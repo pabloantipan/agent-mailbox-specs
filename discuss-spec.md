@@ -201,13 +201,33 @@ picks up mail — the watcher (below) covers the fully-idle case.
 ### `discuss-hook drain`
 
 ```
-read stdin JSON -> {session_id, stop_hook_active}
+read stdin JSON -> {session_id, hook_event_name, stop_hook_active}
+if hook_event_name is empty: exit 0       # not a hook invocation — do NOT consume
 resp = POST /projects/$PROJECT_ID/agents/$AGENT_NAME/drain
          {session_id, stop_hook_active}   with  --max-time 3
 on any error/timeout:  exit 0            # FAIL-OPEN — never hang the agent
-if resp.block:  print {"decision":"block","reason":resp.reason}; exit 0
-else:           exit 0
+if not resp.block: exit 0
+case hook_event_name of
+  Stop | SubagentStop      -> print {"decision":"block","reason":resp.reason}
+  UserPromptSubmit         -> print {"hookSpecificOutput":
+                                {"hookEventName":"UserPromptSubmit",
+                                 "additionalContext":resp.reason}}
+  SessionStart             -> same, with hookEventName SessionStart
+exit 0
 ```
+
+**The output shape is not interchangeable across events.** `decision: "block"`
+continues a stopping agent on `Stop`, but on `UserPromptSubmit` it *rejects the
+prompt*. Sending the Stop shape to all three (as the first implementation did)
+discards the wake, consumes the message, and leaves the session with no re-armed
+watcher — deaf, with no error anywhere. `additionalContext` injects without
+rejecting and is the correct shape for the other two.
+
+**`drain` must refuse to run outside a hook.** Verified 2026-07-18: an agent read
+its wake text, ran `discuss-hook drain` by hand, and only avoided eating its own
+mail because empty stdin failed to parse. With `{}` on stdin the drain would
+succeed and write the message to a stdout nothing is reading. Requiring
+`hook_event_name` closes that.
 
 Fail-open is mandatory: a dead API must degrade to "agent idles normally,"
 never to "agent frozen."
@@ -221,14 +241,32 @@ loop:
   resp = GET /wait?timeout_ms=55000       with --max-time 60
   on error: sleep 2; retry (bounded, e.g. 5x) then exit 0
   if resp.woke:
-     print to STDERR "New messages in your inbox — run drain."   # wake payload
+     print to STDERR "<state the situation; name no command>"     # wake payload
      exit 2                               # <-- wakes the model; lock releases
   # timeout, nothing yet -> loop (still async/background, 0 token cost)
 ```
 
-On exit 2 the agent wakes → its next turn drains via the drain endpoint → on
-completion Stop fires again → a fresh `watch` re-arms (the previous one exited).
-The flock prevents watcher pile-up when Stop fires repeatedly.
+**How the wake actually arrives** (verified 2026-07-18, undocumented): `exit 2`
+does *not* resume the stopped turn. Claude Code re-enters the session as a
+**synthetic `UserPromptSubmit`** carrying the prompt
+`<task-notification><summary>Stop hook feedback</summary></task-notification>`,
+with the watcher's stderr attached as a `system-reminder`. Consequences:
+
+- The **`UserPromptSubmit` drain is the one that services a wake**, not the Stop
+  drain. Its output shape decides whether the wake lands.
+- The stderr payload is delivered to the model **as an instruction it follows
+  literally** — an early draft said "run `discuss-hook drain`" and the agent
+  shelled out and did exactly that. State the situation; never name a command.
+
+On exit 2 the agent wakes → the `UserPromptSubmit` drain injects the messages →
+the agent acts → on completion Stop fires again (with `stop_hook_active`) → a
+fresh `watch` re-arms (the previous one exited). The flock prevents watcher
+pile-up when Stop fires repeatedly; observed working under a real double-Stop.
+
+**Deploying the binary under a live cell:** install by writing beside the target
+and renaming, never `cp` over it. `cp` rewrites in place and corrupts the
+executable for every watcher currently running it, hanging all later
+invocations — a silent cell-wide outage on redeploy.
 
 > **SubagentStop note:** your agents are top-level `claude` processes, so `Stop`
 > is correct. If any role is ever defined as a subagent, its Stop hook is
@@ -259,26 +297,43 @@ The flock prevents watcher pile-up when Stop fires repeatedly.
 agent acts → finishes → `Stop` (stop_hook_active) → allow idle.
 
 **Idle agent** → `watch` blocks on `/wait` (0 tokens) → peer `POST /messages` →
-`/wait` unblocks (coalesced) → `watch` exit 2 → agent wakes → drains → acts →
-idles → `watch` re-arms.
+`/wait` unblocks (coalesced) → `watch` exit 2 → session re-enters as a synthetic
+`UserPromptSubmit` → **that** drain injects the messages via `additionalContext`
+→ agent acts → `Stop` (stop_hook_active) → `watch` re-arms.
+
+**Stalling subject** → thread hits `AGREEMENT_STALL` messages with no
+`decision` → server sets `status='stalled'` and rejects further posts → message
+to the reconciler → they consolidate and post a `decision` (counter resets,
+thread reopens) or set `status='escalated'` and stop. Escalated threads are the
+human's queue.
 
 Token spend happens **only** at: a `block:true` continuation, and an exit-2 wake,
 plus whatever the woken/continued agent then does. Everything else is free.
 
 ---
 
-## 6. Verification gate — do this BEFORE building the cell
+## 6. Verification gate — PASSED 2026-07-18 (Claude Code v2.1.214, darwin/arm64)
 
 The whole push-wake rests on `asyncRewake`, which is real but lightly
-documented. Prove these on your installed Claude Code version with ONE agent and
-a hand-posted message, before wiring 21:
+documented. Proved with ONE agent and a hand-posted message, against a
+file-sentinel stand-in for `/wait` so the only variable was hook behaviour:
 
-1. `asyncRewake:true` + `exit 2` genuinely wakes a **fully stopped** session.
-2. The stderr text on exit 2 is delivered to the model as the wake context.
-3. Re-arm: after a wake, a fresh `Stop` spawns a new `watch` (old one exited) —
-   confirm no pile-up and no gap.
-4. `stop_hook_active` is set on the second Stop so the block loop terminates.
-5. Confirm the async hook's total-runtime timeout vs your `/wait` poll length.
+| # | Item | Result |
+|---|---|---|
+| 1 | `asyncRewake:true` + `exit 2` wakes a **fully stopped** session | **PASS** — 2m21s idle, woke unaided, 27ms from post to wake |
+| 2 | stderr on exit 2 reaches the model as wake context | **PASS** — and is followed literally, see §3 |
+| 3 | Re-arm after a wake, no pile-up, no gap | **PASS** — new watcher same millisecond; `lock_held` observed under a real double-Stop |
+| 4 | `stop_hook_active` terminates the block loop | **PASS** |
+| 5 | Async hook total-runtime cap vs `/wait` poll length | **OPEN** — no cutoff observed through 2m39s of heartbeats; needs a dedicated idle run before `WAIT_TIMEOUT_MS` is trusted |
+
+The bet paid: §1 and §2 can be built against a wake mechanism known to work.
+
+**What the gate cost to learn** — four defects, none of which announce
+themselves at runtime, all detailed where they belong in §3: wrong output shape
+per hook event (deafens the session), manual `drain` destroying a message,
+wake text read as a command, and `cp`-over-a-running-binary hanging every
+watcher. Assume the same class of failure in the API: this system's failure mode
+is silence, not errors.
 
 **Fallback if `asyncRewake` doesn't behave:** keep the drain hooks (Stop /
 UserPromptSubmit / SessionStart) and wake idle agents by external injection —
