@@ -103,6 +103,14 @@ Enforced server-side deliberately: the reconciler is a persona, personas die
 silently, and this is the guarantee that bounds spend. A dead reconciler must
 degrade to "threads stop" and never to "threads loop."
 
+**Thread participants are derived, not stored** (decided 2026-07-19). A
+"conversation between Mau and Javiera" is just a thread they both posted in;
+the viewer computes participants from `messages.from_agent` / `to_agent`. No
+schema change, and a two-person thread renders as a P2P chat for free.
+*Alternative if it stops being enough:* a `thread_participants` table, needed
+only to **convene** a group — address three named personas before any of them
+has spoken. Adding it later invalidates nothing derived.
+
 **Counting rule:** every message increments. Chosen for being cheap.
 *Alternative if it misfires:* count agent alternations instead, so a burst of
 three messages from one persona counts as one round. More faithful to "is this
