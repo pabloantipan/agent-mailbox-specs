@@ -418,3 +418,63 @@ Cloud SQL.
 Items 1–6, 8–12. The worker (item 7) is v1.1 — the outbox, the record and the
 MCP read path prove themselves against `ILIKE` first, so the seam is
 exercised end to end before the first thing that costs money is switched on.
+
+## 13. Decided while building — 2026-09-05
+
+Everything the sections above left open, decided in the `record/` repo and
+recorded here so the spec stays the authority. Each line names the section it
+refines. None of these are policy: the four policy blockers on the card
+(roles beyond own/others, the retention number, deletion's owner, the ingress)
+are still config and named procedures, unanswered.
+
+**Data model (§2).** `seats` has no `undelivered` column. It is derived at
+read from `messages` minus `pickup_samples`, because a broadcast cannot be
+counted for a seat that first appears after the post, and a counter would
+drift from a rebuild. `cells` gains `retain_until`, unread by any job, so
+retention has a home before it has a number. `pickup_samples` gains a primary
+key on `(factory, cell, agent, message)`, which makes replay idempotent.
+
+**Projections (§3).** A `message.posted` also creates the poster's `seats` row
+with both liveness columns NULL, which reads as `never` — the mailbox's own
+word for a persona that was never started. Without it an agent that posts and
+never polls is missing from the roster entirely, which reads as "fine".
+`factories.last_seen` is bumped by any event in a batch, not only by
+`wait.polled`: `dark` asks when we last heard anything, and receipt time is
+the honest answer. It is set from the record's clock, not the mailbox's, so a
+factory replaying old events still reads as alive. Rebuild does not touch it,
+because it is a fact about receiving rather than a projection of content.
+
+**Ingest (§4).** The `202` body carries `duplicates` beside `accepted` and
+`rejected`. `accepted` counts newly stored events, so a replayed batch reads
+`accepted: 0` (gate item 2) and `duplicates` says why rather than leaving it
+to look like a silent drop. A row too malformed to carry an id is quarantined
+under `unparsed-<sha256 prefix>` so the table keeps its primary key and a
+resend dedups.
+
+**Keys (§4).** Only the developer who owns a factory may revoke its keys; any
+other developer gets `403`. A fourth role, `--role key --factory f
+--developer uid`, issues a key straight against the database: local compose
+and the first bootstrap on infra have no developer token yet, and database
+access is the operator's credential in both. The key goes to stdout, never
+through the logger.
+
+**Read API (§4).** `/{f}/health` nests the mailbox's `agents` and `threads`
+blocks under `cells[]`, each with `cell`, `initiative`, `title` and `client`,
+and adds the `push` block. `initiative` is null for a cell whose registration
+has not arrived (§9). The thread list serves `{id, subject, status,
+since_decision, created_at, last_at, messages}` in snake_case — the mailbox
+currently serialises Go field names on that one route (`ID`, `ProjectID`, …),
+which is a bug on that side rather than a shape worth copying; its single
+thread route is already snake_case and the record matches it exactly.
+`/{f}/pickup` takes `since` as unix milliseconds, the clock every other
+timestamp in these APIs uses, and defaults to the last 24 hours; it also takes
+an optional `cell`, because an agent name is only unique within one.
+`/decisions/search` defaults to 20 results and caps at 200 — in v1 each result
+is also an audit event.
+
+**Rule 7's mechanism (§11 item 5).** `specs/health-golden.json` holds the
+field lists for an agent row and a thread row, the two flags that exist only
+on the record, and the allowed values for `watcher`, `kind` and `status`. Each
+repo has a test that checks its own `/health` against it. `record/` carries a
+byte-identical copy so its tests still run once it is cloned alone on PLV's
+host, and one of its tests fails if the two ever differ.

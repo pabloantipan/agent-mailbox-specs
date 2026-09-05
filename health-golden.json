@@ -1,0 +1,79 @@
+{
+  "$comment": [
+    "The health shape both sides must serve. rule 7 of record-spec.md: the same static page renders",
+    "a local cell (discuss-api /projects/{p}/health) or a central factory (discuss-record",
+    "/v1/factories/{f}/health) with no branch, so a field renamed on one side and not the other is a",
+    "silent break. Each repo has a test that decodes its own /health and checks every row against the",
+    "field lists below; that pair of tests is gate item 5's mechanism.",
+    "The record nests the same agents/threads blocks under cells[] and adds a push block; the two",
+    "flags under record_only exist only there, because only the record has the time series to compute",
+    "them. A reader treats a missing flag as false.",
+    "record/specs/health-golden.json is a byte-identical copy, so the record's tests still run once it",
+    "is cloned alone on PLV's host. The record's own test fails if the two ever differ."
+  ],
+  "agent_fields": [
+    "agent",
+    "watcher",
+    "seconds_since_wait",
+    "seconds_since_drain",
+    "undelivered",
+    "oldest_undelivered_seconds",
+    "deaf"
+  ],
+  "thread_fields": [
+    "id",
+    "subject",
+    "status",
+    "kind",
+    "participants",
+    "messages",
+    "since_decision",
+    "quiet_seconds",
+    "age_seconds"
+  ],
+  "record_only": {
+    "agent_fields": ["degrading"],
+    "thread_fields": ["at_risk"]
+  },
+  "watcher_values": ["alive", "stale", "never"],
+  "thread_kinds": ["conversation", "journal"],
+  "thread_statuses": ["open", "stalled", "escalated", "closed"],
+  "example": {
+    "agents": [
+      {
+        "agent": "nico",
+        "watcher": "alive",
+        "seconds_since_wait": 12,
+        "seconds_since_drain": 40,
+        "undelivered": 0,
+        "oldest_undelivered_seconds": 0,
+        "deaf": false,
+        "degrading": false
+      },
+      {
+        "agent": "andrea",
+        "watcher": "never",
+        "seconds_since_wait": 0,
+        "seconds_since_drain": 0,
+        "undelivered": 3,
+        "oldest_undelivered_seconds": 900,
+        "deaf": true,
+        "degrading": false
+      }
+    ],
+    "threads": [
+      {
+        "id": "01M1N893SRDNTAD58H8R031KBQ",
+        "subject": "where the redactor sits",
+        "status": "open",
+        "kind": "conversation",
+        "participants": ["andrea", "nico"],
+        "messages": 8,
+        "since_decision": 8,
+        "quiet_seconds": 5400,
+        "age_seconds": 9000,
+        "at_risk": true
+      }
+    ]
+  }
+}
