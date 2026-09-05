@@ -186,6 +186,17 @@ GET  /health     liveness, no auth, no DB
 GET  /ready      readiness: SELECT 1
 ```
 
+**Consumers of the read API**, so the shapes are designed against real
+readers: the static `ui` (one factory, the mailbox's health shape — rule 7);
+the **management app** (every factory, the flags, the admin endpoints —
+`docs/platform.md`, named and not yet specified); and Cloud Monitoring
+through `/metrics`. The organizer does not read the record: it is one factory
+on one laptop and has the mailbox's own `/health` for that.
+
+Admin endpoints — key revocation, retention, the deletion procedure — are
+**not in v1's contract.** They are named here so their home is known, and
+they are specified with the management app.
+
 ### 4a. The `Redactor` and the audit
 
 Decided 2026-09-04. One function, on every body-returning path:
