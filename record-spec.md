@@ -38,6 +38,8 @@ Status: **spec, not built.** 2026-09-04. Name provisional.
 9. **Every body-returning read is audited.** Who, which factory and cell,
    which thread or query, when, and at what mask level — emitted in the shape
    PLV's audit sink already takes. In v1, not later.
+10. **The record never calls out.** It computes and exposes state; something
+    polls it. Alerting lives in Cloud Monitoring, not here.
 
 ## 2. Data model — Postgres 16 with pgvector
 
@@ -209,6 +211,30 @@ results audit once per result returned, not once per query.
 request (a procedure with an owner: delete the events, `rebuild`), and
 retention (`cells.retain_until`, applied by a job; the number is PLV's).
 
+### 4b. State flags and metrics
+
+Decided 2026-09-04. Three flags, computed at read time from the same
+thresholds the metrics use, so the two never disagree:
+
+| Flag | On | True when |
+|---|---|---|
+| `dark` | a factory row in `/v1/factories` | no event for `RECORD_DARK_AFTER` |
+| `degrading` | a seat in `/{f}/health` | last hour's median pickup > `RECORD_DEGRADING_FLOOR`, or > `RECORD_DEGRADING_FACTOR` × its 24h median |
+| `at_risk` | a thread in `/{f}/health` | `since_decision ≥ RECORD_AT_RISK_SINCE` and quiet > `RECORD_AT_RISK_QUIET` |
+
+```
+GET /metrics        Prometheus text format, no auth, scraped by the collector
+  discuss_factory_last_event_age_seconds{factory}
+  discuss_seat_pickup_ms{factory,cell,agent,quantile="0.5",window="1h"}
+  discuss_thread_since_decision{factory,cell,thread}
+  discuss_ingest_batches_total{factory,result}      accepted | rejected | error
+```
+
+`monitoring/` holds the alert policies as YAML, applied by Cloud Build with
+the manifests. v1 ships three, one per flag, wired to PLV's existing
+notification channel for this service. Thresholds in the policies are read
+from the same values as the record's config; when one changes, both do.
+
 ## 5. MCP
 
 Served by the same binary at `/mcp` (streamable HTTP), authenticated exactly
@@ -256,6 +282,7 @@ record/
 │   └── auth/        factory key hashing, Firebase ID token verification
 ├── migrations/      goose: 0001_identity.sql 0002_events.sql 0003_projections.sql
 ├── k8s/             deploy-api.yaml  deploy-worker.yaml  job-migrate.yaml  service.yaml
+├── monitoring/      dark.yaml  degrading.yaml  at-risk.yaml   (Cloud Monitoring policies)
 ├── Dockerfile       multi-stage, distroless static, nonroot
 ├── docker-compose.yml   pgvector/pgvector:pg16 + record --role api
 ├── cloudbuild.yaml
@@ -322,6 +349,9 @@ Ingress is HTTPS at a hostname the factories are configured with
 | `RECORD_EMBED_MODEL` | `text-embedding-005` | 768 dims; changing it means re-embedding |
 | `RECORD_INGEST_MAX` | `500` | events per batch |
 | `RECORD_AUDIT_TOPIC` | *(unset — structured log only)* | Pub/Sub topic in PLV's audit sink shape |
+| `RECORD_DARK_AFTER` | `10m` | ten missed 55s polls |
+| `RECORD_DEGRADING_FLOOR`, `_FACTOR` | `30s`, `10` | absolute, and relative to the seat's own day |
+| `RECORD_AT_RISK_SINCE`, `_QUIET` | `7`, `1h` | five short of the stall guard |
 
 ## 11. Verification gate
 
@@ -341,9 +371,10 @@ Cloud SQL.
 | 9 | integration tests pass with nothing running (`go test -tags=integration ./...`) | |
 | 10 | a body with a RUT reads raw through the owning factory's key and masked through another's; both reads appear in the audit with their level | |
 | 11 | `search_decisions` over ten results emits ten audit events, one per body returned | |
+| 12 | stop a factory's pusher: within `RECORD_DARK_AFTER` its row reads `dark: true`, `/metrics` shows the age, and the `dark.yaml` policy fires to the test channel | |
 
 ## 12. What "v1" is
 
-Items 1–6, 8–11. The worker (item 7) is v1.1 — the outbox, the record and the
+Items 1–6, 8–12. The worker (item 7) is v1.1 — the outbox, the record and the
 MCP read path prove themselves against `ILIKE` first, so the seam is
 exercised end to end before the first thing that costs money is switched on.
