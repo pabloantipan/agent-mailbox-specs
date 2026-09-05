@@ -259,17 +259,20 @@ registration arrives. The mailbox never waits on this.
 To pass before the record is trusted with a real factory. Same discipline as
 `discuss-spec.md` §6: one factory, one cell, hand-posted messages.
 
+Run 2026-09-05 against `docker compose up` in `record/`, factory `lodestar`,
+cell `camp`.
+
 | # | Item | Result |
 |---|---|---|
-| 1 | a post appears in the record within 3s of the `202` in the pusher log | |
-| 2 | with the record stopped, ten posts accumulate; `lag_seconds` climbs; the view shows it | |
-| 3 | on restart all ten arrive, in order, once — `SELECT count(*)` centrally equals local | |
-| 4 | replaying a batch by hand yields `202` with zero new rows | |
-| 5 | a cell without `push: true` writes **zero** outbox rows across a full thread | |
-| 6 | a rejected row is marked, logged, and the next batch proceeds past it | |
-| 7 | a `401` backs off five minutes and recovers after the key file is replaced, no restart | |
-| 8 | wake latency in `hook.log` is unchanged with the pusher on | |
-| 9 | a body containing a token-shaped string arrives centrally as the marker, the thread intact; a body containing a RUT arrives raw | |
+| 1 | a post appears in the record within 3s of the `202` in the pusher log | **pass** — posted 15:31:48.609, pushed .638, 29ms; all five event types land |
+| 2 | with the record stopped, ten posts accumulate; `lag_seconds` climbs; the view shows it | **pass** — lag 31→38→45s, retries 4s/8s/16s, alert bar renders the line and the reason |
+| 3 | on restart all ten arrive, in order, once — `SELECT count(*)` centrally equals local | **pass** — 15→25 events, ten ids ascending, no duplicates |
+| 4 | replaying a batch by hand yields `202` with zero new rows | **pass** — `{"accepted":0,"duplicates":5}`, 25→25 |
+| 5 | a cell without `push: true` writes **zero** outbox rows across a full thread | **pass** — post, wait, drain, answer and status: 0 rows |
+| 6 | a rejected row is marked, logged, and the next batch proceeds past it | **pass** — marked with its reason, logged, quarantined centrally, the row beside it landed |
+| 7 | a `401` backs off five minutes and recovers after the key file is replaced, no restart | **pass** — 401 15:35:44, recovered 15:40:44 on the rotated key, same pid |
+| 8 | wake latency in `hook.log` is unchanged with the pusher on | **pass** — median 764ms opted out, 786ms with the pusher pushing live (n=15 each); both are the 750ms coalesce window |
+| 9 | a body containing a token-shaped string arrives centrally as the marker, the thread intact; a body containing a RUT arrives raw | **pass** — proven with the store half, `internal/guard` |
 
 Item 8 is the one that protects the product. If it fails, the pusher has
 found its way onto the hot path and the design is wrong, not the code.
