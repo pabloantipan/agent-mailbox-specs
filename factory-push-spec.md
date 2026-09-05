@@ -117,6 +117,21 @@ transaction, so wrapped in one — the `/wait` handler on entry and exit, and
 `pickup_ms` on `message.delivered` is `delivered_at - created_at` computed in
 `MarkDelivered`, where both are at hand.
 
+### What never leaves
+
+Decided 2026-09-04. Before `emit` writes a `message.posted` row it tests the
+body with the same character-diversity heuristic the `ops` pre-commit hook
+uses (moved into `internal/guard`, called by both). A body that trips it is
+**withheld**: the event is still written, `body` replaced by
+`[withheld: secret-shaped content]`, and one log line names the message id.
+The thread's shape survives centrally; the secret does not exist in any
+pushable form.
+
+Personal data is **not** masked here. PLV applies the Ley de Protección de
+Datos at visualization, not at saving; the guard for a RUT or an email is the
+record's read-time `Redactor` (`record-spec.md` §4a). Nothing on the laptop
+inspects a body for personal data.
+
 ## 6. The pusher
 
 A goroutine started by `run()` in `cmd/discuss-api/main.go` when
@@ -235,6 +250,7 @@ To pass before the record is trusted with a real factory. Same discipline as
 | 6 | a rejected row is marked, logged, and the next batch proceeds past it | |
 | 7 | a `401` backs off five minutes and recovers after the key file is replaced, no restart | |
 | 8 | wake latency in `hook.log` is unchanged with the pusher on | |
+| 9 | a body containing a token-shaped string arrives centrally as the marker, the thread intact; a body containing a RUT arrives raw | |
 
 Item 8 is the one that protects the product. If it fails, the pusher has
 found its way onto the hot path and the design is wrong, not the code.

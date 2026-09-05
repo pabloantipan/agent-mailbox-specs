@@ -30,6 +30,14 @@ Status: **spec, not built.** 2026-09-04. Name provisional.
    before the record has learned the type; nothing is lost.
 7. **The read API's health shape equals the mailbox's.** The same static page
    renders a local cell or a central factory with no branch.
+8. **Personal data is stored raw and controlled at read.** PLV applies the Ley
+   de Protección de Datos at visualization, not at saving. Every path that
+   returns a body — read API, MCP, dashboard — passes through the `Redactor`
+   (§4a). The database itself is never a visualization: IAM only, no
+   developer with a `psql` prompt.
+9. **Every body-returning read is audited.** Who, which factory and cell,
+   which thread or query, when, and at what mask level — emitted in the shape
+   PLV's audit sink already takes. In v1, not later.
 
 ## 2. Data model — Postgres 16 with pgvector
 
@@ -176,6 +184,31 @@ GET  /health     liveness, no auth, no DB
 GET  /ready      readiness: SELECT 1
 ```
 
+### 4a. The `Redactor` and the audit
+
+Decided 2026-09-04. One function, on every body-returning path:
+
+```go
+// Redact applies PLV's masks to a body according to who is asking. Until PLV
+// defines roles: raw for cells on the caller's own factory, masked otherwise.
+func (r *Redactor) Redact(caller Caller, factory, cell, body string) (out string, level MaskLevel)
+```
+
+Masks are PLV's, copied not reinvented: RUT `12345678-9` → `1234****-9`,
+email `user@example.com` → `u***@example.com`, values under keys named
+`password`, `token`, `secret`, `apikey`, `authorization`, `credential`,
+`*Token` dropped. The `(caller, cell) → MaskLevel` rule is one function so
+PLV's roles slot in without touching a handler.
+
+Every call to `Redact` emits one audit event — `record.read` with `caller`,
+`factory`, `cell`, `thread` or `query`, `at`, `level` — as a structured log
+line in PLV's audit shape, and to `RECORD_AUDIT_TOPIC` when set. Search
+results audit once per result returned, not once per query.
+
+**Named, not designed here:** deletion against `events` for a data-subject
+request (a procedure with an owner: delete the events, `rebuild`), and
+retention (`cells.retain_until`, applied by a job; the number is PLV's).
+
 ## 5. MCP
 
 Served by the same binary at `/mcp` (streamable HTTP), authenticated exactly
@@ -270,10 +303,13 @@ Ingress is HTTPS at a hostname the factories are configured with
   not the host. Rotating it is the remedy, and it is deliberate.
 - **The embedder is down.** Vectors stay `NULL`, search stays `ILIKE`, the
   worker logs and retries. Nothing else notices.
-- **Body contains something that should not have been pushed.** The seam is
-  opt-in per cell, so this is a cell that opted in and regrets it. There is
-  no redaction in v1; there is `DELETE FROM events WHERE factory = ? AND
-  cell = ?` followed by `rebuild`, and it is a deliberate act.
+- **A body contains personal data.** Expected: it is stored raw by
+  instruction and masked at read (§4a). A data-subject deletion request is
+  `DELETE FROM events WHERE factory = ? AND cell = ? [AND id = ?]` followed by
+  `rebuild` — a procedure with an owner, not something the API offers.
+- **A body contains a secret.** It should not: the laptop withholds it before
+  the outbox row exists (`factory-push-spec.md` §5). If one arrives anyway,
+  the same deletion procedure applies and the laptop's guard has a bug.
 
 ## 10. Config
 
@@ -285,6 +321,7 @@ Ingress is HTTPS at a hostname the factories are configured with
 | `RECORD_EMBED` | *(unset — off)* | `vertex` |
 | `RECORD_EMBED_MODEL` | `text-embedding-005` | 768 dims; changing it means re-embedding |
 | `RECORD_INGEST_MAX` | `500` | events per batch |
+| `RECORD_AUDIT_TOPIC` | *(unset — structured log only)* | Pub/Sub topic in PLV's audit sink shape |
 
 ## 11. Verification gate
 
@@ -302,9 +339,11 @@ Cloud SQL.
 | 7 | with the worker on, the vector is filled and the same query ranks it first among ten decoys | |
 | 8 | a factory key for factory A cannot push as B: `403` | |
 | 9 | integration tests pass with nothing running (`go test -tags=integration ./...`) | |
+| 10 | a body with a RUT reads raw through the owning factory's key and masked through another's; both reads appear in the audit with their level | |
+| 11 | `search_decisions` over ten results emits ten audit events, one per body returned | |
 
 ## 12. What "v1" is
 
-Items 1–6, 8, 9. The worker (item 7) is v1.1 — the outbox, the record and the
+Items 1–6, 8–11. The worker (item 7) is v1.1 — the outbox, the record and the
 MCP read path prove themselves against `ILIKE` first, so the seam is
 exercised end to end before the first thing that costs money is switched on.
