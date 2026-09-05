@@ -8,6 +8,9 @@ service + first-party hooks only, never the metered API).
 Three components: **DB** (§1), **Go API** (§2), **hooks** (§3). Config values in
 §4, flows in §5, the verification gate in §6.
 
+Kept in step with the implementation; last reconciled 2026-09-04. Where the
+spec and `api/` disagree, the spec is wrong until someone fixes one of them.
+
 ---
 
 ## 1. DB config — SQLite, embedded in the API process
@@ -21,7 +24,10 @@ PRAGMA foreign_keys = ON;
 PRAGMA synchronous = NORMAL;    -- WAL-safe, faster than FULL
 ```
 
-Location: `/var/lib/discuss/discuss.db` (or `~/.local/share/discuss/`).
+Location: `~/.local/state/discuss/discuss.db` (`DISCUSS_STATE_DIR`, `0700`).
+Nothing is ever deleted; `synchronous=NORMAL` survives an application crash,
+not a power loss before checkpoint. No backup is taken — see
+`docs/architecture.md`, *Where things live*.
 
 ### Schema
 
@@ -121,8 +127,9 @@ stalls a healthy thread.
 
 ## 2. API config — Go HTTP service
 
-- **Bind:** Unix socket `/run/discuss.sock` (no port, local-user only) — or
-  `127.0.0.1:9494` if you want curl-simplicity. Socket is the safer default.
+- **Bind:** Unix socket `~/.local/state/discuss/discuss.sock` today. Decided
+  2026-09-04 (`docs/decisions.md`): localhost TCP replaces it, so the agents
+  and the browser view share one transport. Not yet removed.
 - **Identity:** one bearer token per `(project, agent)`; the server derives
   `from_agent` and `project_id` **from the token**, never trusting a
   client-supplied `from`. This is what stops agent A posting as agent B.
@@ -138,6 +145,11 @@ stalls a healthy thread.
 | `POST /agents/{a}/ack` | mark handled | `{message_id?  \| thread_id?}` → `{acked}` |
 | `POST /agents/{a}/drain` | **Stop-hook pickup** | `{session_id, stop_hook_active}` → `{block, reason?, delivered_ids}` |
 | `GET /agents/{a}/wait?timeout_ms=55000` | **watcher long-poll** | → `{woke, count}` (returns on first undelivered msg or timeout) |
+| `GET /threads?status=` | list by status, default `escalated` | → `{threads:[…]}` |
+| `POST /threads/{tid}/status` | reopen · escalate · close | `{status}` → `{id, status}` |
+| `GET /health` | roster liveness, live threads, deaf | → `{agents:[…], threads:[…], now}` |
+| `GET /metrics` | traffic: posted, addressed, taken, acked, `median_pickup_ms`; pairs; per day | → `{agents, pairs, days}` |
+| `GET /search?q=&from=&to=&kind=&thread=` | archive, `LIKE` over subject and body | → `{messages:[…]}` |
 | `GET /healthz` | liveness | → `200` |
 
 ### `/drain` handler logic
@@ -286,8 +298,12 @@ invocations — a silent cell-wide outage on redeploy.
 
 | Key | Default | Notes |
 |---|---|---|
-| `bind` | `unix:/run/discuss.sock` | or `127.0.0.1:9494` |
-| `db_path` | `/var/lib/discuss/discuss.db` | WAL |
+| `DISCUSS_STATE_DIR` | `~/.local/state/discuss` | socket, db, tokens, logs |
+| `DISCUSS_BIND` | `unix:<state>/discuss.sock` | or `127.0.0.1:<port>`; TCP is the decided direction |
+| `DISCUSS_DB` | `<state>/discuss.db` | WAL |
+| `DISCUSS_TOKENS` | `<state>/tokens.json` | loaded once at boot |
+| `DISCUSS_UI_BIND` | *(unset — view off)* | e.g. `127.0.0.1:9494`; a second, TCP listener |
+| `DISCUSS_UI_AGENT`, `DISCUSS_UI_PROJECT` | *(required with `UI_BIND`)* | the identity the view reads as |
 | `WAIT_TIMEOUT_MS` | `55000` | client `--max-time 60` |
 | `COALESCE_MS` | `750` | burst → one wake |
 | `WAKE_PER_MIN` | `6` | per-agent token bucket on `/wait` |
