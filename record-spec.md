@@ -472,6 +472,63 @@ an optional `cell`, because an agent name is only unique within one.
 `/decisions/search` defaults to 20 results and caps at 200 — in v1 each result
 is also an audit event.
 
+**The Redactor (§4a).** `Redact` takes a context and a ref — factory, cell,
+the message id, and thread or query — rather than the bare
+`(caller, factory, cell, body)` above: the audit event needs the context for
+correlation and the ref to name which body was returned. `service.Mask` keeps
+the pure shape and is exported, so what "masked" means is readable without a
+request in hand. A developer token is masked everywhere, having no factory of
+its own; `service.Level` is the one function PLV's roles slot into. Credential
+values are dropped at the masked level only, exactly as §4a reads — the
+laptop's emit-side guard is what keeps a secret out of a raw body. An unquoted
+credential value runs to the end of the line rather than to the next space, or
+`Authorization: Bearer abc123` would leak the half that matters.
+
+**The audit (§4a).** One event per body returned, on every path: a thread of
+eight messages is eight events, a search of ten results is ten. The envelope
+is PLV's audit shape — `event_id`, `event_ts`, `schema_version`, `event_kind`,
+`trace_id`, `request_id`, `tier`, `emitter_*` — around the fields §4a names.
+The structured log line is unconditional and never carries the body it audits;
+`RECORD_AUDIT_TOPIC` adds the Pub/Sub copy, and a configured topic that does
+not exist fails at boot rather than leaving a silent hole.
+
+**Metrics and flags (§4b).** `dark` and
+`discuss_factory_last_event_age_seconds` both measure time since the last
+event or, for a factory that has never pushed, since it was registered. A
+factory registered a minute ago is not dark; the same one ten minutes later
+is. The two must use one clock or the flag and the alert that fires on it
+disagree. `discuss_ingest_batches_total` counts one per batch: `accepted`
+whole, `rejected` when rows were quarantined, `error` when it did not land.
+`degrading.yaml` alerts on the absolute floor only — the relative half (ten
+times the seat's own day) is a ratio of two windows a threshold condition
+cannot express, and it stays a flag in the API.
+
+**Search (§4, §6).** Hybrid is read as: a row is a candidate if it matches
+ILIKE **or** carries a vector, ordered by cosine similarity, score 0 for a row
+without one. The union rather than an ILIKE-only filter is what makes gate
+item 7 mean anything — a decision found by meaning and not by substring. An
+embedder that fails does not fail the search: the vector half is dropped and
+ILIKE still answers. An embedding of the wrong dimension is refused per row,
+never truncated into the index. v1 wires no embedder, so search is ILIKE and
+every score is 0; v1.1 is the Vertex client and nothing else.
+
+**The worker (§6).** With `RECORD_EMBED` unset it exits with status 0, not an
+error: the state is configured, not failed, and a non-zero exit is a crash
+loop that reads as a broken deploy. The Deployment's replica count moves with
+the same switch, so the worker is never running with nothing to do.
+
+**The page and deployment (§4, §8).** The page is `GET /{$}` and `GET /{file}`,
+one segment and no dotfiles, rather than a file server at `/` that would
+shadow an unknown `/v1` path and answer it with HTML. `/mcp` is registered per
+method, because a pattern taking every method conflicts with `GET /{file}`.
+The Cloud SQL proxy is a native sidecar in all three workloads: the migrate
+Job cannot complete with an ordinary one. `cloudbuild.yaml` renders `k8s/` and
+`monitoring/` in a single `envsubst` pass, which is the actual mechanism
+behind "the thresholds are read from the same values as the record's config".
+There is deliberately no Ingress manifest, no retention job and no deletion
+job: all three are the open policy questions, and a manifest would answer one
+by accident.
+
 **Rule 7's mechanism (§11 item 5).** `specs/health-golden.json` holds the
 field lists for an agent row and a thread row, the two flags that exist only
 on the record, and the allowed values for `watcher`, `kind` and `status`. Each
