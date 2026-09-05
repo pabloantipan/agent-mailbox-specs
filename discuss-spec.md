@@ -29,6 +29,18 @@ Nothing is ever deleted; `synchronous=NORMAL` survives an application crash,
 not a power loss before checkpoint. No backup is taken — see
 `docs/architecture.md`, *Where things live*.
 
+### Schema versioning
+
+Decided 2026-09-04. `Open` reads `PRAGMA user_version`, applies every step
+above it in one transaction, and sets it. Steps are an ordered `[]string` in
+`store.go` beside the `schema` constant; **that constant is step 1 and is
+never edited again — every change is a new step.** A failing step fails
+`Open`: the API refuses to start rather than run at the wrong version and
+fail open into silence.
+
+One test: open a file at version 0, assert it lands at the latest version
+with every table present; open it again, assert nothing runs.
+
 ### Schema
 
 ```sql

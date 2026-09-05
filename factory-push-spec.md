@@ -74,8 +74,8 @@ default.
 
 ## 4. Data model
 
-Added to the SQLite schema in `internal/store/store.go`, beside the tables it
-mirrors:
+Added as **migration step 2** (`discuss-spec.md` §1, *Schema versioning*),
+never as an edit to the `schema` constant:
 
 ```sql
 CREATE TABLE IF NOT EXISTS outbox (
