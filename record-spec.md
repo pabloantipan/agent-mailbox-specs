@@ -162,7 +162,7 @@ POST /v1/factories/{factory}/keys/revoke         developer token
   Request:  { "key_hash": "..." }                   omit to revoke every key of the factory
   Response: 204
 
-POST /v1/factories/{factory}/cells               factory key, must match {factory}
+POST /v1/factories/{factory}/cells               factory key, must match {factory}; idempotent upsert
   Request:  { "cell": "camp", "initiative": "ccint-camp", "title": "…", "client": "…" }
   Response: 204                                   title and client are what the views show
   Errors:   403 (key is for another factory)
@@ -198,8 +198,16 @@ GET  /health     liveness, no auth, no DB
 GET  /ready      readiness: SELECT 1
 ```
 
+```
+GET  /            the static page, from RECORD_UI_DIR — the same three files the
+GET  /{file}      mailbox serves; no token injected here, the page's connect panel
+                  takes a factory key once. Same origin, so there is no CORS on the
+                  record, ever.                                     (decided 2026-09-05)
+```
+
 **Consumers of the read API**, so the shapes are designed against real
-readers: the static `ui` (one factory, the mailbox's health shape — rule 7);
+readers: the static `ui` (one factory, the mailbox's health shape — rule 7,
+served by the record itself, above);
 the **management app** (every factory, the flags, the admin endpoints —
 `docs/platform.md`, named and not yet specified); and Cloud Monitoring
 through `/metrics`. The organizer does not read the record: it is one factory
@@ -291,6 +299,11 @@ off until a reader needs it.
 
 ## 7. Layout — the PLV golden path
 
+`record/` is the first repo in this initiative with a remote — on PLV's git
+host, because Cloud Build triggers from it. `ops` stays local-only by hook;
+this one gets the same `pre-commit` token guard installed on init, and
+`working-on/initiative.yaml` gains a `ports_to` for it.
+
 ```
 record/
 ├── cmd/discuss-record/main.go          --role api | worker | migrate [rebuild]
@@ -369,6 +382,7 @@ Ingress is HTTPS at a hostname the factories are configured with
 |---|---|---|
 | `RECORD_DB_URL` | *(required)* | `postgres://` via the proxy, or compose's |
 | `RECORD_BIND` | `:8080` | |
+| `RECORD_UI_DIR` | *(unset — no page)* | the `ui` repo's three files, served at `/` |
 | `RECORD_FIREBASE_PROJECT` | *(required)* | verifies developer ID tokens for key issuance |
 | `RECORD_EMBED` | *(unset — off)* | `vertex` |
 | `RECORD_EMBED_MODEL` | `text-embedding-005` | 768 dims; changing it means re-embedding |

@@ -69,8 +69,10 @@ default.
   payload fields; it rejects an unknown `v`.
 - `at` is the mailbox's clock in unix millis, the same one that stamps
   `created_at` — so pickup latency is one clock minus itself.
-- `factory` defaults to `hostname -s`, which is what `working-on`'s `machine`
-  already is.
+- `factory` is read from `~/.local/state/discuss/factory`, written once by
+  `bootstrap.sh` with `hostname -s` — what `working-on`'s `machine` already
+  is. A file, not the live hostname, so renaming the laptop does not orphan
+  the factory's history.
 
 ## 4. Data model
 
@@ -96,8 +98,18 @@ CREATE INDEX IF NOT EXISTS idx_outbox_unpushed ON outbox(id) WHERE pushed_at IS 
 { "project": "camp", "push": true }
 ```
 
-`bootstrap.sh` reads it and composes `DISCUSS_PUSH_CELLS` for the API's
-environment. The API knows nothing about `cell.json`; it knows an allowlist.
+`bootstrap.sh` reads it and writes the cell's entry into
+`~/.local/state/discuss/projects.json`:
+
+```json
+{ "camp": { "push": false }, "plv-auth": { "push": true } }
+```
+
+The API re-reads that file when its mtime changes, so opting a cell in is a
+bootstrap run and never a restart — a restart drops every watcher. The API
+knows nothing about `cell.json`; it knows this file. (Decided 2026-09-05; the
+first draft had a boot-time env var, which is wrong for a thing that changes
+at runtime.)
 
 ## 5. Emission
 
@@ -199,8 +211,10 @@ It never appears in a log line, in `ops/`, or in git — the existing
 ## 8. Registration
 
 Before a factory's events mean anything, the record must know which cell
-belongs to which initiative and developer. That is the organizer's knowledge,
-not the mailbox's, so the organizer does it when it brings a crew up:
+belongs to which initiative. `bootstrap.sh` knows — `cell.json` and
+`working-on/initiative.yaml` sit in the same root — and so does the
+organizer when it brings a crew up. Either registers; the record upserts on
+`(factory, cell)`, so both may:
 
 ```
 POST /v1/factories/{factory}/cells   { "cell": "camp", "initiative": "ccint-camp" }
@@ -234,8 +248,8 @@ registration arrives. The mailbox never waits on this.
 |---|---|---|
 | `DISCUSS_PUSH_URL` | *(unset — pusher off)* | the record's base URL |
 | `DISCUSS_PUSH_KEY_FILE` | `~/.local/state/discuss/push.key` | `0600`; re-read on `401` |
-| `DISCUSS_PUSH_CELLS` | *(empty — nothing emitted)* | comma-separated project ids; `bootstrap.sh` composes it from `cell.json` |
-| `DISCUSS_FACTORY` | `hostname -s` | must equal `working-on`'s `machine` |
+| `DISCUSS_PROJECTS_FILE` | `<state>/projects.json` | per-cell `push`; written by `bootstrap.sh`, re-read on mtime |
+| `DISCUSS_FACTORY_FILE` | `<state>/factory` | written once; equals `working-on`'s `machine` |
 | `DISCUSS_PUSH_INTERVAL_MS` | `1000` | floor between attempts |
 | `DISCUSS_PUSH_BATCH` | `500` | rows per request |
 | `DISCUSS_PUSH_KEEP` | `168h` | retention of pushed rows |
