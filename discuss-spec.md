@@ -139,9 +139,10 @@ stalls a healthy thread.
 
 ## 2. API config — Go HTTP service
 
-- **Bind:** Unix socket `~/.local/state/discuss/discuss.sock` today. Decided
-  2026-09-04 (`docs/decisions.md`): localhost TCP replaces it, so the agents
-  and the browser view share one transport. Not yet removed.
+- **Bind:** `127.0.0.1:9494`, and nothing else. The agents' hooks and the
+  browser view arrive on the same listener and are told apart by their token.
+  The unix socket it replaced is gone (`docs/decisions.md`, 2026-09-04); a
+  `DISCUSS_BIND` still naming `unix:` is refused at boot.
 - **Identity:** one bearer token per `(project, agent)`; the server derives
   `from_agent` and `project_id` **from the token**, never trusting a
   client-supplied `from`. This is what stops agent A posting as agent B.
@@ -159,7 +160,7 @@ stalls a healthy thread.
 | `GET /agents/{a}/wait?timeout_ms=55000` | **watcher long-poll** | → `{woke, count}` (returns on first undelivered msg or timeout) |
 | `GET /threads?status=` | list by status, default `escalated` | → `{threads:[…]}` |
 | `POST /threads/{tid}/status` | reopen · escalate · close | `{status}` → `{id, status}` |
-| `GET /health` | roster liveness, live threads, deaf | → `{agents:[…], threads:[…], now}` |
+| `GET /health` | roster liveness, live threads, deaf, undecided | → `{agents:[…], threads:[…], now}` |
 | `GET /metrics` | traffic: posted, addressed, taken, acked, `median_pickup_ms`; pairs; per day | → `{agents, pairs, days}` |
 | `GET /search?q=&from=&to=&kind=&thread=` | archive, `LIKE` over subject and body | → `{messages:[…]}` |
 | `GET /healthz` | liveness | → `200` |
@@ -310,12 +311,13 @@ invocations — a silent cell-wide outage on redeploy.
 
 | Key | Default | Notes |
 |---|---|---|
-| `DISCUSS_STATE_DIR` | `~/.local/state/discuss` | socket, db, tokens, logs |
-| `DISCUSS_BIND` | `unix:<state>/discuss.sock` | or `127.0.0.1:<port>`; TCP is the decided direction |
+| `DISCUSS_STATE_DIR` | `~/.local/state/discuss` | db, tokens, backups, logs |
+| `DISCUSS_BIND` | `127.0.0.1:9494` | the only listener: agents and the page both |
 | `DISCUSS_DB` | `<state>/discuss.db` | WAL |
 | `DISCUSS_TOKENS` | `<state>/tokens.json` | loaded once at boot |
-| `DISCUSS_UI_BIND` | *(unset — view off)* | e.g. `127.0.0.1:9494`; a second, TCP listener |
-| `DISCUSS_UI_AGENT`, `DISCUSS_UI_PROJECT` | *(required with `UI_BIND`)* | the identity the view reads as |
+| `DISCUSS_UI_DIR` | *(unset — view off)* | a checkout of the `ui` repo, served at `/` |
+| `DISCUSS_UI_AGENT` | *(required with `UI_DIR`)* | the identity the view reads as |
+| `DISCUSS_UI_PROJECT` | *(required with `UI_DIR`)* | comma-separated; one token injected per cell, first is the default |
 | `WAIT_TIMEOUT_MS` | `55000` | client `--max-time 60` |
 | `COALESCE_MS` | `750` | burst → one wake |
 | `WAKE_PER_MIN` | `6` | per-agent token bucket on `/wait` |
