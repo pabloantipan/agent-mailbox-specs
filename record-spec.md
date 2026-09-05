@@ -119,6 +119,11 @@ Column types elided where obvious; the migration files are the authority.
 `decisions` is `messages WHERE kind = 'decision'` kept as its own table
 because it carries the vector and is the first thing anything searches.
 
+**`decisions` is the crew's decision log.** Decided 2026-09-05: the `decision`
+message is canonical and the cell's rulings file in git is the reconciler's
+projection of it. A ruling that was never posted as a `decision` message is
+not in this table, by design, and the record does not go looking for it.
+
 ## 3. How events project
 
 | Event | Applies to |
