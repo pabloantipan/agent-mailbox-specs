@@ -156,6 +156,8 @@ loop:
       log; backoff = 5m                          -- a key problem is not transient
   case 5xx, network, timeout:
       log; backoff = min(backoff*2, 60s), starting at 1s
+  case 429:
+      log; backoff = Retry-After, else 5s          -- the record is shedding load, not refusing us
   case other 4xx:
       log the body; backoff = 5m                 -- we sent something malformed
 ```
@@ -186,6 +188,9 @@ obtained once:
 organizer factory-key            # signs the developer in (existing Firebase flow),
                                  # POST /v1/factories/keys, writes the file
 ```
+
+`organizer factory-key --rotate` issues a new key, writes the file, then revokes
+the old one — in that order, so the pusher is never without a key.
 
 The API reads it at boot and on every `401` (so a rotation needs no restart).
 It never appears in a log line, in `ops/`, or in git — the existing

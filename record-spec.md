@@ -23,9 +23,9 @@ Status: **spec, not built.** 2026-09-04. Name provisional.
 4. **Projections are applied in the ingest transaction.** At crew scale the
    cost is nothing, and the dashboard reads a consistent state. The only
    async work is what costs money: embeddings.
-5. **A factory key authorises one factory.** It can push, register cells, and
-   read. A developer token can read across factories. Nothing can write to a
-   factory it is not.
+5. **A factory key pushes and registers for its own factory, and reads every
+   factory** — masked beyond its own (§4a). A developer token reads every
+   factory and issues or revokes keys. Nothing writes to a factory it is not.
 6. **Unknown event types are stored and ignored.** A newer mailbox can emit
    before the record has learned the type; nothing is lost.
 7. **The read API's health shape equals the mailbox's.** The same static page
@@ -61,6 +61,8 @@ CREATE TABLE cells (
   factory     TEXT NOT NULL REFERENCES factories(id),
   cell        TEXT NOT NULL,
   initiative  TEXT NOT NULL,
+  title       TEXT,
+  client      TEXT,
   push_since  TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (factory, cell)
 );
@@ -156,15 +158,20 @@ POST /v1/factories/keys                          developer token
   Response: 201 { "key": "<shown once>", "factory": "lodestar" }
   Errors:   401; 409 if the factory belongs to another developer
 
-POST /v1/factories/{factory}/cells               factory key, must match {factory}
-  Request:  { "cell": "camp", "initiative": "ccint-camp" }
+POST /v1/factories/{factory}/keys/revoke         developer token
+  Request:  { "key_hash": "..." }                   omit to revoke every key of the factory
   Response: 204
+
+POST /v1/factories/{factory}/cells               factory key, must match {factory}
+  Request:  { "cell": "camp", "initiative": "ccint-camp", "title": "…", "client": "…" }
+  Response: 204                                   title and client are what the views show
   Errors:   403 (key is for another factory)
 
 POST /v1/ingest                                  factory key
   Request:  { "factory": "lodestar", "events": [ envelope, ... ] }   ≤ 500
   Response: 202 { "accepted": 497, "rejected": [ { "id": "...", "reason": "unknown v 2" } ] }
-  Errors:   400 (not a batch), 403 (factory mismatch), 413 (> 500)
+  Errors:   400 (not a batch), 403 (factory mismatch), 413 (> 500),
+            429 (per-factory token bucket, `Retry-After` set)
 
 GET  /v1/factories                               either
   Response: { "factories": [ { "id", "developer", "last_seen", "cells": [ ... ] } ] }
@@ -316,7 +323,9 @@ service in Cloud Logging.
 - **Cloud SQL** Postgres 16, `cloudsql.iam_authentication` on, pgvector
   extension enabled. Reached from GKE through the Auth Proxy sidecar under a
   workload-identity service account with `cloudsql.client`. No DB password
-  exists anywhere.
+  exists anywhere. Point-in-time recovery on, seven-day window: laptops delete
+  pushed rows after seven days, so from day eight the record is the only copy
+  of every stream.
 - **`deploy-api.yaml`**: 2 replicas, rolling update `maxUnavailable: 0`,
   `/health` liveness and `/ready` readiness, requests `250m/256Mi`.
 - **`deploy-worker.yaml`**: 1 replica, same image, `--role worker`.
@@ -364,6 +373,7 @@ Ingress is HTTPS at a hostname the factories are configured with
 | `RECORD_EMBED` | *(unset — off)* | `vertex` |
 | `RECORD_EMBED_MODEL` | `text-embedding-005` | 768 dims; changing it means re-embedding |
 | `RECORD_INGEST_MAX` | `500` | events per batch |
+| `RECORD_INGEST_RATE`, `_BURST` | `5`, `20` | batches per second per factory, and the burst |
 | `RECORD_AUDIT_TOPIC` | *(unset — structured log only)* | Pub/Sub topic in PLV's audit sink shape |
 | `RECORD_DARK_AFTER` | `10m` | ten missed 55s polls |
 | `RECORD_DEGRADING_FLOOR`, `_FACTOR` | `30s`, `10` | absolute, and relative to the seat's own day |
@@ -380,7 +390,7 @@ Cloud SQL.
 | 2 | the same batch again: `202`, `accepted: 0`, no new rows | |
 | 3 | a batch with one bad `v`: the other rows land, the bad one is in `quarantine` with its reason | |
 | 4 | `--role migrate rebuild` after dropping `messages` reproduces it row for row | |
-| 5 | `/v1/factories/{f}/health` renders in the static `ui` page with no code change | |
+| 5 | `/v1/factories/{f}/health` renders in the static `ui` page with no code change, and both repos' health tests decode their own `/health` into `specs/health-golden.json` — rule 7's mechanism | |
 | 6 | a `decision` posted on the laptop is returned by `search_decisions` from a Claude Code session within 5s | |
 | 7 | with the worker on, the vector is filled and the same query ranks it first among ten decoys | |
 | 8 | a factory key for factory A cannot push as B: `403` | |
