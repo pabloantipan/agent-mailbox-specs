@@ -307,6 +307,39 @@ invocations — a silent cell-wide outage on redeploy.
 
 ---
 
+### `discuss-hook watch --external`  (the pane watcher, 2026-09-06)
+
+The same loop, outside the hook. Started by the seat's prelude
+(`discuss-hook watch --external --parent $$ &`) so it lives as long as the
+pane's shell, in the pane's own environment — `ZELLIJ_SESSION_NAME` and
+`ZELLIJ_PANE_ID` name where to type.
+
+| | hook mode | external mode |
+|---|---|---|
+| lock held | exit `lock_held` | wait, retry every 30s — the holder is a hook watcher with a timeout |
+| runtime | `watchMaxRuntime`, above the hook's `timeout` | none; exits `parent_gone` when `--parent` is dead |
+| API unreachable | exit after `watchMaxRetries` | back off to 60s, never exit |
+| on news | wake text on stderr, `exit 2` | `zellij action write-chars --pane-id … <wake text>`, then `write 13`; keep polling |
+| after a wake | — | a grace (20s, doubling to 2m while undrained) before polling again — `/wait` answers "still undelivered" until the drain runs |
+
+Precedence is by the lock: the external watcher starts before `claude`, so
+every hook watcher a `Stop` arms exits `lock_held` at once. A seat in a plain
+terminal has no pane; there the hook watcher remains the wake, unchanged.
+
+Gate:
+
+| # | Item | Result |
+|---|---|---|
+| 1 | the prelude starts it; `hook.log` shows `mode=external … armed`; `/health` `alive` within 60s | **PASS** 2026-09-06 02:03 |
+| 2 | queued mail is delivered with no human | **PASS** — three messages, `delivered=3`; in that run through the restart's `SessionStart` drain |
+| 3 | a `Stop` hook watcher yields `lock_held`; the external pid keeps heartbeating | pending the seat's next `Stop` |
+| 4 | a post to an idle seat is typed into its pane within 1s; the persona answers | pending the next message |
+| 5 | `probe -k` the seat: the watcher exits `parent_gone`, no orphan | |
+| 6 | the API down a minute: backoff, no exit, recovery | |
+| 7 | a seat idle past 7h is still `alive` | |
+| 8 | a plain-terminal seat is unchanged | by construction: `not_in_zellij` exits 0 |
+| — | first run's defect: five wakes typed inside a second; fixed by the grace, pinned by `TestExternalDoesNotStormAnUndrainedSeat` | |
+
 ## 4. Config values (defaults)
 
 | Key | Default | Notes |
