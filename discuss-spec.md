@@ -333,10 +333,10 @@ Gate:
 | 1 | the prelude starts it; `hook.log` shows `mode=external … armed`; `/health` `alive` within 60s | **PASS** 2026-09-06 02:03 |
 | 2 | queued mail is delivered with no human | **PASS** — three messages, `delivered=3`; in that run through the restart's `SessionStart` drain |
 | 3 | a `Stop` hook watcher yields `lock_held`; the external pid keeps heartbeating | pending the seat's next `Stop` |
-| 4 | a post to an idle seat is typed into its pane within 1s; the persona answers | pending the next message |
+| 4 | a post to an idle seat is typed into its pane within 1s; the persona answers | **PASS** 2026-09-06 02:42 — typed 849ms after the post (750ms of it `/wait`'s coalesce), drained 607ms later, answered 44s after the post; one wake, `grace=20s` |
 | 5 | `probe -k` the seat: the watcher exits `parent_gone`, no orphan | |
 | 6 | the API down a minute: backoff, no exit, recovery | |
-| 7 | a seat idle past 7h is still `alive` | |
+| 7 | a seat idle past 7h is still `alive` | in progress — Chino's external watcher passed 36m, already past the old ceiling; two more seats queued on the lock behind six-hour hook watchers |
 | 8 | a plain-terminal seat is unchanged | by construction: `not_in_zellij` exits 0 |
 | — | first run's defect: five wakes typed inside a second; fixed by the grace, pinned by `TestExternalDoesNotStormAnUndrainedSeat` | |
 
