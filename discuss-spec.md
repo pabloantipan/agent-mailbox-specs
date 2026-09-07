@@ -347,6 +347,12 @@ Precedence is by the lock: the external watcher starts before `claude`, so
 every hook watcher a `Stop` arms exits `lock_held` at once. A seat in a plain
 terminal has no pane; there the hook watcher remains the wake, unchanged.
 
+After `DISCUSS_WAKE_BUDGET` consecutive wakes in which `/wait`'s undelivered
+count never fell, the watcher stops typing, logs `reason=wake_budget` once and
+keeps polling, re-arming when the count falls — a seat past
+`MAX_DRAINS_PER_SESSION` reports the same backlog for the life of its session,
+and the count falling is the only evidence out here that a wake reached a drain.
+
 Gate:
 
 | # | Item | Result |
@@ -376,8 +382,10 @@ Gate:
 | `COALESCE_MS` | `750` | burst → one wake |
 | `WAKE_PER_MIN` | `6` | per-agent token bucket on `/wait` |
 | `MAX_DRAINS_PER_SESSION` | `8` | hard cost ceiling |
+| `DISCUSS_WAKE_BUDGET` | `5` | external watcher: consecutive wakes with no fall in the undelivered count before it stops typing |
 | `AGREEMENT_STALL` | `12` | messages since last `decision` → thread stalls |
 | `REASON_CAP` | `10000` | hook output cap; truncate + pointer |
+| `DISCUSS_BODY_MAX` | `8192` | bytes of message body; a longer post is `413` — write the content to a file and post its path |
 | `drain hook --max-time` | `3s` | fail-open on exceed |
 | async `watch` timeout | `600s` | re-arm before this elapses |
 | `projects.json` `human` | *(written by bootstrap.sh from cell.json)* | the one identity that may `/pause`, `/resume`, `/clear`; unnamed = nobody |
