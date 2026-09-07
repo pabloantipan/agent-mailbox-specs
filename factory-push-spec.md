@@ -44,6 +44,9 @@ the watcher is the `/wait` call itself, which is enough.
 | `wait.polled` | `GET /wait` on entry | `agent, timeout_ms` |
 | `wait.woken` | `GET /wait` on exit with messages | `agent, count, waited_ms` |
 | `drain` | `POST /drain` | `agent, session, delivered, drains_in_session` |
+| `cell.paused` | `POST /pause` (discuss-spec §7) | `by, note, thread, clear_seq` |
+| `cell.resumed` | `POST /resume` | `by, note, thread, clear_seq` |
+| `cell.cleared` | `POST /clear` | `by, thread, clear_seq` |
 
 `message.posted` carries the body. That is what makes central search and
 vectors possible, and it is why push is opt-in per cell rather than on by

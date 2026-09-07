@@ -52,6 +52,7 @@ CREATE TABLE messages (
   from_agent  TEXT NOT NULL,
   to_agent    TEXT,                  -- NULL = broadcast to the cell
   kind        TEXT NOT NULL,         -- msg|question|answer|status|done|decision|claim|yield
+                                     -- pause|resume: server-written, see §7
   subject     TEXT,
   body        TEXT NOT NULL,
   created_at  INTEGER NOT NULL       -- unix millis
@@ -80,6 +81,18 @@ CREATE TABLE session_drains (
   session_id TEXT PRIMARY KEY,
   count      INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL
+);
+
+-- the cell's control state (migration step 3, 2026-09-06; §7)
+CREATE TABLE cells (
+  project_id   TEXT PRIMARY KEY,
+  paused_at    INTEGER,               -- NULL = running
+  paused_by    TEXT,
+  note         TEXT,
+  pause_thread TEXT,                  -- the notice's thread; the resume replies into it
+  pause_msg    TEXT,                  -- the notice's id: the drain/wait cut while paused
+  clear_seq    INTEGER NOT NULL DEFAULT 0,  -- bumped by /clear; watchers compare, never reset
+  updated_at   INTEGER NOT NULL
 );
 
 CREATE INDEX idx_msg_recipient ON messages(project_id, to_agent, created_at);
@@ -157,10 +170,13 @@ stalls a healthy thread.
 | `GET /threads/{tid}` | full thread (tree) | → `{id, subject, status, messages:[…]}` |
 | `POST /agents/{a}/ack` | mark handled | `{message_id?  \| thread_id?}` → `{acked}` |
 | `POST /agents/{a}/drain` | **Stop-hook pickup** | `{session_id, stop_hook_active}` → `{block, reason?, delivered_ids}` |
-| `GET /agents/{a}/wait?timeout_ms=55000` | **watcher long-poll** | → `{woke, count}` (returns on first undelivered msg or timeout) |
+| `GET /agents/{a}/wait?timeout_ms=55000&seen_clear=N` | **watcher long-poll** | → `{woke, count, paused, clear_seq}` (returns on first undelivered msg, on `clear_seq > N`, or timeout) |
 | `GET /threads?status=` | list by status, default `escalated` | → `{threads:[…]}` |
 | `POST /threads/{tid}/status` | reopen · escalate · close | `{status}` → `{id, status}` |
-| `GET /health` | roster liveness, live threads, deaf, undecided | → `{agents:[…], threads:[…], now}` |
+| `GET /health` | roster liveness, live threads, deaf, undecided, the cell's control state | → `{agents:[…], threads:[…], push, cell, now}` |
+| `POST /pause` | **human only** — stop the cell (§7) | `{note?}` → `{cell, thread_id, message_id}`; 409 if paused |
+| `POST /resume` | **human only** — reopen it | `{note?}` → `{cell, thread_id, message_id}`; 409 if running |
+| `POST /clear` | **human only** — every seat drops its conversation | → `{cell}`; 409 if running |
 | `GET /metrics` | traffic: posted, addressed, taken, acked, `median_pickup_ms`; pairs; per day | → `{agents, pairs, days}` |
 | `GET /search?q=&from=&to=&kind=&thread=` | archive, `LIKE` over subject and body | → `{messages:[…]}` |
 | `GET /healthz` | liveness | → `200` |
@@ -169,11 +185,13 @@ stalls a healthy thread.
 
 ```
 if stop_hook_active:            return {block:false}     # already drained this cycle
-if drains(session_id) >= MAX_DRAINS_PER_SESSION: return {block:false}
-rows = undelivered(pid, agent)
+cell = cell_state(pid)
+rows = undelivered(pid, agent, from = cell.pause_msg if cell.paused else none)   # §7: a pause holds the backlog
 if empty:                       return {block:false}
+if no row is kind pause|resume and drains(session_id) >= MAX_DRAINS_PER_SESSION:
+                                return {block:false}     # the ceiling never blocks the human's stop
 mark_delivered(rows, now); bump drains(session_id)
-reason = REACTION_POLICY + format(rows)     # truncate to REASON_CAP, add inbox pointer if over
+reason = REACTION_POLICY + format(rows)     # control notices first; truncate to REASON_CAP, add inbox pointer if over
 return {block:true, reason, delivered_ids: ids(rows)}
 ```
 
@@ -182,8 +200,10 @@ return {block:true, reason, delivered_ids: ids(rows)}
 ```
 deadline = now + timeout_ms
 loop:
-  if undelivered(pid, agent) exists: return {woke:true, count:n}   # do NOT mark delivered here
-  if now >= deadline:                return {woke:false, count:0}
+  cell = cell_state(pid)                                          # every tick: a pause or a clear lands mid-poll
+  if seen_clear given and cell.clear_seq > seen_clear: return {woke:false, clear_seq}   # the watcher types /clear
+  if undelivered(pid, agent, from = cell.pause_msg if paused) exists: return {woke:true, count:n, paused, clear_seq}
+  if now >= deadline:                return {woke:false, count:0, paused, clear_seq}
   sleep(COALESCE_MS)                 # a burst within this window returns as one wake
 ```
 
@@ -320,6 +340,7 @@ pane's shell, in the pane's own environment — `ZELLIJ_SESSION_NAME` and
 | runtime | `watchMaxRuntime`, above the hook's `timeout` | none; exits `parent_gone` when `--parent` is dead |
 | API unreachable | exit after `watchMaxRetries` | back off to 60s, never exit |
 | on news | wake text on stderr, `exit 2` | `zellij action write-chars --pane-id … <wake text>`, then `write 13`; keep polling |
+| `clear_seq` moved (§7) | ignored — no pane | types `/clear` + Enter once per move; sends `seen_clear` on every poll after the first |
 | after a wake | — | a grace (20s, doubling to 2m while undrained) before polling again — `/wait` answers "still undelivered" until the drain runs |
 
 Precedence is by the lock: the external watcher starts before `claude`, so
@@ -359,6 +380,7 @@ Gate:
 | `REASON_CAP` | `10000` | hook output cap; truncate + pointer |
 | `drain hook --max-time` | `3s` | fail-open on exceed |
 | async `watch` timeout | `600s` | re-arm before this elapses |
+| `projects.json` `human` | *(written by bootstrap.sh from cell.json)* | the one identity that may `/pause`, `/resume`, `/clear`; unnamed = nobody |
 
 ---
 
@@ -411,3 +433,74 @@ UserPromptSubmit / SessionStart) and wake idle agents by external injection —
 a per-agent daemon that tails `/wait` and does `tmux send-keys` into the agent's
 pane. Uglier and brittle, but bulletproof on billing and needs no undocumented
 hook behavior. Falling back costs you the clean wake, not the whole design.
+
+
+---
+
+## 7. Pause, clear, resume — the human's stop (2026-09-06)
+
+**Why.** `MAX_DRAINS_PER_SESSION` caps what a session may receive, and a seat
+past it still has undelivered mail — so its watcher keeps waking it, and every
+wake is a turn that delivers nothing. On 2026-09-06 all five camp seats reached
+the ceiling on the same day: 1480 `drain ceiling reached` lines, one external
+watcher typing a wake into its pane every 2m40s for ten hours. The only stop
+that existed was `launchctl unload` of the API. This section is the stop that
+keeps the API up, and the rotate that resets the ceiling.
+
+**State.** One row per cell (`cells`, §1). `paused_at` set = paused. `clear_seq`
+is a counter the human bumps and every external watcher compares against the
+value it last saw.
+
+**Three verbs, human only** — the identity `projects.json` names as the cell's
+`human` (bootstrap.sh writes it from `cell.json`; unnamed means nobody may):
+
+| Verb | Server does | Every seat gets |
+|---|---|---|
+| `POST /pause {note}` | posts a `pause` notice (broadcast, new thread, from the human) and records the pause in one transaction | the notice, alone — *stop, write your hand-off (bitácora, memory file), end your turn, stay silent until resumed* |
+| `POST /clear` | bumps `clear_seq`; refused unless paused | its external watcher types `/clear` into its pane — a new session id, an empty context, the drain count reset |
+| `POST /resume {note}` | posts a `resume` notice into the pause thread, lifts the pause, closes the thread | the notice first, then the backlog the pause held — *re-read agents/ and your bitácora, then continue* |
+
+**While paused:**
+- `POST /messages` from anyone but the human → `409 the cell is paused by X`.
+- `/drain` and `/wait` see only messages with `id >= pause_msg`: the notice and
+  what the human says. The backlog is held, so a paused seat is not woken for
+  it — which is what ends the storm.
+- A delivery that carries a `pause` or `resume` **bypasses the drain ceiling**.
+  The ceiling caps what agents do to each other; the human's stop must reach
+  the seat that has spent it.
+- The notice text names files, never commands; a `pause` delivery replaces the
+  "then continue" footer with "hand off, then stop"; a control notice is
+  formatted before anything else in the same delivery.
+- `/health` carries a top-level `cell` block: `{paused, since_seconds, by, note,
+  thread, clear_seq}`. Rows are untouched (health-golden.json holds).
+
+**The human's procedure** (`ops/README.md`, "Pause a cell"):
+
+```
+eval "$(discuss-api token env camp pablo | sed 's/ claude$//')"   # identity for the calls
+discuss-hook pause -m "why"      # seats hand off and go quiet
+discuss-hook cell                # watch: last drain ages grow, undelivered stays
+discuss-hook clear               # optional: every pane types /clear
+discuss-hook resume -m "what changed"
+```
+
+**Events:** `cell.paused`, `cell.resumed`, `cell.cleared` — `{by, note, thread,
+clear_seq}` (factory-push-spec §2). The record ignores types it does not know.
+
+**Boundaries:** a seat in a plain terminal has no pane, so `clear` does nothing
+there; `/clear` is typed by hand. The hook-mode watcher ignores `clear_seq`.
+A pause is not a thread status: threads stay as they were, and the stall guard
+is untouched.
+
+Gate:
+
+| # | Item | Result |
+|---|---|---|
+| 1 | an agent's `/pause` → 403 naming the human; a cell with no `human` → 403 saying so | unit: `TestOnlyTheHumanControlsTheCell` |
+| 2 | `pause`: the notice reaches a seat, the backlog before it does not, agent posts → 409, the human's posts go through | unit: `TestPauseSilencesTheCell` |
+| 3 | a seat at the drain ceiling receives the pause | unit: `TestPauseReachesASeatAtTheDrainCeiling` |
+| 4 | `clear` on a running cell → 409; on a paused one, a watcher polling with `seen_clear` returns within a coalesce tick and types `/clear` exactly once per move | unit: `TestClearSignalsTheWatchers`, `TestExternalClearsOnlyWhenTheCounterMoves` |
+| 5 | `resume`: notice first, then the held backlog; posting works; the pause thread is closed | unit: `TestResumeReleasesTheBacklogBehindTheNotice` |
+| 6 | live: the camp cell paused during the 2026-09-06 storm; wakes stop within one grace; every seat's `hook.log` shows the notice delivered | **PASS** 2026-09-06 12:30 — paused 300ms after the API came up; five `woke_seat count=1` and five `delivered=1` inside 16s, all through sessions at the ceiling (8 drains); one wake slipped into the 300ms race; no wake after 12:30:38 |
+| 7 | live: `clear` on five zellij panes — five `cleared_seat` lines, five fresh session ids | pending Pablo's call |
+| 8 | live: `resume` after a clear — each seat re-reads its files and continues; the backlog arrives behind the notice | pending |
