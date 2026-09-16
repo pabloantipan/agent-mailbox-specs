@@ -30,6 +30,10 @@ Status: **spec, not built.** 2026-09-04. Name provisional.
    before the record has learned the type; nothing is lost.
 7. **The read API's health shape equals the mailbox's.** The same static page
    renders a local cell or a central factory with no branch.
+   The record therefore answers the page's own paths — `/projects/{cell}/…`
+   are aliases of the factory routes (§4). A missing field is degradation,
+   rendered as absence (`view-spec.md` §8); a different route would be a fork
+   the page cannot hide, and is refused.
 8. **Personal data is stored raw and controlled at read.** PLV applies the Ley
    de Protección de Datos at visualization, not at saving. Every path that
    returns a body — read API, MCP, dashboard — passes through the `Redactor`
@@ -196,6 +200,20 @@ GET  /v1/factories/{factory}/pickup?agent=&since=            either
 
 GET  /health     liveness, no auth, no DB
 GET  /ready      readiness: SELECT 1
+```
+
+```
+Aliases for the page                             either; read-only   (decided 2026-09-16)
+GET  /projects/{cell}/health                     → that cell's group of /v1/factories/{factory}/health,
+                                                   in the mailbox's own shape (rule 7; health-golden.json)
+GET  /projects/{cell}/threads                    → /v1/factories/{factory}/cells/{cell}/threads
+GET  /projects/{cell}/threads/{id}               → /v1/factories/{factory}/cells/{cell}/threads/{id}
+  {factory} comes from the caller: a factory key names its own factory; a
+  developer token resolves the cell across factories and answers 409 naming
+  them when it is not unique. 404 for a cell nobody registered.
+  Every other /projects/{cell}/... path answers 404 with one sentence: the
+  record has no inbox, no drain, no post — it serves a reader, never a seat.
+  The page never learns a second scheme; the record answers the page's own.
 ```
 
 ```
@@ -535,3 +553,22 @@ on the record, and the allowed values for `watcher`, `kind` and `status`. Each
 repo has a test that checks its own `/health` against it. `record/` carries a
 byte-identical copy so its tests still run once it is cloned alone on PLV's
 host, and one of its tests fails if the two ever differ.
+
+## 14. Policy defaults — 2026-09-16
+
+The four blockers on the record-service card, answered with defaults so v1
+closes as a local record. Each is one config value or one named procedure;
+PLV changes the number, not the code.
+
+- **Retention: 90 days** from a cell's registration. `cells.retain_until` is
+  set on registration; the job that applies it is v1.1 and reads
+  `RECORD_RETAIN_DAYS` (default 90; unset means never).
+- **Unmasked beyond own factory: nobody.** `service.Level` stays own-factory
+  raw, every other reader masked. The role that changes it is PLV's to name.
+- **Deletion: the factory's developer owns it**, by the named procedure —
+  `DELETE FROM events …` then `--role migrate rebuild` — run by hand and
+  visible in the record's own audit log. No endpoint.
+- **Ingress: decided when plv-infra hosts it.** ClusterIP and no manifest
+  until then; local compose needs none.
+- **Git host: github.com/pabloantipan/agent-mailbox-record** until PLV names
+  one; the module path follows the host when it moves.

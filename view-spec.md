@@ -167,3 +167,30 @@ which builds `discuss-hook` from the working tree — so an api-only card
 cannot use the documented install path while the hook is dirty without
 shipping another card's in-flight change. Worked around by hand; a per-binary
 `install-api` target is the fix.
+
+## 8. What a degraded page is allowed to look like — decided 2026-09-16
+
+Rule 7 of `record-spec.md` says one page, two servers, no fork. This section
+says what "no fork" renders as, so the next presence test is not decided at
+its use site by whoever writes it.
+
+The page reads one object, `facts`, exactly once per connection: from the
+first successful `/health` (`you`, the agents roster, `now`, `push`) and from
+the origin (`injected`, `navigator.clipboard`). Every surface consults
+`facts`; nothing else tests presence. A later `/health` refreshes data, never
+`facts` — a server that changes what it is mid-session is a reconnect, and
+the connect panel says so.
+
+| Fact absent | Renders as |
+|---|---|
+| `you` | the header names nobody, at zero height |
+| roster empty | no recipient control, the wakes line empty, broadcast only |
+| `navigator.clipboard` | no copy control |
+| `push` | no lag alert |
+| `injected` false | the connect panel is the page until a token is taken |
+
+Absence is degradation and renders as absence — never as a sentence about
+the server. A different route is not degradation: the record answers the
+page's own paths (`record-spec.md` §4, aliases), so the page never learns a
+second scheme. If a server ever needs the page to know which one it is, that
+is a fork, and it is refused.

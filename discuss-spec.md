@@ -378,17 +378,20 @@ Gate:
 | `DISCUSS_UI_DIR` | *(unset — view off)* | a checkout of the `ui` repo, served at `/` |
 | `DISCUSS_UI_AGENT` | *(required with `UI_DIR`)* | the identity the view reads as |
 | `DISCUSS_UI_PROJECT` | *(required with `UI_DIR`)* | comma-separated; one token injected per cell, first is the default |
-| `WAIT_TIMEOUT_MS` | `55000` | client `--max-time 60` |
-| `COALESCE_MS` | `750` | burst → one wake |
-| `WAKE_PER_MIN` | `6` | per-agent token bucket on `/wait` |
-| `MAX_DRAINS_PER_SESSION` | `8` | hard cost ceiling |
+| `DISCUSS_WAIT_TIMEOUT_MS` | `55000` | client `--max-time 60` |
+| `DISCUSS_COALESCE_MS` | `750` | burst → one wake |
+| `DISCUSS_WAKE_PER_MIN` | `6` | per-agent token bucket on `/wait` |
+| `DISCUSS_MAX_DRAINS_PER_SESSION` | `8` | hard cost ceiling |
 | `DISCUSS_WAKE_BUDGET` | `5` | external watcher: consecutive wakes with no fall in the undelivered count before it stops typing |
-| `AGREEMENT_STALL` | `12` | messages since last `decision` → thread stalls |
-| `REASON_CAP` | `10000` | hook output cap; truncate + pointer |
+| `DISCUSS_AGREEMENT_STALL` | `12` | messages since last `decision` → thread stalls |
+| `DISCUSS_REASON_CAP` | `10000` | hook output cap; truncate + pointer |
 | `DISCUSS_BODY_MAX` | `8192` | bytes of message body; a longer post is `413` — write the content to a file and post its path |
 | `drain hook --max-time` | `3s` | fail-open on exceed |
 | async `watch` timeout | `600s` | re-arm before this elapses |
 | `projects.json` `human` | *(written by bootstrap.sh from cell.json)* | the one identity that may `/pause`, `/resume`, `/clear`; unnamed = nobody |
+
+The table names the real environment keys (decided 2026-09-16). Prose in
+§1–§3 uses the bare names for the same values.
 
 ---
 
