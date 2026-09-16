@@ -430,10 +430,11 @@ Cloud SQL.
 | 10 | a body with a RUT reads raw through the owning factory's key and masked through another's; both reads appear in the audit with their level | |
 | 11 | `search_decisions` over ten results emits ten audit events, one per body returned | |
 | 12 | stop a factory's pusher: within `RECORD_DARK_AFTER` its row reads `dark: true`, `/metrics` shows the age, and the `dark.yaml` policy fires to the test channel | |
+| 13 | the page's connect panel, given the record's base URL, a cell and a factory key, becomes the view: `/projects/{cell}/health` decodes into `specs/health-golden.json` and the thread aliases answer byte for byte as the factory routes do, the four resolutions hold (own factory, across factories, `409` naming both, `404`), and every other `/projects/` path is the one sentence §4 fixes | |
 
 ## 12. What "v1" is
 
-Items 1–6, 8–12. The worker (item 7) is v1.1 — the outbox, the record and the
+Items 1–6, 8–13. The worker (item 7) is v1.1 — the outbox, the record and the
 MCP read path prove themselves against `ILIKE` first, so the seam is
 exercised end to end before the first thing that costs money is switched on.
 
