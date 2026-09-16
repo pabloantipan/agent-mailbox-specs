@@ -175,7 +175,7 @@ says what "no fork" renders as, so the next presence test is not decided at
 its use site by whoever writes it.
 
 The page reads one object, `facts`, exactly once per connection: from the
-first successful `/health` (`you`, the agents roster, `now`, `push`) and from
+first successful `/health` (`you`, the agents roster, `now`, `push`, `cell`) and from
 the origin (`injected`, `navigator.clipboard`). Every surface consults
 `facts`; nothing else tests presence. A later `/health` refreshes data, never
 `facts` — a server that changes what it is mid-session is a reconnect, and
@@ -188,6 +188,7 @@ the connect panel says so.
 | `navigator.clipboard` | no copy control |
 | `push` | no lag alert |
 | `injected` false | the connect panel is the page until a token is taken |
+| `cell` (the pause state) | no pause banner; posting is not refused by the page |
 
 Absence is degradation and renders as absence — never as a sentence about
 the server. A different route is not degradation: the record answers the

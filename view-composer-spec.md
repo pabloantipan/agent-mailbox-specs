@@ -141,6 +141,12 @@ Item 7 is the one this card existed for. A naive "always re-render" loses the
 selection and a naive "never re-render" loses the cell; only one of those is
 visible, which is how it would have shipped.
 
+**§6 item 10 after `view-spec.md` §8 (2026-09-16).** Item 10 passed by removing
+`navigator.clipboard` and watching the fallback textarea open. Under §8 a page
+with no clipboard renders no copy control at all, so the item as written cannot
+run. Its replacement is §8's clipboard row; the fallback now serves only a
+clipboard that exists and refuses, and says so.
+
 ## 7. What the run found that this spec did not anticipate
 
 **`you` is what makes the wake count sayable.** §3.1 says "roster size minus
