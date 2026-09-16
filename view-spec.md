@@ -179,7 +179,9 @@ first successful `/health` (`you`, the agents roster, `now`, `push`, `cell`) and
 the origin (`injected`, `navigator.clipboard`). Every surface consults
 `facts`; nothing else tests presence. A later `/health` refreshes data, never
 `facts` — a server that changes what it is mid-session is a reconnect, and
-the connect panel says so.
+the connect panel says so. That includes a fact that was present and is
+now absent, or the reverse: `push` or `cell` vanishing mid-session hands the
+panel back with a sentence naming the fact, never a thrown error at a use site.
 
 | Fact absent | Renders as |
 |---|---|
@@ -189,6 +191,7 @@ the connect panel says so.
 | `push` | no lag alert |
 | `injected` false | the connect panel is the page until a token is taken |
 | `cell` (the pause state) | no pause banner; posting is not refused by the page |
+| `now` | ages count from the browser's clock; no skew is taken |
 
 Absence is degradation and renders as absence — never as a sentence about
 the server. A different route is not degradation: the record answers the
