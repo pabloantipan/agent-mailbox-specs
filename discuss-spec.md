@@ -115,7 +115,10 @@ ORDER BY m.created_at ASC;
 ```
 
 `delivered_at` is the loop guard (a message shown once never re-triggers);
-`acked_at` is separate so you can still ask "which requests are open."
+`acked_at` is separate so you can still ask "which requests are open." An
+acked message is no longer *undelivered* — an agent that read it from its inbox
+and handled it is not woken for it (2026-09-23) — but ack never writes
+`delivered_at`; only a drain does, so pickup metrics keep measuring drains.
 
 ### Agreement stall — the *semantic* loop guard
 
@@ -188,7 +191,8 @@ if stop_hook_active:            return {block:false}     # already drained this 
 cell = cell_state(pid)
 rows = undelivered(pid, agent, from = cell.pause_msg if cell.paused else none)   # §7: a pause holds the backlog
 if empty:                       return {block:false}
-if no row is kind pause|resume and drains(session_id) >= MAX_DRAINS_PER_SESSION:
+if no row is kind pause|resume and agent not in UNCAPPED_AGENTS
+   and drains(session_id) >= MAX_DRAINS_PER_SESSION:
                                 return {block:false}     # the ceiling never blocks the human's stop
 mark_delivered(rows, now); bump drains(session_id)
 reason = REACTION_POLICY + format(rows)     # control notices first; truncate to REASON_CAP, add inbox pointer if over
@@ -199,11 +203,16 @@ return {block:true, reason, delivered_ids: ids(rows)}
 
 ```
 deadline = now + timeout_ms
+at_ceiling = session_id given and agent not in UNCAPPED_AGENTS
+             and drains(session_id) >= MAX_DRAINS_PER_SESSION       # the hook watcher names its session
 loop:
   cell = cell_state(pid)                                          # every tick: a pause or a clear lands mid-poll
   if seen_clear given and cell.clear_seq > seen_clear: return {woke:false, clear_seq}   # the watcher types /clear
-  if undelivered(pid, agent, from = cell.pause_msg if paused) exists: return {woke:true, count:n, paused, clear_seq}
-  if now >= deadline:                return {woke:false, count:0, paused, clear_seq}
+  rows = undelivered(pid, agent, from = cell.pause_msg if paused)
+  if rows exist and (not at_ceiling or any row is kind pause|resume):
+                                     return {woke:true, count:n, paused, clear_seq}
+  held = n if rows exist else 0      # a session at the ceiling is not woken for mail its drain will refuse (2026-09-23)
+  if now >= deadline:                return {woke:false, count:0, held, paused, clear_seq}
   sleep(COALESCE_MS)                 # a burst within this window returns as one wake
 ```
 
@@ -381,7 +390,8 @@ Gate:
 | `DISCUSS_WAIT_TIMEOUT_MS` | `55000` | client `--max-time 60` |
 | `DISCUSS_COALESCE_MS` | `750` | burst → one wake |
 | `DISCUSS_WAKE_PER_MIN` | `6` | per-agent token bucket on `/wait` |
-| `DISCUSS_MAX_DRAINS_PER_SESSION` | `8` | hard cost ceiling |
+| `DISCUSS_MAX_DRAINS` | `8` | hard cost ceiling per session |
+| `DISCUSS_UNCAPPED_AGENTS` | `supervisor` | comma-separated seats the ceiling does not apply to; set empty to exempt nobody |
 | `DISCUSS_WAKE_BUDGET` | `5` | external watcher: consecutive wakes with no fall in the undelivered count before it stops typing |
 | `DISCUSS_AGREEMENT_STALL` | `12` | messages since last `decision` → thread stalls |
 | `DISCUSS_REASON_CAP` | `10000` | hook output cap; truncate + pointer |
@@ -479,6 +489,13 @@ value it last saw.
 - A delivery that carries a `pause` or `resume` **bypasses the drain ceiling**.
   The ceiling caps what agents do to each other; the human's stop must reach
   the seat that has spent it.
+- Since 2026-09-23 the storm above cannot start from a hook watcher: it passes
+  its `session_id` to `/wait`, and a session at the ceiling is held quiet
+  (`held: n`) unless a control notice is among the rows. External watchers
+  have no session and keep their wake budget. The seats the ceiling fits
+  worst — a supervisor that drains on every `done` of a wave — are exempt by
+  `DISCUSS_UNCAPPED_AGENTS`; context growth there is the 65% rotation rule's
+  job, not the mailbox's.
 - The notice text names files, never commands; a `pause` delivery replaces the
   "then continue" footer with "hand off, then stop"; a control notice is
   formatted before anything else in the same delivery.
