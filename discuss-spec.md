@@ -172,7 +172,7 @@ stalls a healthy thread.
 | `GET /agents/{a}/inbox?unread=1&limit=N` | list | → `[{id, thread_id, from, kind, subject, body, created_at}]` |
 | `GET /threads/{tid}` | full thread (tree) | → `{id, subject, status, messages:[…]}` |
 | `POST /agents/{a}/ack` | mark handled | `{message_id?  \| thread_id?}` → `{acked}` |
-| `POST /agents/{a}/drain` | **Stop-hook pickup** | `{session_id, stop_hook_active}` → `{block, reason?, delivered_ids}` |
+| `POST /agents/{a}/drain` | **Stop-hook pickup** | `{session_id, stop_hook_active, event?}` → `{block, reason?, delivered_ids}`; `block:false` with `reason:"drain_ceiling"` is a refusal |
 | `GET /agents/{a}/wait?timeout_ms=55000&seen_clear=N` | **watcher long-poll** | → `{woke, count, paused, clear_seq}` (returns on first undelivered msg, on `clear_seq > N`, or timeout) |
 | `GET /threads?status=` | list by status, default `escalated` | → `{threads:[…]}` |
 | `POST /threads/{tid}/status` | reopen · escalate · close | `{status}` → `{id, status}` |
@@ -188,16 +188,39 @@ stalls a healthy thread.
 
 ```
 if stop_hook_active:            return {block:false}     # already drained this cycle
+if event in (UserPromptSubmit, SessionStart): reset drains(session_id)   # a prompt ends the stop cycle
 cell = cell_state(pid)
 rows = undelivered(pid, agent, from = cell.pause_msg if cell.paused else none)   # §7: a pause holds the backlog
 if empty:                       return {block:false}
-if no row is kind pause|resume and agent not in UNCAPPED_AGENTS
+counted = event not in (UserPromptSubmit, SessionStart)   # absent (an old hook) counts, as before
+if counted and no row is kind pause|resume and agent not in UNCAPPED_AGENTS
    and drains(session_id) >= MAX_DRAINS_PER_SESSION:
-                                return {block:false}     # the ceiling never blocks the human's stop
-mark_delivered(rows, now); bump drains(session_id)
+                                return {block:false, reason:"drain_ceiling"}   # never blocks the human's stop
+mark_delivered(rows, now); if counted: bump drains(session_id)
 reason = REACTION_POLICY + format(rows)     # control notices first; truncate to REASON_CAP, add inbox pointer if over
 return {block:true, reason, delivered_ids: ids(rows)}
 ```
+
+### The drain ceiling counts per stop cycle (2026-09-26)
+
+**What counts.** `drains(session_id)` is the number of delivering drains on
+`Stop` since the session's last prompt. A drain on `UserPromptSubmit` or
+`SessionStart` delivers whatever the count and resets it to zero, empty inbox
+or not. The hook sends the event name as `event`; a request without it (a
+hook older than this) counts every drain, as before. A refused drain answers
+`{block:false, reason:"drain_ceiling"}` and the hook logs
+`reason=drain_ceiling`, so a starved seat is told apart from an empty inbox.
+
+**Why.** The ceiling exists to end a Stop→block chain: agents feeding each
+other through Stop drains with nobody prompting (2026-09-06, `docs/decisions.md`).
+Counted per session it also starved a long-lived seat: at eight deliveries the
+FSE seat kept its mail for the rest of its session while `/wait` kept waking
+it (2026-09-26). A prompt is not part of a Stop chain, so it neither spends
+nor is refused by the ceiling (decision 0024 reverses the 2026-09-06
+rejection of "delivering past the ceiling" for these drains only). An
+`asyncRewake` or an external watcher's typed wake arrives as a prompt too, so
+the bound on a wake loop is `WAKE_PER_MIN`, the wake budget and the agreement
+stall; the ceiling bounds only what one wake's Stop chain delivers.
 
 ### `/wait` handler logic (long-poll + coalesce)
 
@@ -359,7 +382,7 @@ terminal has no pane; there the hook watcher remains the wake, unchanged.
 After `DISCUSS_WAKE_BUDGET` consecutive wakes in which `/wait`'s undelivered
 count never fell, the watcher stops typing, logs `reason=wake_budget` once and
 keeps polling, re-arming when the count falls — a seat past
-`MAX_DRAINS_PER_SESSION` reports the same backlog for the life of its session,
+`MAX_DRAINS_PER_SESSION` reports the same backlog until its next prompt,
 and the count falling is the only evidence out here that a wake reached a drain.
 
 Gate:
@@ -390,7 +413,7 @@ Gate:
 | `DISCUSS_WAIT_TIMEOUT_MS` | `55000` | client `--max-time 60` |
 | `DISCUSS_COALESCE_MS` | `750` | burst → one wake |
 | `DISCUSS_WAKE_PER_MIN` | `6` | per-agent token bucket on `/wait` |
-| `DISCUSS_MAX_DRAINS` | `8` | hard cost ceiling per session |
+| `DISCUSS_MAX_DRAINS` | `8` | hard cost ceiling on delivering `Stop` drains per stop cycle; a prompt or session start resets it |
 | `DISCUSS_UNCAPPED_AGENTS` | `supervisor` | comma-separated seats the ceiling does not apply to; set empty to exempt nobody |
 | `DISCUSS_WAKE_BUDGET` | `5` | external watcher: consecutive wakes with no fall in the undelivered count before it stops typing |
 | `DISCUSS_AGREEMENT_STALL` | `12` | messages since last `decision` → thread stalls |
