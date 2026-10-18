@@ -117,6 +117,24 @@ seat; the second adds Argos findings and away-mode handling.
   through `role-relay judge agent-slack judge` like Talos. A cell's own
   reconciler (camp's po_andrea) keeps deciding inside its persona cell.
 
+- **FR-10 Minimax regret** (Pablo, 2026-10-18: "the judge shall work under:
+  La minimizacion del maximo arrepentimiento criteria"). Every ruling and every
+  recommendation the judge makes shall carry a regret table:
+  - **Rows:** the options.
+  - **Columns:** the scenarios that matter, namely what could turn out true
+    that would make one option the right one. Each scenario comes from the
+    evidence: the FSEs' positions, the premises, and past cases.
+  - **Cells:** the cost of that option if that scenario is true, in hours of
+    factory or operator work lost.
+  - **Irreversible harm** (data that left the Mac, a client boundary
+    crossed, a permission granted, a deletion) is written as `irreversible`
+    and outranks any number of hours.
+
+  The regret of a cell is its cost minus the lowest cost in its column. The
+  judge picks the option with the smallest worst-case regret. A tie goes to
+  the more reversible option. The table is part of the crossing record, so
+  the operator can see why, and so can challenge a scenario or a cost.
+
 ## Change on the map
 
 No base map for agent-slack yet (`docs/architecture/` is empty); Daedalus
@@ -145,6 +163,7 @@ flowchart LR
 | G4 | FR-5, FR-6 | Given a data-off-mac crossing in away mode, when 5 min pass, then nothing is ruled and the operator is asked | fixture | status awaiting-cells, a question to the operator |
 | G5 | FR-7, FR-8 | Given a ruled crossing with one cell silent, when 31 min pass, then Argos shows a should `crossing:<id>:<cell>` | Argos on fixture | the finding |
 | G6 | — | Replay of 0026: hestia raises push for organizer | drill in organizer-fixture plus a second fixture cell | goes to the operator as data-off-mac, never ruled by default, organizer asked |
+| G8 | FR-10 | Given the 0026 replay, when the judge recommends, then its regret table shows 'push now' with irreversible regret if organizer objects, and 'wait for the operator' with a regret of hours | fixture | the judge recommends waiting, and the table is in the record |
 | G7 | — | End to end: one real crossing (the next one Hephaistos would have relayed) goes through the judge | docs/runs/ | positions, ruling, all acknowledged |
 
 ## Boundary
@@ -204,4 +223,4 @@ flowchart LR
 
 ## Amendments
 
-- none yet
+- 2026-10-18: FR-10 minimax regret added, Pablo's criterion for the judge; gate G8.
