@@ -1,0 +1,123 @@
+{
+  "$comment": [
+    "H1, the event batch: POST /v1/ingest, a factory's mailbox events, from its mailbox pusher to its own",
+    "record and from that record's forwarder to Hestia. Spec: specs factory-push-spec.md §2, §3, §6 and",
+    "record-spec.md §4. Map: agent-slack docs/contracts/factory-contract-map.md H1, H8, F1. Sample rule and",
+    "index: contracts/README.md. This file is the record side (hestia's card ingest-contract); the mailbox",
+    "side's tests are Hephaistos's.",
+    "How it is used: `events` is one valid envelope per event type the record knows, in emission (id)",
+    "order; posted together as {\"factory\": `factory`, \"events\": [<each envelope>]} by a key of",
+    "`factory`, every one is accepted, typed (never stored as unknown) and lands in each table its",
+    "`projects_to` names (an empty list: stored in events, nothing else). `response` is the 202 for that",
+    "batch, then for the same batch again. `cell_pause_after` is the cell's pause state after the batch.",
+    "`quarantined` are rows the reader parks: posted as [events[0].envelope, <row>], the batch is a 202 and",
+    "the row is answered in `rejected` with a reason holding `reason_contains`. `statuses` is one case per",
+    "refusal: `body` is posted as is; `events` instead is that many copies of events[0].envelope, each",
+    "with its id suffixed -<n>; `body_bytes` instead is a well-formed batch of exactly that size (pad it",
+    "with an unknown top-level string field; the bytes are described, not inlined); `key` is whose key",
+    "sends it; `error_contains` is a substring of the {\"error\": ...} body."
+  ],
+  "contract": "H1",
+  "endpoint": "POST /v1/ingest",
+  "writers": [
+    {"repo": "agent-slack api (the mailbox pusher)", "code": "cmd/discuss-api/push.go", "test": "cmd/discuss-api/push_test.go"},
+    {"repo": "record (the forwarder, events it already accepted)", "code": "internal/forward/forward.go, internal/forward/client.go",
+     "test": "internal/forward/forward_integration_test.go, internal/forward/shed_test.go"}
+  ],
+  "readers": [
+    {"repo": "record", "code": "internal/handler/ingest_handler.go, internal/model/envelope.go, internal/service/projection.go",
+     "tests": ["internal/handler/ingest_integration_test.go", "internal/model/envelope_test.go"]}
+  ],
+  "limits": {
+    "max_events": 500,
+    "max_body_bytes": 33554432,
+    "rate_per_second": 5,
+    "burst": 20,
+    "retry_after_absent_seconds": 5,
+    "retry_after_cap_seconds": 300,
+    "settings": {
+      "max_events": "RECORD_INGEST_MAX on the reader; DISCUSS_PUSH_BATCH and RECORD_FORWARD_BATCH must not exceed it",
+      "rate_per_second": "RECORD_INGEST_RATE, a token bucket per factory, burst RECORD_INGEST_BURST",
+      "max_body_bytes": "fixed in the record (model.MaxBodyBytes), not configurable"
+    }
+  },
+  "batch_keys": ["factory", "events"],
+  "envelope_keys": ["id", "v", "factory", "cell", "type", "at", "payload"],
+  "envelope_rules": [
+    "v is 1",
+    "factory is optional; when present it equals the batch's factory",
+    "at is unix milliseconds, greater than 0",
+    "a null or absent payload is {}",
+    "an unknown type is stored and not projected; an unknown payload field is tolerated; a field of the wrong type is quarantined"
+  ],
+  "factory": "lodestar",
+  "events": [
+    {"type": "message.posted", "projects_to": ["messages", "threads", "seats"],
+     "envelope": {"id": "01K8ZQ0000000000000000000A", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "message.posted",
+                  "at": 1761350400000,
+                  "payload": {"id": "m1", "thread": "t1", "parent": "", "from": "andrea", "to": "nico", "kind": "question",
+                              "subject": "the seam", "body": "where does the redactor sit?", "since_decision": 1, "thread_status": "open"}}},
+    {"type": "message.delivered", "projects_to": ["pickup_samples", "seats"],
+     "envelope": {"id": "01K8ZQ0000000000000000000B", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "message.delivered",
+                  "at": 1761350401200, "payload": {"message": "m1", "agent": "nico", "pickup_ms": 1200}}},
+    {"type": "message.acked", "projects_to": [],
+     "envelope": {"id": "01K8ZQ0000000000000000000C", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "message.acked",
+                  "at": 1761350401300, "payload": {"message": "m1", "agent": "nico"}}},
+    {"type": "thread.status", "projects_to": ["threads"],
+     "envelope": {"id": "01K8ZQ0000000000000000000D", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "thread.status",
+                  "at": 1761350402000, "payload": {"thread": "t1", "status": "escalated", "by": "nico", "since_decision": 1}}},
+    {"type": "wait.polled", "projects_to": ["seats"],
+     "envelope": {"id": "01K8ZQ0000000000000000000E", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "wait.polled",
+                  "at": 1761350402100, "payload": {"agent": "nico", "timeout_ms": 55000}}},
+    {"type": "wait.woken", "projects_to": [],
+     "envelope": {"id": "01K8ZQ0000000000000000000F", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "wait.woken",
+                  "at": 1761350402200, "payload": {"agent": "nico", "count": 1, "waited_ms": 900}}},
+    {"type": "drain", "projects_to": ["seats"],
+     "envelope": {"id": "01K8ZQ0000000000000000000G", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "drain",
+                  "at": 1761350402300, "payload": {"agent": "nico", "session": "s1", "delivered": 1, "drains_in_session": 1}}},
+    {"type": "cell.paused", "projects_to": ["cell_pause"],
+     "envelope": {"id": "01K8ZQ0000000000000000000H", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "cell.paused",
+                  "at": 1761350403000, "payload": {"by": "pablo", "note": "lunch", "thread": "t-pause", "clear_seq": 0}}},
+    {"type": "cell.cleared", "projects_to": ["cell_pause"],
+     "envelope": {"id": "01K8ZQ0000000000000000000J", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "cell.cleared",
+                  "at": 1761350404000, "payload": {"by": "pablo", "thread": "t-pause", "clear_seq": 1}}},
+    {"type": "cell.resumed", "projects_to": ["cell_pause"],
+     "envelope": {"id": "01K8ZQ0000000000000000000K", "v": 1, "factory": "lodestar", "cell": "sample-cell", "type": "cell.resumed",
+                  "at": 1761350405000, "payload": {"by": "pablo", "note": "back", "thread": "t-pause", "clear_seq": 1}}}
+  ],
+  "cell_pause_after": {"cell": "sample-cell", "paused": false, "changed_by": "pablo", "note": "back", "thread": "t-pause", "clear_seq": 1},
+  "response": {
+    "status": 202,
+    "keys": ["accepted", "duplicates", "rejected"],
+    "rejected_keys": ["id", "reason"],
+    "first": {"accepted": 10, "duplicates": 0, "rejected": []},
+    "again": {"accepted": 0, "duplicates": 10, "rejected": []}
+  },
+  "quarantined": [
+    {"name": "unknown v", "reason_contains": "unknown v 2",
+     "row": {"id": "01K8ZQ0000000000000000000Q", "v": 2, "cell": "sample-cell", "type": "drain", "at": 1761350406000,
+             "payload": {"agent": "nico", "session": "s1", "delivered": 0, "drains_in_session": 1}}},
+    {"name": "missing id", "reason_contains": "missing id",
+     "row": {"v": 1, "cell": "sample-cell", "type": "drain", "at": 1761350406000, "payload": {"agent": "nico"}}},
+    {"name": "another factory", "reason_contains": "does not match batch factory",
+     "row": {"id": "01K8ZQ0000000000000000000R", "v": 1, "factory": "driftwood", "cell": "sample-cell", "type": "drain",
+             "at": 1761350406000, "payload": {"agent": "nico"}}},
+    {"name": "missing at", "reason_contains": "missing at",
+     "row": {"id": "01K8ZQ0000000000000000000S", "v": 1, "cell": "sample-cell", "type": "drain", "at": 0, "payload": {"agent": "nico"}}},
+    {"name": "a payload field of the wrong type", "reason_contains": "bad payload",
+     "row": {"id": "01K8ZQ0000000000000000000T", "v": 1, "cell": "sample-cell", "type": "cell.paused", "at": 1761350406000,
+             "payload": {"by": "pablo", "clear_seq": "one"}}}
+  ],
+  "statuses": [
+    {"name": "malformed", "status": 400, "key": "factory", "body": "{\"factory\":", "error_contains": "not a batch: malformed JSON body"},
+    {"name": "no factory", "status": 400, "key": "factory", "body": "{\"events\":[]}", "error_contains": "not a batch: factory is required"},
+    {"name": "another factory's key", "status": 403, "key": "another factory", "body": "{\"factory\":\"lodestar\",\"events\":[]}",
+     "error_contains": "this key cannot push for factory lodestar"},
+    {"name": "501 events", "status": 413, "key": "factory", "events": 501, "error_contains": "exceeds the maximum of 500"},
+    {"name": "over 32 MiB", "status": 413, "key": "factory", "body_bytes": 33554433, "error_contains": "33554432"},
+    {"name": "over the bucket", "status": 429, "key": "factory", "body": "{\"factory\":\"lodestar\",\"events\":[]}",
+     "after": "burst batches in the same instant (the bucket is empty)", "headers": {"Retry-After": "whole seconds, at least 1"},
+     "error_contains": "too many batches from factory lodestar",
+     "sender": "wait Retry-After seconds (an HTTP date also), 5 when it is absent, at most 300; the same for a 503"}
+  ]
+}
