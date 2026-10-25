@@ -169,14 +169,20 @@ loop:
       if len(rows) == batch: loop immediately   -- draining a backlog
   case 401, 403:
       log; backoff = 5m                          -- a key problem is not transient
-  case 5xx, network, timeout:
+  case 429 or 503 carrying Retry-After:
+      log; backoff = Retry-After, at most 5m       -- the record is shedding load, not refusing us
+  case 429 without Retry-After:
+      log; backoff = 5s
+  case 5xx without Retry-After (503 included), network, timeout:
       log; backoff = min(backoff*2, 60s), starting at 1s
-  case 429:
-      log; backoff = Retry-After, else 5s          -- the record is shedding load, not refusing us
   case other 4xx:
       log the body; backoff = 5m                 -- we sent something malformed
 ```
 
+- **Retry-After wins whenever it is there** (decisions.md 2026-10-25, ruling
+  4): on a 429 or a 503 the sender waits what the header says, at most five
+  minutes; with no header a 5xx is an outage and climbs the doubling
+  backoff. `contracts/ingest-batch.json` holds the same rule as data.
 - **Never marks anything pushed on a non-202.** A lost `202` means a resend,
   which the record deduplicates.
 - **Request timeout 10s.** A slow record must not pin the pusher.

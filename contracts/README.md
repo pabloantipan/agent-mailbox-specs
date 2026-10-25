@@ -42,7 +42,7 @@ to follow.
 | H11, L3 | `mailbox-threads.json` | mailbox: `api/internal/api/contract_test.go` `TestThreadListKeysMatchSample` | role-relay, hephaistos-mail.sh, discuss-threads, tidy-check (claudecode), Deltagos `internal/discuss/client.go`: no test reads it yet | pins today's untagged keys |
 | F2, F4 | `working-on/` (`sample/` + `expected.json`) | the working-on skill (`~/claudecode/skills/working-on/SKILL.md`), which names this tree as the format's reference | record `record/internal/kb/workingon/golden_test.go` (reads it); Deltagos `organizer/internal/scan`: no test reads it yet | written; both readers differ from it (`expected.json` `readers_today`) |
 | H3 | `usage-batch.json` | Deltagos `internal/service/usagepost.go`; record forwarder `internal/forward/usage.go`: neither test reads it yet | record `internal/usage/usage_test.go`, `migration_integration_test.go`, `internal/handler/usage_integration_test.go` (read it) | written (record side); writers' tests to follow: organizer's FSE, hestia's FSE |
-| H1 | `ingest-batch.json` | mailbox pusher `api/cmd/discuss-api/push.go` (`push_test.go` does not read it yet); record forwarder `internal/forward/forward.go`, `client.go` | record `internal/handler/ingest_integration_test.go`, `internal/model/envelope_test.go` (read it) | written (record side); the mailbox pusher's test is Hephaistos's;  |
+| H1 | `ingest-batch.json` | mailbox pusher `api/cmd/discuss-api/push.go` (`push_test.go` does not read it yet); record forwarder `internal/forward/forward.go`, `client.go` | record `internal/handler/ingest_integration_test.go`, `internal/model/envelope_test.go` (read it) | written (record side); the mailbox pusher's test is Hephaistos's; both senders to follow ruling 4's retry rule (see Gaps) |
 | H5, H6, H7 | `auth.json` | Keycloak realm `record/deploy/hestia/keycloak/hestia-realm.json` and enrolment `record/internal/enroll` (`auth_contract_test.go`); `GET /v1/auth/verify` | record `internal/auth/auth_contract_test.go`, `internal/handler/auth_contract_test.go`, `factory_name_integration_test.go`, `cmd/discuss-record/key_role_test.go`; gateway `deploy/hestia/test/verify-stub` and `gw-test.sh` (all read it; the file lists every one) | written |
 | H4 | `kb-snapshot.json` | record forwarder `internal/forward` (`kb_send_test.go`), `internal/kb/snapshot_codec_test.go` | record `internal/model/kb_snapshot_contract_test.go`, `internal/handler/kb_snapshot_contract_integration_test.go` (read it; record vendors `specs/contracts/kb-snapshot.json`, equal today) | written |
 | — | `index-initiatives.json` | record's index job (the file it writes) | the installer (the file it reads) | not written: hestia's card contract-test-gaps |
@@ -58,6 +58,12 @@ working-on sample and skill, and this folder.
   now also looks in `~/agent-slack/specs`, so it runs on lodestar; where
   neither path exists it skips unless `RECORD_SPECS_REQUIRED=1` (rule 3 says
   fail). hestia's card.
+- **Retry on 429 and 503 (ruling 4).** `ingest-batch.json` now says it: a
+  sender honours `Retry-After` whenever a 429 or 503 carries it; without it
+  every 5xx, 503 included, goes on the doubling backoff. The record forwarder
+  (`internal/forward/forward.go` `shedWait`) still waits 5 s on a 503 with no
+  header (hestia's FSE); the mailbox pusher (`push.go`) still ignores
+  `Retry-After` on a 503 (Hephaistos).
 - **The thread list's keys** are Go field names (`ID`, `Subject`, ...)
   because `store.Thread` has no json tags. Tagging them is a separate change
   that edits `mailbox-threads.json` and every reader it lists together.

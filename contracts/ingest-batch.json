@@ -35,7 +35,10 @@
     "burst": 20,
     "retry_after_absent_seconds": 5,
     "retry_after_cap_seconds": 300,
+    "backoff_start_seconds": 1,
+    "backoff_cap_seconds": 60,
     "settings": {
+      "retry": "decisions.md 2026-10-25 ruling 4: a sender honours Retry-After whenever a 429 or a 503 carries it, at most retry_after_cap_seconds; without it, every 5xx (503 included) goes on the doubling backoff, backoff_start_seconds doubling to backoff_cap_seconds; a 429 without it waits retry_after_absent_seconds",
       "max_events": "RECORD_INGEST_MAX on the reader; DISCUSS_PUSH_BATCH and RECORD_FORWARD_BATCH must not exceed it",
       "rate_per_second": "RECORD_INGEST_RATE, a token bucket per factory, burst RECORD_INGEST_BURST",
       "max_body_bytes": "fixed in the record (model.MaxBodyBytes), not configurable"
@@ -118,6 +121,6 @@
     {"name": "over the bucket", "status": 429, "key": "factory", "body": "{\"factory\":\"lodestar\",\"events\":[]}",
      "after": "burst batches in the same instant (the bucket is empty)", "headers": {"Retry-After": "whole seconds, at least 1"},
      "error_contains": "too many batches from factory lodestar",
-     "sender": "wait Retry-After seconds (an HTTP date also), 5 when it is absent, at most 300; the same for a 503"}
+     "sender": "wait Retry-After seconds (an HTTP date also), at most 300, whenever a 429 or a 503 carries it; a 429 without it waits 5; a 5xx without it, 503 included, goes on the doubling backoff (1 s doubling to 60 s)"}
   ]
 }
