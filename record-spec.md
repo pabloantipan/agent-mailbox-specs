@@ -154,7 +154,24 @@ rule 1 true rather than aspirational.
 ## 4. API contract
 
 All under `/v1`. Errors are `{"error": "..."}`. Auth is `Authorization:
-Bearer` — a factory key or a developer token; each row below says which.
+Bearer` with one of three tokens; each row below says which callers it takes.
+
+- **Factory key**: the static key `POST /v1/factories/keys` issues.
+- **Developer token**: a developer's Firebase token.
+- **OIDC access token** from `RECORD_OIDC_ISSUER`, audience
+  `RECORD_OIDC_AUDIENCE`, signed RS256, ES256 or PS256. A token with a
+  `factory` claim is a factory caller (the forwarder's client-credentials
+  token, client `factory-<name>`); a person's token is a developer caller
+  that may only read. Scopes come from the space-separated `scope` claim
+  and are two: `ingest:write`, which every factory write needs (ingest,
+  cells, kb snapshot, usage, kb proposals and leases), and `kb:read`, which
+  every read needs (every `GET` under `/v1`, `/projects/{cell}/*`, `/kb/*`,
+  `/mcp`). A missing scope is 403 "this token lacks scope <s>"; static keys
+  and Firebase tokens are not scope-checked.
+
+In the rows, "factory key" means a factory key or a factory OIDC token with
+`ingest:write`; "either" means any caller with `kb:read`; "developer token"
+means a Firebase developer token only (an OIDC login is read-only, 403).
 
 ```
 POST /v1/factories/keys                          developer token
@@ -169,11 +186,15 @@ POST /v1/factories/{factory}/keys/revoke         developer token
 POST /v1/factories/{factory}/cells               factory key, must match {factory}; idempotent upsert
   Request:  { "cell": "camp", "initiative": "ccint-camp", "title": "…", "client": "…" }
   Response: 204                                   title and client are what the views show
-  Errors:   403 (key is for another factory)
+  Errors:   400 (cell or initiative missing), 403 (key is for another factory),
+            409 (the factory has no factories row: enroll it again),
+            500 (a database error; the sender retries, and the forwarder holds
+            every event behind the registration until it passes)
 
 POST /v1/ingest                                  factory key
   Request:  { "factory": "lodestar", "events": [ envelope, ... ] }   ≤ 500
-  Response: 202 { "accepted": 497, "rejected": [ { "id": "...", "reason": "unknown v 2" } ] }
+  Response: 202 { "accepted": 496, "duplicates": 1, "rejected": [ { "id": "...", "reason": "unknown v 2" } ] }
+            duplicates: events whose id the record already held, not stored again
   Errors:   400 (not a batch), 403 (factory mismatch), 413 (> 500),
             429 (per-factory token bucket, `Retry-After` set)
 
@@ -198,8 +219,13 @@ GET  /v1/decisions/search?q=&factory=&cell=&limit=           either
 GET  /v1/factories/{factory}/pickup?agent=&since=            either
   Response: { "samples": [ { "at", "pickup_ms" } ] }  — the series behind "degrading"
 
-GET  /health     liveness, no auth, no DB
-GET  /ready      readiness: SELECT 1
+GET  /health     liveness, no DB: 200 { "status": "ok" }
+GET  /ready      readiness, 2 s timeout: pings Postgres and, with the kb layer on,
+                 the graph backend (Neo4j), in that order: 200 { "status": "ready" },
+                 or 503 { "error": "<backend> unreachable" }
+GET  /metrics    Prometheus text (§4b)
+                 These three are the record's only routes without auth. A gateway
+                 in front may still require a token (Hestia's leaves only /ready open).
 ```
 
 ```
@@ -272,7 +298,7 @@ thresholds the metrics use, so the two never disagree:
 | `at_risk` | a thread in `/{f}/health` | `since_decision ≥ RECORD_AT_RISK_SINCE` and quiet > `RECORD_AT_RISK_QUIET` |
 
 ```
-GET /metrics        Prometheus text format, no auth, scraped by the collector
+GET /metrics        Prometheus text format, scraped by the collector (auth: §4, probes)
   discuss_factory_last_event_age_seconds{factory}
   discuss_seat_pickup_ms{factory,cell,agent,quantile="0.5",window="1h"}
   discuss_thread_since_decision{factory,cell,thread}
@@ -369,8 +395,8 @@ service in Cloud Logging.
   testcontainers and needs nothing running.
 
 Ingress is HTTPS at a hostname the factories are configured with
-(`DISCUSS_PUSH_URL`). There is no unauthenticated route but `/health` and
-`/ready`.
+(`DISCUSS_PUSH_URL`). The only unauthenticated routes are the three probes
+in §4.
 
 ## 9. Edge cases
 

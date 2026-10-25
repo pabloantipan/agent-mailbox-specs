@@ -214,47 +214,22 @@ Cards point into specs by section: `spec: <path>#<section>` and
 
 ## 5. Cards (execution memory)
 
-### 5.1 Schema
+The card format (front-matter fields, statuses, decision records, the
+roadmap, the state machine and who moves a card to `done/`) is defined once,
+in the `working-on` skill (`~/claudecode/skills/working-on/SKILL.md` and its
+`templates/`). Its reference tree is `contracts/working-on/` in this repo:
+`sample/` is a small initiative that covers every form a reader must accept
+or report, and `expected.json` is what a reader must make of it, including
+the readings the skill leaves to the sample (a scalar where a list is
+written, a stale status under `done/`, crossing statuses, ledgers). The
+record and Deltagos test their readers against that tree
+(`contracts/README.md`). This spec does not copy the schema; a section that
+did (2026-09-26) fell behind the skill.
 
-```yaml
----
-title: <one line>
-status: now | next | blocked | done
-repos: [<repo-dir>, ...]
-branch: <main branch of the work>
-updated: <YYYY-MM-DD>
-next: "<one imperative line>"          # mandatory on every open card
-# optional
-due: <YYYY-MM-DD>                      # only a real date
-start: <YYYY-MM-DD>
-threads: [<discuss thread id>]
-depends_on: [<card-slug>]
-boundary: [<path>]                     # disjoint across a wave
-spec: <path>#<section>
-gate: <path>#<section>
-seat: <cell seat>                      # the builder; retire keeps a seat an open card names
-review: pass | fail                    # reviewer only
----
-## Goal / ## Where / ## Done (≤5) / ## Next (≤3) / ## Blockers / ## Notes / ## Review
-```
-
-A card that has `spec`, `gate` and `boundary` can be launched. Without them it is a
-note with a next action. A card stays under forty lines. Execution state is
-the `next` line plus git.
-
-### 5.2 State machine
-
-```
-next ──work starts──► now ──builder at gate──► now, next: "review: …"
-                       │                            │
-                       │ blocker (named owner)       ├─ pass ─► done  (reviewer; git mv to done/)
-                       ▼                            └─ fail ─► now, next = first unmet gate item
-                    blocked ──blocker cleared──► now
-```
-
-- A card in `done/` is history and is never edited.
-- More than three `now` cards is a signal to talk to Pablo.
-- The supervisor reads `depends_on` to sequence waves.
+What the topology relies on: a card with `spec`, `gate` and `boundary` can
+be launched, without them it is a note with a next action; the supervisor
+sequences waves by `depends_on`; execution state is the `next` line plus
+git.
 
 ---
 
