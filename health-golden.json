@@ -4,12 +4,17 @@
     "a local cell (discuss-api /projects/{p}/health) or a central factory (discuss-record",
     "/v1/factories/{f}/health) with no branch, so a field renamed on one side and not the other is a",
     "silent break. Each repo has a test that decodes its own /health and checks every row against the",
-    "field lists below; that pair of tests is gate item 5's mechanism.",
+    "field lists below; that pair of tests is gate item 5's mechanism. The mailbox's test reads this file",
+    "(api/internal/api/health_load_test.go, ../../../specs/health-golden.json); the record reads its copy.",
     "The record nests the same agents/threads blocks under cells[] and adds a push block; the two",
     "flags under record_only exist only there, because only the record has the time series to compute",
     "them. A reader treats a missing flag as false.",
     "record/specs/health-golden.json is a byte-identical copy, so the record's tests still run once it",
-    "is cloned alone on PLV's host. The record's own test fails if the two ever differ."
+    "is cloned alone on PLV's host. The record's own test fails if the two ever differ.",
+    "mailbox_only: fields the mailbox serves and its readers use (the UI, Deltagos, check.sh), which the",
+    "record may omit. A reader treats a missing undecided as false and a missing deaf_reason as no reason.",
+    "Fields under *_optional appear only when they have a value (deaf_reason only on a deaf agent).",
+    "Sample rule and index: contracts/README.md."
   ],
   "agent_fields": [
     "agent",
@@ -34,6 +39,11 @@
   "record_only": {
     "agent_fields": ["degrading"],
     "thread_fields": ["at_risk"]
+  },
+  "mailbox_only": {
+    "agent_fields": [],
+    "agent_fields_optional": ["deaf_reason"],
+    "thread_fields": ["undecided"]
   },
   "watcher_values": ["alive", "stale", "never"],
   "thread_kinds": ["conversation", "journal"],

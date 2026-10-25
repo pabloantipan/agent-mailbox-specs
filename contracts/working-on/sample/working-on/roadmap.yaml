@@ -1,0 +1,18 @@
+stages:
+  - id: discover
+    title: Find the edge
+    phase: discovery
+    outcome: The system is defined enough to build.
+    exit:
+      - text: The shape is ruled
+        met: 2026-10-05
+    gates: []
+    done: 2026-10-06
+  - id: build
+    title: Build it
+    phase: building
+    outcome: The first slice runs.
+    exit:
+      - The slice passes its gate
+    gates: ["0002"]
+    appetite: two waves

@@ -1,0 +1,99 @@
+{
+  "$comment": [
+    "What a reader of the working-on format must make of sample/, the initiative root beside this file.",
+    "The format is the working-on skill (~/claudecode/skills/working-on/SKILL.md); where the skill is silent,",
+    "accepted_reading below is the reading, and the skill points here. Readers: the record",
+    "(record/internal/kb/workingon, Read) and Deltagos (organizer/internal/scan, ReadInitiative). Each reads",
+    "sample/ in its own tests and compares with this file; readers_today records where each one differs",
+    "today (2026-10-25, record at ~/hestia-monorepo/record, Deltagos at ~/organizer), which is their cards' work.",
+    "A change to the format changes sample/ and this file first."
+  ],
+  "root": "sample",
+  "accepted_reading": {
+    "card_statuses": ["now", "next", "blocked", "done"],
+    "list_fields": {
+      "card": ["repos", "depends_on", "boundary", "footprint", "threads"],
+      "decision": ["options", "cards", "threads", "affects", "supersedes"],
+      "scalar_fields": "superseded_by, seat, stage, next and the dates are scalars.",
+      "stage": ["gates"],
+      "rule": "A field the skill writes as a list also accepts one scalar, read as a one-item list (`boundary: \"<prose>\"` is one boundary entry). An empty scalar is an empty list."
+    },
+    "spec": "`spec` (and `gate`) is written as one scalar; a list is accepted and read as several references, the first being the one a builder is launched against.",
+    "done_folder": "A card under working-on/done/ is done whatever its `status` says. Any other status there is reported as a problem (the card is still read).",
+    "unknown_card_status": "A card status outside card_statuses is kept as written and reported as a problem; it counts in no status bucket.",
+    "decision_statuses": {
+      "open": ["proposed", "awaiting-cells"],
+      "decided": ["ruled", "applied", "acknowledged"],
+      "closed": ["superseded", "withdrawn"],
+      "note": "awaiting-cells, applied and acknowledged are the crossing statuses (working-on templates/crossing.md); they are valid in any decisions/ folder. applied and acknowledged come after the ruling, so they are not waiting."
+    },
+    "ruled_by_modes": ["operator away mode, recommendation taken"],
+    "ruled_by_note": "A ruled_by value listed in ruled_by_modes names a mode, not a person.",
+    "ledgers": {
+      "names": ["tickets.md", "jira-map.md", "jira-estimates.md", "assumptions.md"],
+      "patterns": ["jira-report-*.md", "jira-*.md with no front-matter"],
+      "rule": "A ledger in working-on/ is not a card: skipped silently, no problem, no warning."
+    },
+    "unread": "A card or record whose front-matter is missing, unclosed or not YAML, or a decision whose file name is not NNNN-slug.md, is reported as an unread problem and contributes nothing else."
+  },
+  "initiative": {"id": "sample-initiative", "title": "Sample initiative, the working-on format's reference tree", "status": "active"},
+  "cards": [
+    {"slug": "now-lists", "path": "working-on/now-lists.md", "status": "now", "seat": "builder-a", "stage": "build",
+     "depends_on": ["next-scalars"], "boundary": ["sample-repo/a.go", "sample-repo/b.go"],
+     "threads": ["01M5AAAAAAAAAAAAAAAAAAAAAA", "01M5BBBBBBBBBBBBBBBBBBBBBB"], "spec": ["docs/specs/sample-spec.md#goals"]},
+    {"slug": "next-scalars", "path": "working-on/next-scalars.md", "status": "next", "repos": ["sample-repo"],
+     "depends_on": ["now-lists"], "boundary": ["sample-repo/ only, nothing outside it"],
+     "threads": ["01M5CCCCCCCCCCCCCCCCCCCCCC"], "spec": ["docs/specs/sample-spec.md#goals"]},
+    {"slug": "blocked-spec-list", "path": "working-on/blocked-spec-list.md", "status": "blocked",
+     "spec": ["docs/specs/sample-spec.md#goals", "decisions 0002"], "waits_on_decision": "0003"},
+    {"slug": "dropped", "path": "working-on/dropped.md", "status": "dropped"},
+    {"slug": "shipped", "path": "working-on/done/shipped.md", "status": "done", "done_folder": true},
+    {"slug": "stale-status", "path": "working-on/done/stale-status.md", "status": "done", "status_as_written": "now", "done_folder": true}
+  ],
+  "decisions": [
+    {"number": "0001", "status": "superseded", "class": "closed", "superseded_by": "0002"},
+    {"number": "0002", "status": "ruled", "class": "decided", "stage": "build", "cards": ["now-lists"], "supersedes": ["0001"]},
+    {"number": "0003", "status": "proposed", "class": "open", "cards": ["blocked-spec-list"]},
+    {"number": "0004", "status": "withdrawn", "class": "closed"},
+    {"number": "0005", "status": "awaiting-cells", "class": "open"},
+    {"number": "0006", "status": "applied", "class": "decided", "ruled_by_is_mode": true},
+    {"number": "0007", "status": "acknowledged", "class": "decided"}
+  ],
+  "stages": [
+    {"id": "discover", "phase": "discovery", "done": "2026-10-06", "exit": [{"text": "The shape is ruled", "met": "2026-10-05"}]},
+    {"id": "build", "phase": "building", "gates": ["0002"], "appetite": "two waves", "exit": [{"text": "The slice passes its gate"}]}
+  ],
+  "current_stage": "build",
+  "specs": [{"name": "sample-spec", "path": "docs/specs/sample-spec.md", "title": "Sample spec", "status": "ruled"}],
+  "skipped_silently": ["working-on/tickets.md", "working-on/jira-map.md", "working-on/assumptions.md"],
+  "problems": [
+    {"path": "working-on/bad-yaml.md", "unread": true, "reason": "front-matter is not YAML (an unquoted colon in next)"},
+    {"path": "working-on/dropped.md", "unread": false, "reason": "unknown card status \"dropped\""},
+    {"path": "working-on/done/stale-status.md", "unread": false, "reason": "status \"now\" on a card under done/"}
+  ],
+  "readers_today": {
+    "record": {
+      "where": "~/hestia-monorepo/record/internal/kb/workingon/read.go, graph.go; record/internal/portfolio",
+      "agrees": ["every card's list fields (lenient list type), spec as a list", "crossing statuses kept as written", "bad-yaml.md skipped with a warning"],
+      "differs": [
+        "tickets.md, jira-map.md, assumptions.md: a warning each (\"no frontmatter\"); no ledger exemption",
+        "dropped.md: read with status dropped, no problem raised",
+        "done/stale-status.md: status now (Done flag set, status not corrected), no problem; the portfolio counts it as now",
+        "0006 and 0007: the portfolio treats applied and acknowledged as waiting; awaiting-cells is left out of proposed",
+        "0006: ruled_by \"operator away mode, recommendation taken\" becomes a person node",
+        "boundary and repos are not read at all (nothing to compare)"
+      ]
+    },
+    "deltagos": {
+      "where": "~/organizer/internal/scan/scan.go, decisions.go; organizer/internal/model/model.go, decision.go",
+      "agrees": ["now-lists.md", "dropped.md reported as unknown status", "tickets.md and jira-map.md skipped silently", "bad-yaml.md an unread problem"],
+      "differs": [
+        "next-scalars.md: unread (yaml.v3: cannot unmarshal !!str into []string for repos, depends_on, boundary, threads)",
+        "blocked-spec-list.md: unread (cannot unmarshal !!seq into string for spec)",
+        "assumptions.md: an unread problem (\"no frontmatter\"); not in its ledger list",
+        "done/stale-status.md: status now kept (only an empty status becomes done), no problem",
+        "0005, 0006, 0007: \"unknown decision status\" for awaiting-cells, applied, acknowledged"
+      ]
+    }
+  }
+}

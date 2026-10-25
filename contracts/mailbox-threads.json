@@ -1,0 +1,53 @@
+{
+  "$comment": [
+    "The mailbox's thread list, GET /projects/{p}/threads?status=<s>, as it is served today. The row is",
+    "store.Thread encoded with no json tags (api/internal/store/store.go), so its keys are the Go field",
+    "names. The scripts below read those exact keys; a reader that misses a key gets an empty value, not",
+    "an error (role-relay would relay nothing: an empty subject never matches [for <role>]). The mailbox's",
+    "test api/internal/api/contract_test.go (TestThreadListKeysMatchSample) reads this file and fails if",
+    "the served keys change. Lowercase tags are a later, separate change: change this sample first, then",
+    "every reader below in the same change. Sample rule and index: contracts/README.md."
+  ],
+  "endpoint": "GET /projects/{p}/threads?status=<status>",
+  "default_status": "escalated",
+  "status_values": ["open", "stalled", "escalated", "closed"],
+  "envelope_key": "threads",
+  "empty_list": {"threads": null},
+  "row_keys": ["ID", "ProjectID", "Subject", "Status", "SinceDecision", "CreatedAt"],
+  "row_types": {
+    "ID": "string, a 26-character ULID",
+    "ProjectID": "string",
+    "Subject": "string, empty when the thread has none",
+    "Status": "string, one of status_values",
+    "SinceDecision": "integer",
+    "CreatedAt": "integer, Unix milliseconds"
+  },
+  "example": {
+    "threads": [
+      {
+        "ID": "01M5AAAAAAAAAAAAAAAAAAAAAA",
+        "ProjectID": "sample-cell",
+        "Subject": "[for smith] a sample request",
+        "Status": "open",
+        "SinceDecision": 2,
+        "CreatedAt": 1761350400000
+      }
+    ]
+  },
+  "must_not_change_without_readers": ["ID", "Subject", "Status", "SinceDecision", "CreatedAt"],
+  "readers": [
+    {"path": "~/claudecode/bin/role-relay", "lines": "86, 228, 233, 267-269, 335-337", "keys": ["ID", "Subject"],
+     "note": "open and closed lists; its test fake hand-encodes the same keys (~/claudecode/tests/role-relay/test_own_thread.py:49)"},
+    {"path": "~/claudecode/scripts/hephaistos-mail.sh", "lines": "103-114", "keys": ["ID", "Subject"]},
+    {"path": "~/claudecode/bin/discuss-threads", "lines": "24-27", "keys": ["ID", "Subject"]},
+    {"path": "~/claudecode/bin/tidy-check", "lines": "617-660", "keys": ["ID", "CreatedAt"],
+     "note": "tolerant: reads id or ID, created_at or CreatedAt"},
+    {"path": "~/organizer/internal/discuss/client.go", "lines": "59-66, 158-163", "keys": ["ID", "Subject", "Status", "SinceDecision", "CreatedAt"],
+     "note": "Deltagos's ThreadHead pins the same keys with explicit json tags"}
+  ],
+  "not_readers": [
+    "~/claudecode/scripts/factory/check.sh reads /health (agent, watcher, deaf_reason), not the thread list; that is health-golden.json",
+    "the UI (~/agent-slack/ui/app.js) reads /health and /threads/{id}, not the list"
+  ],
+  "record_differs": "The record's alias /projects/{cell}/threads serves ThreadSummary with lowercase keys (id, subject, status, since_decision, created_at), adds last_at and messages, drops project_id, and lists every live thread by default (record internal/model/health.go, internal/service/read_service.go). No reader above is pointed at the record today."
+}

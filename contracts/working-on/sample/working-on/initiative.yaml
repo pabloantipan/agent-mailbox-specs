@@ -1,0 +1,8 @@
+id: sample-initiative
+title: Sample initiative, the working-on format's reference tree
+client: personal
+status: active
+started: 2026-10-01
+machine: sample-host
+repos: [sample-repo]
+ports_to: none
