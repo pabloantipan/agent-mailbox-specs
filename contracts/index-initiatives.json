@@ -1,0 +1,86 @@
+{
+  "$comment": [
+    "A laptop's index settings: the file index-initiatives in the record checkout, beside the .env whose",
+    "RECORD_FACTORY names the factory its rows are filed under. record's deploy/lodestar/install.sh checks both",
+    "and renders the index job's plist from them (RECORD_FACTORY, RECORD_INITIATIVES); deploy/lodestar/index.sh",
+    "reads the list on every pass. Built by hestia's card index-plist-versioned (record 81d4051, map L2).",
+    "Ruled by Pablo 2026-10-25 (decisions.md, 'every contract between two repos has one shared sample both sides test').",
+    "Every reader below reads this file by path and fails, never skips, when it is absent (README rule 3).",
+    "A change edits this file first; then every reader and writer listed follows in the same change."
+  ],
+  "map": ["L2"],
+  "writers": [
+    {"side": "the factory installer (Hephaistos)", "path": "the installer that lays a laptop's record checkout down",
+     "test": "none yet: the installer's card"},
+    {"side": "the operator's hand (odyssey's move, the command index-plist-versioned printed)", "path": "<checkout>/index-initiatives",
+     "test": "none: a hand"}
+  ],
+  "readers": [
+    {"side": "record install.sh (check_list, the factory checks, render)", "path": "record/deploy/lodestar/install.sh",
+     "test": "record internal/contracts/indexinitiatives_test.go TestInstallReadsIndexInitiatives (renders every case with install.sh render; valid exit 0 with the plist's keys, must_refuse exit 2 saying why)"},
+    {"side": "record index.sh (the job's loop: `while read -r id root cell`)", "path": "record/deploy/lodestar/index.sh",
+     "test": "none yet: index.sh runs the index role through docker compose; the valid cases' initiatives are what its loop makes of each line"}
+  ],
+
+  "file": {
+    "name": "index-initiatives",
+    "location": "the record checkout's root, beside .env (git-ignored: /index-initiatives)",
+    "plist_key": "RECORD_INITIATIVES",
+    "factory_from": ".env RECORD_FACTORY (the one key read from it; plain, export or quoted; the last one wins)",
+    "line": "id root [cell], separated by spaces or tabs",
+    "skipped": "a blank line, or one whose first non-space character is #",
+    "root": "absolute, or relative to $HOME",
+    "cell": "optional: the mailbox cell whose threads index-workingon also reads",
+    "absent": "index.sh's own list, lodestar's; then RECORD_FACTORY is unset or lodestar"
+  },
+
+  "valid": [
+    {"name": "three fields",
+     "factory": "odyssey",
+     "lines": ["camp ccint/ccint-camp-monorepo camp"],
+     "initiatives": [{"id": "camp", "root": "ccint/ccint-camp-monorepo", "cell": "camp"}]},
+    {"name": "two fields, no cell",
+     "factory": "odyssey",
+     "lines": ["agent-slack agent-slack"],
+     "initiatives": [{"id": "agent-slack", "root": "agent-slack", "cell": ""}]},
+    {"name": "comments, blank lines, tabs and runs of spaces",
+     "factory": "bench-01",
+     "lines": ["# id   root            cell", "", "  hestia   hestia-monorepo   hestia", "beta\t/srv/beta"],
+     "initiatives": [{"id": "hestia", "root": "hestia-monorepo", "cell": "hestia"}, {"id": "beta", "root": "/srv/beta", "cell": ""}]},
+    {"name": "lodestar with its own list",
+     "factory": "lodestar",
+     "lines": ["organizer organizer organizer"],
+     "initiatives": [{"id": "organizer", "root": "organizer", "cell": "organizer"}]},
+    {"name": "no list and no factory: index.sh's own list, filed as lodestar",
+     "factory": "",
+     "lines": null,
+     "initiatives": null}
+  ],
+
+  "must_refuse": [
+    {"name": "four fields", "factory": "odyssey", "lines": ["alpha alpha-monorepo alpha extra"],
+     "reason": "a fourth field would fall into index.sh's cell", "says": "want `id root [cell]`, got 4 fields"},
+    {"name": "one field", "factory": "odyssey", "lines": ["alpha"],
+     "reason": "no root to index", "says": "want `id root [cell]`, got 1 fields"},
+    {"name": "only comments and blank lines", "factory": "odyssey", "lines": ["# nothing yet", ""],
+     "reason": "a list that indexes nothing", "says": "no initiative in it"},
+    {"name": "an empty file", "factory": "odyssey", "lines": [],
+     "reason": "a list that indexes nothing", "says": "no initiative in it"},
+    {"name": "a list without a factory", "factory": "", "lines": ["alpha alpha-monorepo alpha"],
+     "reason": "its rows would be filed as lodestar", "says": "sets no RECORD_FACTORY"},
+    {"name": "a factory other than lodestar without a list", "factory": "odyssey", "lines": null,
+     "reason": "index.sh's own list is lodestar's; odyssey would index lodestar's initiatives", "says": "but there is no"},
+    {"name": "a factory that is not a factory name", "factory": "Odyssey", "lines": ["alpha alpha-monorepo alpha"],
+     "reason": "the factory-name rule (auth.json factory_name)", "says": "is not a factory name"}
+  ],
+
+  "cases_note": "factory \"\" is a checkout with no .env; lines null is a checkout with no index-initiatives, [] an empty file. A refused case exits 2 and writes nothing; its says is a part of the message.",
+
+  "limits": {
+    "fields_min": 2,
+    "fields_max": 3,
+    "initiatives_min": 1,
+    "factory_name": "auth.json factory_name.pattern",
+    "refused_exit": 2
+  }
+}
