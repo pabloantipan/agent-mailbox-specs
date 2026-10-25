@@ -220,12 +220,15 @@ GET  /v1/factories/{factory}/pickup?agent=&since=            either
   Response: { "samples": [ { "at", "pickup_ms" } ] }  — the series behind "degrading"
 
 GET  /health     liveness, no DB: 200 { "status": "ok" }
-GET  /ready      readiness, 2 s timeout: pings Postgres and, with the kb layer on,
-                 the graph backend (Neo4j), in that order: 200 { "status": "ready" },
+GET  /ready      readiness, 2 s timeout: pings Postgres and, when the graph runs on
+                 Neo4j (RECORD_GRAPH not pg), Neo4j, in that order: 200 { "status": "ready" },
                  or 503 { "error": "<backend> unreachable" }
 GET  /metrics    Prometheus text (§4b)
-                 These three are the record's only routes without auth. A gateway
-                 in front may still require a token (Hestia's leaves only /ready open).
+                 Routes without the bearer middleware: these three probes; GET
+                 /v1/auth/verify, which checks the token itself (204 or 401); the
+                 portfolio page and its static files (GET /, GET /{file}); and the
+                 /projects/{cell} catch-alls, which answer 404. A gateway in front may
+                 still require a token (Hestia's leaves only /ready and /portfolio open).
 ```
 
 ```
@@ -395,8 +398,8 @@ service in Cloud Logging.
   testcontainers and needs nothing running.
 
 Ingress is HTTPS at a hostname the factories are configured with
-(`DISCUSS_PUSH_URL`). The only unauthenticated routes are the three probes
-in §4.
+(`DISCUSS_PUSH_URL`). The routes that skip the bearer middleware are listed
+in §4 under the probes.
 
 ## 9. Edge cases
 

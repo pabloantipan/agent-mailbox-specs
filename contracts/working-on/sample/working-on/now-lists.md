@@ -7,7 +7,7 @@ updated: 2026-10-20
 next: "Run the gate"
 stage: build
 seat: builder-a
-depends_on: [next-scalars]
+depends_on: [shipped]
 boundary: [sample-repo/a.go, sample-repo/b.go]
 threads: [01M5AAAAAAAAAAAAAAAAAAAAAA, 01M5BBBBBBBBBBBBBBBBBBBBBB]
 spec: "docs/specs/sample-spec.md#goals"

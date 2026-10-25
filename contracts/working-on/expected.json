@@ -39,7 +39,7 @@
   "initiative": {"id": "sample-initiative", "title": "Sample initiative, the working-on format's reference tree", "status": "active"},
   "cards": [
     {"slug": "now-lists", "path": "working-on/now-lists.md", "status": "now", "seat": "builder-a", "stage": "build",
-     "depends_on": ["next-scalars"], "boundary": ["sample-repo/a.go", "sample-repo/b.go"],
+     "depends_on": ["shipped"], "boundary": ["sample-repo/a.go", "sample-repo/b.go"],
      "threads": ["01M5AAAAAAAAAAAAAAAAAAAAAA", "01M5BBBBBBBBBBBBBBBBBBBBBB"], "spec": ["docs/specs/sample-spec.md#goals"]},
     {"slug": "next-scalars", "path": "working-on/next-scalars.md", "status": "next", "repos": ["sample-repo"],
      "depends_on": ["now-lists"], "boundary": ["sample-repo/ only, nothing outside it"],
