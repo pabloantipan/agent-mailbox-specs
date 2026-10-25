@@ -1,0 +1,1683 @@
+{
+  "contract": "H4 kb snapshot: POST /v1/kb/snapshot, a factory's whole kb from its --role forward to Hestia (hestia 0011; card kb-snapshot-budget)",
+  "map": "~/agent-slack/docs/contracts/factory-contract-map.md, H4",
+  "rule": "~/agent-slack/specs/contracts/README.md: a contract change edits this file first; both sides' tests read it",
+  "writers": [
+    {
+      "repo": "record",
+      "code": "internal/forward forward.go kbTick and sendKB; internal/kb Snapshot, EncodeSnapshot, GzipSnapshot",
+      "tests": [
+        "internal/kb/snapshot_codec_test.go TestContractSampleEncodesByteStable",
+        "internal/forward/kb_send_test.go"
+      ]
+    }
+  ],
+  "readers": [
+    {
+      "repo": "record",
+      "code": "internal/handler kb_snapshot_handler.go postKBSnapshot; internal/kb DecodeSnapshot, ReplaceSnapshot; /kb/freshness?factory=",
+      "tests": [
+        "internal/model/kb_snapshot_contract_test.go",
+        "internal/handler/kb_snapshot_contract_integration_test.go"
+      ]
+    }
+  ],
+  "vendored": "record keeps a copy at specs/contracts/kb-snapshot.json; internal/model TestContractCopyMatchesAgentSlack fails when they differ",
+  "limits": {
+    "max_body_bytes": 33554432,
+    "max_snapshot_bytes": 134217728,
+    "warn_at": 0.75,
+    "encodings": [
+      "identity",
+      "gzip"
+    ],
+    "notes": "max_body_bytes bounds the body as it travels (gzip when Content-Encoding: gzip); max_snapshot_bytes bounds the plain JSON once inflated; warn_at is the fraction of the binding cap past which the forwarder's size line is a warning and factory check warns"
+  },
+  "version_field": {
+    "path": "index.version",
+    "is": "sha256, lowercase hex, of the snapshot encoded (encoding/json, the field order below) with index.version empty",
+    "also": {
+      "index.kb_commit": "kb_index_state git:main last_commit_sha at the sender, empty where it indexes no knowledge repo (working-on documents carry commit_sha nogit)",
+      "index.indexed_at": "the latest documents[].indexed_at, null without documents"
+    },
+    "absent": "a sender older than kb-snapshot-budget sends no index; the receiver accepts the snapshot and stores an empty version",
+    "answered_by": "GET /kb/freshness?factory=\u003cf\u003e -\u003e snapshot.index_version, snapshot.kb_commit, snapshot.indexed_at, snapshot.accepted_at (epoch ms)"
+  },
+  "log_line": {
+    "message": "kb snapshot size",
+    "fields": [
+      "plainBytes",
+      "wireBytes",
+      "encoding",
+      "capBytes",
+      "capFraction",
+      "warnAt",
+      "hash",
+      "remote",
+      "factory"
+    ],
+    "level": "INFO, WARN from warn_at"
+  },
+  "node_types": {
+    "workingon": [
+      "card",
+      "decision",
+      "initiative",
+      "person",
+      "seat",
+      "spec",
+      "stage",
+      "thread"
+    ],
+    "kbindex": [
+      "decision",
+      "defect",
+      "initiative",
+      "learning",
+      "runbook",
+      "service",
+      "term"
+    ]
+  },
+  "edge_rels": {
+    "workingon": [
+      "BUILT_BY",
+      "DECIDED_BY",
+      "DEPENDS_ON",
+      "GATED_BY",
+      "HAS_STAGE",
+      "IN_STAGE",
+      "NEXT_STAGE",
+      "OWNED_BY",
+      "POSTED_BY",
+      "RAISED_IN",
+      "RULED_BY",
+      "SPECIFIED_BY",
+      "SUPERSEDES",
+      "WAITS_ON"
+    ],
+    "kbindex": [
+      "AFFECTS",
+      "DECIDED_IN",
+      "DEPENDS_ON",
+      "DERIVED_FROM",
+      "MENTIONS",
+      "PART_OF",
+      "RELATED_TO",
+      "SUPERSEDES",
+      "USES_TERM"
+    ]
+  },
+  "origins": [
+    "git",
+    "mailbox"
+  ],
+  "not_validated": "node type, node status and edge rel have no enum at the receiver; an edge's ends need not be nodes (migrations/0005_kb.sql, no FK)",
+  "valid": [
+    {
+      "name": "every-node-type-and-rel",
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "snapshot": {
+        "factory": "lodestar",
+        "index": {
+          "version": "1e26f1af98bc4ef31bf2411bda9910aa8c0975e5c9ac69c772a5315e2df55d78",
+          "kb_commit": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+          "indexed_at": "2026-10-02T08:30:00.123456Z"
+        },
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          },
+          {
+            "id": "decision:fx/0004",
+            "type": "decision",
+            "title": "Whether the walk crosses cells",
+            "status": "proposed",
+            "path": "working-on/decisions/0004-walk-store.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-dec-fx-0004",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "lrn-retries",
+            "type": "learning",
+            "title": "Retries need a ceiling",
+            "status": "active",
+            "path": "learnings/retries.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-lrn-retries",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": "2027-01-15",
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNP",
+            "type": "thread",
+            "title": "the walk",
+            "status": "open",
+            "path": "mailbox/fx/01JQ7Y2B3C4D5E6F7G8H9JKMNP",
+            "commit_sha": "nogit",
+            "content_hash": "h-thread-t1",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          },
+          {
+            "chunk_id": "dec-0007#1",
+            "doc_id": "dec-0007",
+            "ordinal": 1,
+            "heading_path": "Context \u003e Constraints",
+            "body": "Revisit past a few MB: árbol, \"quoted\", tab\tand newline\nkept.",
+            "content_hash": "c-dec-0007-1",
+            "embedding_model": "bge-m3"
+          },
+          {
+            "chunk_id": "decision:fx/0004#0",
+            "doc_id": "decision:fx/0004",
+            "ordinal": 0,
+            "heading_path": "",
+            "body": "Does the walk cross cells?",
+            "content_hash": "c-dec-fx-0004-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "lrn-retries#0",
+            "doc_id": "lrn-retries",
+            "ordinal": 0,
+            "heading_path": "Body",
+            "body": "Every retry loop has a ceiling: a minute.",
+            "content_hash": "c-lrn-retries-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNP#0",
+            "doc_id": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNP",
+            "ordinal": 0,
+            "heading_path": "",
+            "body": "w1-walker: the walk\nbruno: decided, it does not.",
+            "content_hash": "c-thread-t1-0",
+            "embedding_model": ""
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          },
+          {
+            "id": "dec-0003",
+            "type": "decision",
+            "title": "Events as the truth",
+            "status": "superseded"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted"
+          },
+          {
+            "id": "decision:fx/0001",
+            "type": "decision",
+            "title": "Seed the store",
+            "status": "accepted"
+          },
+          {
+            "id": "decision:fx/0004",
+            "type": "decision",
+            "title": "Whether the walk crosses cells",
+            "status": "proposed"
+          },
+          {
+            "id": "dft-timeout",
+            "type": "defect",
+            "title": "The 30 s client timeout",
+            "status": "open"
+          },
+          {
+            "id": "ini-hestia",
+            "type": "initiative",
+            "title": "Hestia",
+            "status": "active"
+          },
+          {
+            "id": "initiative:fx",
+            "type": "initiative",
+            "title": "Fixture initiative",
+            "status": "active",
+            "props": {
+              "initiative": "fx"
+            }
+          },
+          {
+            "id": "lrn-retries",
+            "type": "learning",
+            "title": "Retries need a ceiling",
+            "status": "active"
+          },
+          {
+            "id": "person:alma",
+            "type": "person",
+            "title": "alma",
+            "status": "active"
+          },
+          {
+            "id": "rbk-redeploy",
+            "type": "runbook",
+            "title": "Redeploy Hestia",
+            "status": "active"
+          },
+          {
+            "id": "seat:fx/w1-walker",
+            "type": "seat",
+            "title": "fx/w1-walker",
+            "status": "active"
+          },
+          {
+            "id": "spec:fx/x",
+            "type": "spec",
+            "title": "The walk's spec",
+            "status": "ruled"
+          },
+          {
+            "id": "stage:fx/build",
+            "type": "stage",
+            "title": "Build",
+            "status": "open",
+            "props": {
+              "order": 2,
+              "phase": "building",
+              "outcome": "The walk answers from any decision",
+              "current": true,
+              "exits_met": 1,
+              "exits_total": 2,
+              "exit": [
+                {
+                  "text": "Expand answers two hops",
+                  "met": "2026-09-20"
+                },
+                {
+                  "text": "A seat reads it"
+                }
+              ],
+              "appetite": "two waves",
+              "initiative": "fx"
+            }
+          },
+          {
+            "id": "stage:fx/define",
+            "type": "stage",
+            "title": "Define",
+            "status": "done",
+            "props": {
+              "order": 1,
+              "phase": "discovery",
+              "outcome": "The store is seeded",
+              "done": "2026-09-10",
+              "exits_met": 1,
+              "exits_total": 1,
+              "exit": [
+                {
+                  "text": "Rows seeded",
+                  "met": "2026-09-10"
+                }
+              ],
+              "initiative": "fx"
+            }
+          },
+          {
+            "id": "svc-record",
+            "type": "service",
+            "title": "record",
+            "status": "active"
+          },
+          {
+            "id": "term-snapshot",
+            "type": "term",
+            "title": "snapshot",
+            "status": "active"
+          },
+          {
+            "id": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNP",
+            "type": "thread",
+            "title": "the walk",
+            "status": "open"
+          },
+          {
+            "id": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNQ",
+            "type": "thread",
+            "title": "01JQ7Y2B3C4D5E6F7G8H9JKMNQ",
+            "status": "open"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "DEPENDS_ON",
+            "dst": "card:fx/seed-rows",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "IN_STAGE",
+            "dst": "stage:fx/build",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "SPECIFIED_BY",
+            "dst": "spec:fx/x",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "WAITS_ON",
+            "dst": "decision:fx/0004",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "WAITS_ON",
+            "dst": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNQ",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "dec-0007",
+            "rel": "AFFECTS",
+            "dst": "svc-record",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "dec-0007",
+            "rel": "DECIDED_IN",
+            "dst": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNP",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "dec-0007",
+            "rel": "DEPENDS_ON",
+            "dst": "dec-0003",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "dec-0007",
+            "rel": "MENTIONS",
+            "dst": "dft-timeout",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "dec-0007",
+            "rel": "PART_OF",
+            "dst": "ini-hestia",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "dec-0007",
+            "rel": "RELATED_TO",
+            "dst": "lrn-retries",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "dec-0007",
+            "rel": "SUPERSEDES",
+            "dst": "dec-0003",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "dec-0007",
+            "rel": "USES_TERM",
+            "dst": "term-snapshot",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "decision:fx/0004",
+            "rel": "IN_STAGE",
+            "dst": "stage:fx/build",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "decision:fx/0004",
+            "rel": "OWNED_BY",
+            "dst": "person:alma",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "decision:fx/0004",
+            "rel": "RAISED_IN",
+            "dst": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNP",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "decision:fx/0004",
+            "rel": "RULED_BY",
+            "dst": "person:alma",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "decision:fx/0004",
+            "rel": "SUPERSEDES",
+            "dst": "decision:fx/0001",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "initiative:fx",
+            "rel": "HAS_STAGE",
+            "dst": "stage:fx/build",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "initiative:fx",
+            "rel": "HAS_STAGE",
+            "dst": "stage:fx/define",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "lrn-retries",
+            "rel": "DERIVED_FROM",
+            "dst": "run:2026-10-01-hestia-reboot",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "rbk-redeploy",
+            "rel": "AFFECTS",
+            "dst": "svc-record",
+            "origin": "git",
+            "origin_ref": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+          },
+          {
+            "src": "stage:fx/build",
+            "rel": "GATED_BY",
+            "dst": "decision:fx/0004",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "stage:fx/define",
+            "rel": "NEXT_STAGE",
+            "dst": "stage:fx/build",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNP",
+            "rel": "DECIDED_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "mailbox",
+            "origin_ref": "ev-03"
+          },
+          {
+            "src": "thread:01JQ7Y2B3C4D5E6F7G8H9JKMNP",
+            "rel": "POSTED_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "mailbox",
+            "origin_ref": "ev-01"
+          }
+        ]
+      },
+      "expect": {
+        "status": 200,
+        "result": {
+          "factory": "lodestar",
+          "documents": 5,
+          "chunks": 6,
+          "nodes": 20,
+          "edges": 27,
+          "kept_embeddings": 0
+        },
+        "index_version": "same"
+      }
+    },
+    {
+      "name": "same-gzip",
+      "caller_factory": "lodestar",
+      "encoding": "gzip",
+      "same_as": "every-node-type-and-rel",
+      "expect": {
+        "status": 200,
+        "result": {
+          "factory": "lodestar",
+          "documents": 5,
+          "chunks": 6,
+          "nodes": 20,
+          "edges": 27,
+          "kept_embeddings": 0
+        },
+        "index_version": "same"
+      }
+    },
+    {
+      "name": "old-sender-no-index",
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "same_as": "every-node-type-and-rel",
+      "without": "index",
+      "expect": {
+        "status": 200,
+        "result": {
+          "factory": "lodestar",
+          "documents": 5,
+          "chunks": 6,
+          "nodes": 20,
+          "edges": 27,
+          "kept_embeddings": 0
+        },
+        "index_version": ""
+      }
+    }
+  ],
+  "must_refuse": [
+    {
+      "name": "duplicate-document-id",
+      "status": 400,
+      "error_contains": "document card:fx/walk-graph appears twice",
+      "snapshot": {
+        "factory": "lodestar",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "a key twice: the tables' keys would refuse it halfway through"
+    },
+    {
+      "name": "document-without-id",
+      "status": 400,
+      "error_contains": "document 0 has no id",
+      "snapshot": {
+        "factory": "lodestar",
+        "documents": [
+          {
+            "id": "",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "a row with no key"
+    },
+    {
+      "name": "duplicate-chunk-id",
+      "status": 400,
+      "error_contains": "chunk card:fx/walk-graph#0 appears twice",
+      "snapshot": {
+        "factory": "lodestar",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "a key twice"
+    },
+    {
+      "name": "duplicate-node-id",
+      "status": 400,
+      "error_contains": "node card:fx/seed-rows appears twice",
+      "snapshot": {
+        "factory": "lodestar",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "a key twice"
+    },
+    {
+      "name": "orphan-chunk",
+      "status": 400,
+      "error_contains": "which the snapshot does not carry",
+      "snapshot": {
+        "factory": "lodestar",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          },
+          {
+            "chunk_id": "card:fx/ghost#0",
+            "doc_id": "card:fx/ghost",
+            "ordinal": 0,
+            "heading_path": "",
+            "body": "nobody wrote me",
+            "content_hash": "c-ghost",
+            "embedding_model": ""
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "a chunk whose document the snapshot does not carry"
+    },
+    {
+      "name": "two-chunks-one-ordinal",
+      "status": 400,
+      "error_contains": "has two chunks at ordinal 0",
+      "snapshot": {
+        "factory": "lodestar",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          },
+          {
+            "chunk_id": "dec-0007#other",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "(factory, doc_id, ordinal) is unique"
+    },
+    {
+      "name": "duplicate-edge",
+      "status": 400,
+      "error_contains": "appears twice",
+      "snapshot": {
+        "factory": "lodestar",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          },
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "mailbox",
+            "origin_ref": "ev-09"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "(src, rel, dst) is the key; origin does not tell two apart"
+    },
+    {
+      "name": "edge-without-rel",
+      "status": 400,
+      "error_contains": "has no src, rel or dst",
+      "snapshot": {
+        "factory": "lodestar",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "an edge needs src, rel and dst"
+    },
+    {
+      "name": "bad-review-date",
+      "status": 400,
+      "error_contains": "\"2026-13-01\" is not a date",
+      "snapshot": {
+        "factory": "lodestar",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-13-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "review dates are YYYY-MM-DD or null"
+    },
+    {
+      "name": "no-factory",
+      "status": 400,
+      "error_contains": "factory is required",
+      "snapshot": {
+        "factory": "",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "the snapshot names its factory"
+    },
+    {
+      "name": "another-factorys",
+      "caller_factory": "lodestar",
+      "status": 403,
+      "error_contains": "cannot push for factory driftwood",
+      "snapshot": {
+        "factory": "driftwood",
+        "documents": [
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now",
+            "path": "working-on/walk-graph.md",
+            "commit_sha": "nogit",
+            "content_hash": "h-card-walk",
+            "schema_version": 1,
+            "last_reviewed": null,
+            "review_due": null,
+            "deleted": false,
+            "indexed_at": "2026-10-01T12:00:00Z"
+          },
+          {
+            "id": "dec-0007",
+            "type": "decision",
+            "title": "Snapshots, not deltas",
+            "status": "accepted",
+            "path": "decisions/0007-snapshots.md",
+            "commit_sha": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
+            "content_hash": "h-dec-0007",
+            "schema_version": 1,
+            "last_reviewed": "2026-09-01",
+            "review_due": "2026-12-01",
+            "deleted": false,
+            "indexed_at": "2026-10-02T08:30:00.123456Z"
+          }
+        ],
+        "chunks": [
+          {
+            "chunk_id": "card:fx/walk-graph#0",
+            "doc_id": "card:fx/walk-graph",
+            "ordinal": 0,
+            "heading_path": "Goal",
+            "body": "Walk the store two hops from any decision.",
+            "content_hash": "c-card-walk-0",
+            "embedding_model": ""
+          },
+          {
+            "chunk_id": "dec-0007#0",
+            "doc_id": "dec-0007",
+            "ordinal": 0,
+            "heading_path": "Context",
+            "body": "A factory's kb travels whole, as one snapshot.",
+            "content_hash": "c-dec-0007-0",
+            "embedding_model": "bge-m3"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "card:fx/seed-rows",
+            "type": "card",
+            "title": "Seed the rows",
+            "status": "done"
+          },
+          {
+            "id": "card:fx/walk-graph",
+            "type": "card",
+            "title": "Walk the store from a decision",
+            "status": "now"
+          }
+        ],
+        "edges": [
+          {
+            "src": "card:fx/walk-graph",
+            "rel": "BUILT_BY",
+            "dst": "seat:fx/w1-walker",
+            "origin": "git",
+            "origin_ref": "nogit"
+          }
+        ]
+      },
+      "encoding": "identity",
+      "reason": "a key pushes its own factory only"
+    },
+    {
+      "name": "malformed-json",
+      "status": 400,
+      "error_contains": "malformed JSON body",
+      "raw": "{\"factory\":\"lodestar\",\"documents\":[",
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "not JSON"
+    },
+    {
+      "name": "malformed-gzip",
+      "encoding": "gzip",
+      "status": 400,
+      "error_contains": "malformed gzip body",
+      "raw": "not gzip at all",
+      "caller_factory": "lodestar",
+      "reason": "Content-Encoding: gzip on a body that is not"
+    },
+    {
+      "name": "unsupported-encoding",
+      "encoding": "br",
+      "status": 415,
+      "error_contains": "unsupported kb snapshot encoding",
+      "same_as": "every-node-type-and-rel",
+      "caller_factory": "lodestar",
+      "reason": "the receiver reads identity and gzip; 415 with Accept-Encoding: gzip"
+    },
+    {
+      "name": "wire-past-max-body-bytes",
+      "status": 413,
+      "error_contains": "exceeds 33554432 bytes",
+      "generate": "identity body of one node whose title is max_body_bytes long",
+      "caller_factory": "lodestar",
+      "encoding": "identity",
+      "reason": "the body on the wire past max_body_bytes"
+    },
+    {
+      "name": "plain-past-max-snapshot-bytes",
+      "encoding": "gzip",
+      "status": 413,
+      "error_contains": "exceeds 134217728 bytes of plain JSON",
+      "generate": "gzip body whose plain JSON is one node whose title is max_snapshot_bytes long",
+      "caller_factory": "lodestar",
+      "reason": "the inflated JSON past max_snapshot_bytes"
+    }
+  ]
+}
