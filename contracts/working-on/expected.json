@@ -27,8 +27,14 @@
       "closed": ["superseded", "withdrawn"],
       "note": "awaiting-cells, applied and acknowledged are the crossing statuses (working-on templates/crossing.md); they are valid in any decisions/ folder. applied and acknowledged come after the ruling, so they are not waiting."
     },
-    "ruled_by_modes": ["operator away mode, recommendation taken"],
-    "ruled_by_note": "A ruled_by value listed in ruled_by_modes names a mode, not a person.",
+    "ruled_by_modes": ["operator away mode, recommendation taken", "pablo by away mode", "pablo (standing rule)", "pablo by standing rule"],
+    "ruled_by_reading": {
+      "operator away mode, recommendation taken": {"person": "pablo", "mode": "away"},
+      "pablo by away mode": {"person": "pablo", "mode": "away"},
+      "pablo (standing rule)": {"person": "pablo", "mode": "standing rule"},
+      "pablo by standing rule": {"person": "pablo", "mode": "standing rule"}
+    },
+    "ruled_by_note": "decisions.md 2026-10-25 ruling 5: ruled_by has one form ahead (the working-on skill names it); old forms are read, not rewritten. A ruled_by value listed in ruled_by_modes is one of those old forms: it names a person and a mode, read as ruled_by_reading gives them (the ruling is pablo's, a RULED_BY to person pablo, with the mode beside it). Any other value is a person, read as written.",
     "ledgers": {
       "names": ["tickets.md", "jira-map.md", "jira-estimates.md", "assumptions.md"],
       "patterns": ["jira-report-*.md", "jira-*.md with no front-matter"],
@@ -56,8 +62,11 @@
     {"number": "0003", "status": "proposed", "class": "open", "cards": ["blocked-spec-list"]},
     {"number": "0004", "status": "withdrawn", "class": "closed"},
     {"number": "0005", "status": "awaiting-cells", "class": "open"},
-    {"number": "0006", "status": "applied", "class": "decided", "ruled_by_is_mode": true},
-    {"number": "0007", "status": "acknowledged", "class": "decided"}
+    {"number": "0006", "status": "applied", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "away"}},
+    {"number": "0007", "status": "acknowledged", "class": "decided"},
+    {"number": "0008", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "away"}},
+    {"number": "0009", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "standing rule"}},
+    {"number": "0010", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "standing rule"}}
   ],
   "stages": [
     {"id": "discover", "phase": "discovery", "done": "2026-10-06", "exit": [{"text": "The shape is ruled", "met": "2026-10-05"}]},
@@ -80,7 +89,8 @@
         "dropped.md: read with status dropped, no problem raised",
         "done/stale-status.md: status now (Done flag set, status not corrected), no problem; the portfolio counts it as now",
         "0006 and 0007: the portfolio treats applied and acknowledged as waiting; awaiting-cells is left out of proposed",
-        "0006: ruled_by \"operator away mode, recommendation taken\" becomes a person node",
+        "0006: ruled_by \"operator away mode, recommendation taken\" makes no person and no RULED_BY (the reading before ruling 5); wanted: person pablo, mode away",
+        "0008, 0009, 0010: ruled_by \"pablo by away mode\", \"pablo (standing rule)\", \"pablo by standing rule\" each become a person node named as written; wanted: person pablo plus its mode",
         "boundary and repos are not read at all (nothing to compare)"
       ]
     },
@@ -92,7 +102,8 @@
         "blocked-spec-list.md: unread (cannot unmarshal !!seq into string for spec)",
         "assumptions.md: an unread problem (\"no frontmatter\"); not in its ledger list",
         "done/stale-status.md: status now kept (only an empty status becomes done), no problem",
-        "0005, 0006, 0007: \"unknown decision status\" for awaiting-cells, applied, acknowledged"
+        "0005, 0006, 0007: \"unknown decision status\" for awaiting-cells, applied, acknowledged",
+        "0006, 0008, 0009, 0010: ruled_by kept as one string as written; no person and mode read from it"
       ]
     }
   }

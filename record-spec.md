@@ -194,9 +194,36 @@ POST /v1/factories/{factory}/cells               factory key, must match {factor
 POST /v1/ingest                                  factory key
   Request:  { "factory": "lodestar", "events": [ envelope, ... ] }   ≤ 500
   Response: 202 { "accepted": 496, "duplicates": 1, "rejected": [ { "id": "...", "reason": "unknown v 2" } ] }
-            duplicates: events whose id the record already held, not stored again
-  Errors:   400 (not a batch), 403 (factory mismatch), 413 (> 500),
-            429 (per-factory token bucket, `Retry-After` set)
+            duplicates: events whose (factory, id) the record already held, not stored again
+  Errors:   400 (not a batch), 403 (factory mismatch), 413 (> 500 events, or a body
+            past 32 MiB), 429 (per-factory token bucket, `Retry-After` set)
+  Duplicates: an event is appended with INSERT ... ON CONFLICT (factory, id) DO
+            NOTHING (repository/events_repo.go InsertEvent); a row that was already
+            there counts in "duplicates" and is not projected again
+            (service/ingest_service.go), so a resent batch, or the same id twice in
+            one batch, is a 202 that changes nothing. A refused row is parked in
+            quarantine on the same key and a resend only refreshes its reason and
+            received_at. Two factories may use the same id: different streams (§9).
+
+POST /v1/kb/snapshot                             factory key, must be the snapshot's factory
+  Request:  a factory's whole kb { "factory", "index", "documents", "chunks", "nodes",
+            "edges" }, plain JSON or Content-Encoding: gzip (contracts/kb-snapshot.json)
+  Response: 200 { "factory", "documents", "chunks", "nodes", "edges", "kept_embeddings" };
+            the factory's kb rows are replaced by the snapshot's
+  Errors:   400 (malformed JSON or gzip; no factory; a key twice: a document,
+            chunk or node id, a chunk ordinal within its document, or an edge's
+            (src, rel, dst), each named "<kind> <id> appears twice"; a row with no
+            key; a chunk whose document is absent; a review date not YYYY-MM-DD),
+            all refused before any write (kb/snapshot.go validateSnapshot);
+            403 (another factory's); 415 (an encoding other than identity or gzip);
+            413 past 32 MiB on the wire (model.MaxBodyBytes = 32 << 20, the same cap
+            as /v1/ingest) or past 128 MiB of plain JSON once a gzip body is inflated
+            (model.MaxSnapshotBytes); 503 when Postgres holds the snapshot and the
+            graph is behind (the sender resends).
+  The cap is the sender's to respect: the forwarder logs each snapshot's size
+  against the cap that binds, as a warning from 75% of it (model.SnapshotWarnAt),
+  and does not send one past either cap (forward/forward.go sendKB).
+  Every answer carries Accept-Encoding: gzip.
 
 GET  /v1/factories                               either
   Response: { "factories": [ { "id", "developer", "last_seen", "cells": [ ... ] } ] }
@@ -404,8 +431,14 @@ in §4 under the probes.
 ## 9. Edge cases
 
 - **Events for a cell never registered.** Accepted into `events`; projections
-  are applied; the cell shows under its factory with `initiative: null` until
-  registration arrives. Rule 6 in spirit: never lose, never block.
+  are applied; the record registers the cell itself, with initiative
+  `unattributed` (hestia 0041; repository/identity_repo.go
+  RegisterUnseenCell, and `rebuild` does the same for the whole log), so the
+  cell shows under its factory as `unattributed` until a registration names
+  its initiative. A later `unattributed` registration never replaces a real
+  one. A factory with no `factories` row (OIDC, never enrolled) has nowhere to
+  file the cell: nothing is written, and the next batch asks again. Rule 6 in
+  spirit: never lose, never block.
 - **A factory sends `at` in the future or far past.** Stored as sent;
   `received_at` sits beside it. Dashboards order by `received_at` for
   liveness and by `at` for the timeline.
