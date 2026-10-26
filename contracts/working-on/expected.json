@@ -36,7 +36,7 @@
       "pablo (away mode)": {"person": "pablo", "mode": "away"},
       "operator": {"person": "pablo", "mode": "present"}
     },
-    "ruled_by_note": "decisions.md 2026-10-25 ruling 5: ruled_by has one form ahead (the working-on skill names it: `<person>`, or `<person> (away mode)` | `<person> (standing rule)`); old forms are read, not rewritten. A ruled_by value listed in ruled_by_modes does not name a person as written: it names a person and a mode, read as ruled_by_reading gives them (the ruling is pablo's, a RULED_BY to person pablo, with the mode beside it). `operator` (Hestia's ask, 2026-10-26) is person pablo, mode present. Any other value is a person, read as written, mode present (`pablo` is person pablo, mode present). The mode is the decision fact's ruled_mode (facts.enums.ruled_mode); a Themis ruling `themis (FR-4 <x>)` is person themis, mode standing rule. `owner` is not mapped: it is read as written.",
+    "ruled_by_note": "decisions.md 2026-10-25 ruling 5: ruled_by has one form ahead (the working-on skill names it: `<person>`, or `<person> (away mode)` | `<person> (standing rule)`); old forms are read, not rewritten. A ruled_by value listed in ruled_by_modes does not name a person as written: it names a person and a mode, read as ruled_by_reading gives them (the ruling is pablo's, a RULED_BY to person pablo, with the mode beside it). `operator` (Hestia's ask, 2026-10-26) is person pablo, mode present, and is pablo wherever a person is read (`owner: operator` is person pablo too), so no person node is named operator. Any other value is a person, read as written, mode present (`pablo` is person pablo, mode present). The mode is the decision fact's ruled_mode (facts.enums.ruled_mode); a Themis ruling `themis (FR-4 <x>)` is person themis, mode standing rule.",
     "ledgers": {
       "names": ["tickets.md", "jira-map.md", "jira-estimates.md", "assumptions.md"],
       "patterns": ["jira-report-*.md", "jira-*.md with no front-matter"],
@@ -135,14 +135,14 @@
     ],
     "decision": [
       {"number": "0011", "status": "ruled", "raised": "2026-10-20", "raised_at": "2026-10-20T09:15-03:00", "raised_by": "sample-fse",
-       "raised_in": "01M5DDDDDDDDDDDDDDDDDDDDDD", "owner": "operator", "ruled": "2026-10-20", "ruled_at": "2026-10-20T09:52-03:00",
+       "raised_in": "01M5DDDDDDDDDDDDDDDDDDDDDD", "owner": "pablo", "ruled": "2026-10-20", "ruled_at": "2026-10-20T09:52-03:00",
        "ruled_by": "pablo", "ruled_mode": "away", "options": ["a", "b"], "recommended": "b", "chosen": "b",
        "forecast": {"lo": 60, "hi": 100}, "cards": ["facts-fields"]},
       {"number": "0012", "status": "ruled", "raised": "2026-10-21", "raised_at": "2026-10-21T14:00-03:00", "raised_by": "sample-fse",
-       "owner": "operator", "ruled": "2026-10-21", "ruled_at": "2026-10-21T16:30-03:00",
+       "owner": "pablo", "ruled": "2026-10-21", "ruled_at": "2026-10-21T16:30-03:00",
        "ruled_by": "pablo", "ruled_mode": "present", "options": ["a", "b"], "recommended": "a", "chosen": "b",
        "forecast": {"lo": 40, "hi": 90}},
-      {"number": "0002", "status": "ruled", "raised": "2026-10-02", "raised_by": "sample-fse", "owner": "operator", "ruled": "2026-10-05",
+      {"number": "0002", "status": "ruled", "raised": "2026-10-02", "raised_by": "sample-fse", "owner": "pablo", "ruled": "2026-10-05",
        "ruled_by": "pablo", "ruled_mode": "present", "options": ["a", "b"], "chosen": "b", "stage": "build", "cards": ["now-lists"], "supersedes": ["0001"],
        "$comment": "a record written before 0042: no new field, ruled_by operator read as pablo, present"}
     ],
@@ -199,7 +199,7 @@
         "0006: ruled_by \"operator away mode, recommendation taken\" makes no person and no RULED_BY (the reading before ruling 5); wanted: person pablo, mode away",
         "0008, 0009, 0010: ruled_by \"pablo by away mode\", \"pablo (standing rule)\", \"pablo by standing rule\" each become a person node named as written; wanted: person pablo plus its mode",
         "boundary and repos are not read at all (nothing to compare)",
-        "0001, 0002, 0007: ruled_by \"operator\" is person operator with RULED_BY to it; wanted (2026-10-26): person pablo, mode present",
+        "0001, 0002, 0007: ruled_by \"operator\" is person operator with RULED_BY to it, and every owner: operator makes person operator; wanted (2026-10-26): person pablo (mode present for ruled_by), no person operator",
         "0011: ruled_by \"pablo (away mode)\" not split at the parentheses; 0012 makes person pablo (wanted, beside the operator owner)",
         "facts (0042): no schema check, no fact ledger yet; specs with frontmatter read for title and status only (amended-spec agrees there)"
       ]
