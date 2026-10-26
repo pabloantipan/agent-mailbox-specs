@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "working-on/schemas/decision.schema.json",
+  "title": "decision record frontmatter (working-on/decisions/NNNN-slug.md)",
+  "$comment": "Hestia 0042 (frontmatter-fact-ledger, crossing agent-slack 0022, ruled 2026-10-26). The laptop indexer checks a decision's frontmatter against this schema before it writes a `decision` fact; a record that fails is a counted warning and gives no fact (it is still read for the kb as before). Owner of the schema and its enums: Hephaistos (Q5). Every field is optional so that records written before 0042 stay valid; no field is backfilled from prose (review.md, Trade-offs). An empty key (`ruled:` with nothing after it) reads as null and is the same as an absent one. Unknown keys are allowed: the schema types what the facts read, it does not close the format.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "title": {"type": ["string", "null"]},
+    "status": {"type": ["string", "null"], "description": "kept as written; the classes are expected.json accepted_reading.decision_statuses"},
+    "raised": {"$ref": "#/$defs/date"},
+    "raised_by": {"type": ["string", "null"]},
+    "owner": {"type": ["string", "null"]},
+    "ruled": {"$ref": "#/$defs/date"},
+    "ruled_by": {"type": ["string", "null"], "description": "one scalar: `<person>` or `<person> (<mode>)`; old variants are read as expected.json accepted_reading.ruled_by_reading gives them"},
+    "options": {"$ref": "#/$defs/list"},
+    "chosen": {"type": ["string", "null"], "description": "one of options; a question record writes `Q1 <alt>, Q2 <alt>`"},
+    "cards": {"$ref": "#/$defs/list"},
+    "threads": {"$ref": "#/$defs/list"},
+    "affects": {"$ref": "#/$defs/list"},
+    "supersedes": {"$ref": "#/$defs/list"},
+    "superseded_by": {"type": ["string", "integer", "null"]},
+    "stage": {"type": ["string", "null"]},
+    "crossing": {"type": ["string", "integer", "null"]},
+    "supervisor": {"type": ["string", "null"]},
+
+    "raised_at": {"$ref": "#/$defs/datetime", "description": "NEW (0042): when the question was put to the owner, RFC 3339 with an offset; minutes are enough"},
+    "ruled_at": {"$ref": "#/$defs/datetime", "description": "NEW (0042): when the owner ruled, RFC 3339 with an offset"},
+    "ruled_mode": {
+      "description": "NEW (0042, enum owned by Hephaistos, Q5): how the ruling was made. When absent it is read from ruled_by (expected.json ruled_by_reading); when both are written they must agree.",
+      "oneOf": [
+        {"type": "null"},
+        {"const": "present", "description": "the owner ruled in words, in a session or a thread (ruled_by `pablo`, old `operator`)"},
+        {"const": "away", "description": "autonomous mode took the recommendation (ruled_by `pablo (away mode)`, old `pablo by away mode`, `operator away mode, recommendation taken`)"},
+        {"const": "standing rule", "description": "a standing ruling covered it (ruled_by `pablo (standing rule)`, old `pablo by standing rule`; a Themis ruling `themis (FR-4 x)`)"}
+      ]
+    },
+    "recommended": {"type": ["string", "null"], "description": "NEW (0042): the option the raiser recommended, one of options (or `Q1 <alt>, Q2 <alt>`)"},
+    "forecast": {
+      "type": ["string", "null"],
+      "description": "the wall-clock band of a record that launches a task (agent-slack 0014; Q2: written as a frontmatter band). Canonical form `<lo>-<hi>m` or `<lo>-<hi>h`, e.g. `60-100m`. Older prose is valid; the fact reads a band at the start of the text (as Argos does) into forecast {lo, hi} in minutes, and no forecast when none starts it.",
+      "examples": ["60-100m", "1.5-3h"]
+    },
+    "raised_in": {
+      "description": "NEW (0042, Q6): the mailbox thread the decision was raised in, set only when it was raised in the mailbox",
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/thread"}]
+    }
+  },
+  "$defs": {
+    "date": {"type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}"},
+    "datetime": {"type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})$"},
+    "thread": {"type": "string", "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"},
+    "list": {
+      "description": "a list field: a list, or one scalar read as a one-item list (expected.json list_fields.rule)",
+      "anyOf": [
+        {"type": "null"},
+        {"type": ["string", "integer"]},
+        {"type": "array", "items": {"type": ["string", "integer"]}}
+      ]
+    }
+  }
+}

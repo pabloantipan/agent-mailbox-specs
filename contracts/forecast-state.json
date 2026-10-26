@@ -1,0 +1,125 @@
+{
+  "$comment": [
+    "A supervisor seat's forecast extensions: the file `factory forecast extend <session> +<n>m|+<n>h \"<why>\"` appends to,",
+    "~/.local/state/factory/forecast/<session>.json (claudecode scripts/factory/forecast.py, ext_path, save_ext; Argos reads it",
+    "to end the forecast window). Hestia 0042 (crossing agent-slack 0022), Q2, Pablo 2026-10-26: \"YES! make they facts too\":",
+    "every extension is a fact of kind forecast_extension, read by the laptop indexer from that folder, read-only, and sent",
+    "in the facts ledger (facts-batch.json) like the working-on facts (working-on/expected.json facts).",
+    "The history is never cut: an entry once written is never edited, so a fact once sent never changes.",
+    "A change edits this file first; then every writer and reader below follows in the same change."
+  ],
+  "map": [],
+  "writers": [
+    {"side": "factory forecast extend (Hephaistos)", "path": "~/claudecode/scripts/factory/forecast.py (extend, migrate, save_ext)",
+     "test": "none yet reads this file: the writer's test is Hephaistos's"}
+  ],
+  "readers": [
+    {"side": "Argos (forecast.py evaluate, load_ext, launch_entries, window_end)", "path": "~/claudecode/scripts/factory/forecast.py",
+     "test": "none yet reads this file"},
+    {"side": "record's laptop indexer, kind forecast_extension (hestia 0042)", "path": "record (hestia's facts cards)",
+     "test": "to be written by hestia: every valid case gives the listed facts, every must_refuse case gives none and a counted warning"}
+  ],
+
+  "file": {
+    "location": "~/.local/state/factory/forecast/<session>.json, one file per supervisor session; <session>.json.tmp is the writer's atomic-replace temp and is never read",
+    "encoding": "UTF-8 JSON object, written with sort_keys and indent 1",
+    "keys": {
+      "session": "the supervisor session (written by every extend; a file without it takes its name from the file name, less .json)",
+      "rule": "\"from-now\" (forecast.py RULE): each entry's end is its own t plus add_min; a file without it reads the same way",
+      "extensions": "the entries, in the order written; never cut"
+    },
+    "entry": {
+      "t": "integer, epoch seconds UTC: when the extend was made",
+      "started": "integer or null, epoch seconds UTC: the launch the extension belongs to (the seat's probe .started); null when no start was resolved",
+      "add_min": "integer minutes, 1 to 10080 (forecast.py parse_add: at most 7 days), counted from t",
+      "end": "integer epoch seconds UTC, t + 60 * add_min (stamped by migrate; absent in files written before the from-now rule)",
+      "why": "non-empty text: why the window was extended (extend refuses an empty one)",
+      "by": "\"<project>/<agent>\" of who extended (PROJECT_ID/AGENT_NAME), or one of them, or $USER"
+    },
+    "unknown_keys": "an unknown key, in the file or in an entry, is ignored (not refused)"
+  },
+
+  "fact": {
+    "kind": "forecast_extension",
+    "v": 1,
+    "key": ["factory", "session", "at"],
+    "payload": {
+      "session": "the file's session",
+      "launch": "started, as RFC 3339 UTC (Z); absent when started is null",
+      "at": "t, as RFC 3339 UTC (Z)",
+      "add_min": "add_min",
+      "end": "t + 60 * add_min, as RFC 3339 UTC (Z)",
+      "why": "why, as written (text, kept and never counted)",
+      "by": "by, as written"
+    },
+    "note": "The window an extension makes is Argos's to compute (the later end wins, nothing stacks; only the entries of one launch count). The fact carries each entry, not the window: forecast accuracy is read against the decision's band (working-on facts, decision.forecast) and against the extended window, at Hestia."
+  },
+
+  "valid": [
+    {"name": "a from-now file, two extensions of two launches",
+     "path": "sample-probe-sup1.json",
+     "file": {
+       "extensions": [
+         {"add_min": 90, "by": "sample/sup1", "end": 1792964554, "started": 1792947374, "t": 1792959154,
+          "why": "usage limit stopped every seat; the review waits on the operator"},
+         {"add_min": 120, "by": "sample/sup1", "end": 1792997999, "started": 1792990741, "t": 1792990799,
+          "why": "a third card joined the wave"}
+       ],
+       "rule": "from-now",
+       "session": "sample-probe-sup1"
+     },
+     "facts": [
+       {"session": "sample-probe-sup1", "launch": "2026-10-25T16:56:14Z", "at": "2026-10-25T20:12:34Z", "add_min": 90, "end": "2026-10-25T21:42:34Z",
+        "why": "usage limit stopped every seat; the review waits on the operator", "by": "sample/sup1"},
+       {"session": "sample-probe-sup1", "launch": "2026-10-26T04:59:01Z", "at": "2026-10-26T04:59:59Z", "add_min": 120, "end": "2026-10-26T06:59:59Z",
+        "why": "a third card joined the wave", "by": "sample/sup1"}
+     ]},
+    {"name": "a file written before the from-now rule: no rule, no session key, no end; one entry with no launch",
+     "path": "sample-probe-sup2.json",
+     "file": {
+       "extensions": [
+         {"add_min": 60, "by": "sample/fse", "started": 1792890000, "t": 1792900000, "why": "the gate needs one more run"},
+         {"add_min": 60, "by": "sample", "started": null, "t": 1792905000, "why": "no start resolved; extended anyway"}
+       ]
+     },
+     "facts": [
+       {"session": "sample-probe-sup2", "launch": "2026-10-25T01:00:00Z", "at": "2026-10-25T03:46:40Z", "add_min": 60, "end": "2026-10-25T04:46:40Z",
+        "why": "the gate needs one more run", "by": "sample/fse"},
+       {"session": "sample-probe-sup2", "at": "2026-10-25T05:10:00Z", "add_min": 60, "end": "2026-10-25T06:10:00Z",
+        "why": "no start resolved; extended anyway", "by": "sample"}
+     ]},
+    {"name": "a file with no extensions",
+     "path": "sample-probe-sup3.json",
+     "file": {"extensions": [], "rule": "from-now", "session": "sample-probe-sup3"},
+     "facts": []}
+  ],
+
+  "must_refuse": [
+    {"name": "the file is not a JSON object", "scope": "file", "path": "sample-probe-sup4.json", "file": [{"t": 1792900000, "add_min": 60}],
+     "reading": "a counted warning, no fact from the file"},
+    {"name": "the file is not JSON", "scope": "file", "path": "sample-probe-sup5.json", "file_text": "{\"extensions\": [",
+     "reading": "a counted warning, no fact from the file (a later pass reads it again)"},
+    {"name": "an entry that is not an object", "scope": "entry", "entry": "+60m",
+     "reading": "a counted warning for the entry; the file's other entries still give their facts"},
+    {"name": "no t", "scope": "entry", "entry": {"add_min": 60, "why": "x", "by": "a/b"},
+     "reading": "a counted warning for the entry"},
+    {"name": "add_min missing", "scope": "entry", "entry": {"t": 1792900000, "why": "x", "by": "a/b"},
+     "reading": "a counted warning for the entry"},
+    {"name": "add_min zero", "scope": "entry", "entry": {"t": 1792900000, "add_min": 0, "why": "x", "by": "a/b"},
+     "reading": "a counted warning for the entry"},
+    {"name": "add_min past 7 days", "scope": "entry", "entry": {"t": 1792900000, "add_min": 10081, "why": "x", "by": "a/b"},
+     "reading": "a counted warning for the entry"},
+    {"name": "add_min not a whole number", "scope": "entry", "entry": {"t": 1792900000, "add_min": "90", "why": "x", "by": "a/b"},
+     "reading": "a counted warning for the entry"},
+    {"name": "why empty", "scope": "entry", "entry": {"t": 1792900000, "add_min": 60, "why": " ", "by": "a/b"},
+     "reading": "a counted warning for the entry"},
+    {"name": "end disagrees with t + 60 * add_min", "scope": "entry", "entry": {"t": 1792900000, "add_min": 60, "end": 1792900001, "why": "x", "by": "a/b"},
+     "reading": "a counted warning for the entry (migrate always stamps t + 60 * add_min; never guess which is right)"}
+  ],
+
+  "limits": {
+    "add_min": [1, 10080],
+    "time": "epoch seconds in the file; RFC 3339 UTC with Z, to the second, in the fact",
+    "files": "every *.json in the folder; *.tmp and anything else are not read"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "working-on/schemas/card.schema.json",
+  "title": "card frontmatter (working-on/<slug>.md, working-on/done/<slug>.md)",
+  "$comment": "Hestia 0042 (frontmatter-fact-ledger, crossing agent-slack 0022). The laptop indexer checks a card's frontmatter against this schema before it writes a `card` fact; a card that fails is a counted warning and gives no fact (it is still read for the kb as before). Owner: Hephaistos. Every field is optional, so cards written before 0042 stay valid; an empty key reads as null. Unknown keys are allowed. Ledgers (expected.json accepted_reading.ledgers) are not cards and are never checked.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "title": {"type": ["string", "null"]},
+    "status": {"type": ["string", "null"], "description": "kept as written; expected.json card_statuses and done_folder say how it is read"},
+    "repos": {"$ref": "#/$defs/list"},
+    "branch": {"type": ["string", "null"]},
+    "updated": {"$ref": "#/$defs/date"},
+    "next": {"type": ["string", "null"]},
+    "stage": {"type": ["string", "null"]},
+    "seat": {"anyOf": [{"type": ["string", "null"]}, {"type": "array", "items": {"type": "string"}}]},
+    "reviewer": {"type": ["string", "null"]},
+    "supervisor": {"type": ["string", "null"]},
+    "depends_on": {"$ref": "#/$defs/list"},
+    "boundary": {"$ref": "#/$defs/list"},
+    "footprint": {"$ref": "#/$defs/list"},
+    "threads": {"$ref": "#/$defs/list"},
+    "spec": {"$ref": "#/$defs/list"},
+    "gate": {"$ref": "#/$defs/list"},
+    "review": {"type": ["string", "null"], "description": "pass or fail once reviewed; kept as written"},
+
+    "created": {"$ref": "#/$defs/day", "description": "NEW (0042): the day the card was cut (YYYY-MM-DD, or RFC 3339 with an offset)"},
+    "done": {"$ref": "#/$defs/day", "description": "NEW (0042): the day the card reached done (YYYY-MM-DD, or RFC 3339 with an offset)"},
+    "review_rounds": {"type": ["integer", "null"], "minimum": 0, "description": "NEW (0042): how many review rounds the card took; 1 is a first-time pass"}
+  },
+  "$defs": {
+    "date": {"type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}"},
+    "day": {"type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2}))?$"},
+    "list": {
+      "description": "a list field: a list, or one scalar read as a one-item list (expected.json list_fields.rule)",
+      "anyOf": [
+        {"type": "null"},
+        {"type": ["string", "integer"]},
+        {"type": "array", "items": {"type": ["string", "integer"]}}
+      ]
+    }
+  }
+}
