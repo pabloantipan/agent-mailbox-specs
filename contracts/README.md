@@ -41,6 +41,8 @@ to follow.
 | H10 | `../health-golden.json` | mailbox: `api/internal/api/health_load_test.go` `TestHealthRowFieldsMatchGolden` (reads it). record: `record/internal/handler/health_golden_integration_test.go` `TestHealthMatchesTheGoldenShape` (reads its vendored `record/specs/health-golden.json`; `TestGoldenCopyMatchesTheInitiative` compares the copy with this file) | UI `ui/app.js`, Deltagos `organizer/internal/discuss/discuss.go`, `check.sh`: no test reads it yet | mailbox reads it; record's copy equals it today (see Gaps) |
 | H11, L3 | `mailbox-threads.json` | mailbox: `api/internal/api/contract_test.go` `TestThreadListKeysMatchSample` | role-relay, hephaistos-mail.sh, discuss-threads, tidy-check (claudecode), Deltagos `internal/discuss/client.go`: no test reads it yet | pins today's untagged keys |
 | F2, F4 | `working-on/` (`sample/` + `expected.json`) | the working-on skill (`~/claudecode/skills/working-on/SKILL.md`), which names this tree as the format's reference | record `record/internal/kb/workingon/golden_test.go` (reads it); Deltagos `organizer/internal/scan`: no test reads it yet | written; both readers differ from it (`expected.json` `readers_today`) |
+| 0042 facts | `working-on/schemas/` (`decision`, `card`, `run-record`, `spec` `.schema.json`) + `working-on/expected.json` `facts` (the new fields' sample records, the fact payloads, the enums `ruled_mode` and `cause`, must-refuse cases) | the working-on, fse, supervise and spec-craft skills (Hephaistos; their edits follow) | record's laptop indexer, the facts ledger (hestia 0042's cards): no test reads it yet | written (hestia 0042, crossing agent-slack 0022); old records stay valid; record to follow |
+| 0042 facts | `forecast-state.json` (fact kind `forecast_extension`) | `factory forecast extend` (`~/claudecode/scripts/factory/forecast.py`, Hephaistos): no test reads it yet | Argos (`forecast.py`); record's laptop indexer (hestia): no test reads it yet | written; record to follow |
 | H3 | `usage-batch.json` | Deltagos `internal/service/usagepost.go`; record forwarder `internal/forward/usage.go`: neither test reads it yet | record `internal/usage/usage_test.go`, `migration_integration_test.go`, `internal/handler/usage_integration_test.go` (read it) | written (record side); writers' tests to follow: organizer's FSE, hestia's FSE |
 | H1 | `ingest-batch.json` | mailbox pusher `api/cmd/discuss-api/push.go` (`push_test.go` does not read it yet); record forwarder `internal/forward/forward.go`, `client.go` | record `internal/handler/ingest_integration_test.go`, `internal/model/envelope_test.go` (read it) | written (record side); the mailbox pusher's test is Hephaistos's; both senders to follow ruling 4's retry rule (see Gaps) |
 | H5, H6, H7 | `auth.json` | Keycloak realm `record/deploy/hestia/keycloak/hestia-realm.json` and enrolment `record/internal/enroll` (`auth_contract_test.go`); `GET /v1/auth/verify` | record `internal/auth/auth_contract_test.go`, `internal/handler/auth_contract_test.go`, `factory_name_integration_test.go`, `cmd/discuss-record/key_role_test.go`; gateway `deploy/hestia/test/verify-stub` and `gw-test.sh` (all read it; the file lists every one) | written |
@@ -49,7 +51,9 @@ to follow.
 
 Owners (decisions.md 2026-10-25): hestia's FSE for the record side, the
 organizer's FSE for the Deltagos side, Hephaistos for the mailbox, the
-working-on sample and skill, and this folder.
+working-on sample and skill, and this folder. Hestia 0042 adds: the
+working-on schemas, their enums and `forecast-state.json` are Hephaistos's
+(Q5); `facts-batch.json` (H12) is hestia's FSE's, in this folder.
 
 ## Gaps known today
 
