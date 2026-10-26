@@ -27,14 +27,16 @@
       "closed": ["superseded", "withdrawn"],
       "note": "awaiting-cells, applied and acknowledged are the crossing statuses (working-on templates/crossing.md); they are valid in any decisions/ folder. applied and acknowledged come after the ruling, so they are not waiting."
     },
-    "ruled_by_modes": ["operator away mode, recommendation taken", "pablo by away mode", "pablo (standing rule)", "pablo by standing rule"],
+    "ruled_by_modes": ["operator away mode, recommendation taken", "pablo by away mode", "pablo (standing rule)", "pablo by standing rule", "pablo (away mode)", "operator"],
     "ruled_by_reading": {
       "operator away mode, recommendation taken": {"person": "pablo", "mode": "away"},
       "pablo by away mode": {"person": "pablo", "mode": "away"},
       "pablo (standing rule)": {"person": "pablo", "mode": "standing rule"},
-      "pablo by standing rule": {"person": "pablo", "mode": "standing rule"}
+      "pablo by standing rule": {"person": "pablo", "mode": "standing rule"},
+      "pablo (away mode)": {"person": "pablo", "mode": "away"},
+      "operator": {"person": "pablo", "mode": "present"}
     },
-    "ruled_by_note": "decisions.md 2026-10-25 ruling 5: ruled_by has one form ahead (the working-on skill names it); old forms are read, not rewritten. A ruled_by value listed in ruled_by_modes is one of those old forms: it names a person and a mode, read as ruled_by_reading gives them (the ruling is pablo's, a RULED_BY to person pablo, with the mode beside it). Any other value is a person, read as written.",
+    "ruled_by_note": "decisions.md 2026-10-25 ruling 5: ruled_by has one form ahead (the working-on skill names it: `<person>`, or `<person> (away mode)` | `<person> (standing rule)`); old forms are read, not rewritten. A ruled_by value listed in ruled_by_modes does not name a person as written: it names a person and a mode, read as ruled_by_reading gives them (the ruling is pablo's, a RULED_BY to person pablo, with the mode beside it). `operator` (Hestia's ask, 2026-10-26) is person pablo, mode present. Any other value is a person, read as written, mode present (`pablo` is person pablo, mode present). The mode is the decision fact's ruled_mode (facts.enums.ruled_mode); a Themis ruling `themis (FR-4 <x>)` is person themis, mode standing rule. `owner` is not mapped: it is read as written.",
     "ledgers": {
       "names": ["tickets.md", "jira-map.md", "jira-estimates.md", "assumptions.md"],
       "patterns": ["jira-report-*.md", "jira-*.md with no front-matter"],
@@ -54,32 +56,137 @@
      "spec": ["docs/specs/sample-spec.md#goals", "decisions 0002"], "waits_on_decision": "0003"},
     {"slug": "dropped", "path": "working-on/dropped.md", "status": "dropped"},
     {"slug": "shipped", "path": "working-on/done/shipped.md", "status": "done", "done_folder": true},
-    {"slug": "stale-status", "path": "working-on/done/stale-status.md", "status": "done", "status_as_written": "now", "done_folder": true}
+    {"slug": "stale-status", "path": "working-on/done/stale-status.md", "status": "done", "status_as_written": "now", "done_folder": true},
+    {"slug": "facts-fields", "path": "working-on/done/facts-fields.md", "status": "done", "done_folder": true, "repos": ["sample-repo"],
+     "spec": ["docs/specs/amended-spec.md#goals"]}
   ],
   "decisions": [
-    {"number": "0001", "status": "superseded", "class": "closed", "superseded_by": "0002"},
-    {"number": "0002", "status": "ruled", "class": "decided", "stage": "build", "cards": ["now-lists"], "supersedes": ["0001"]},
+    {"number": "0001", "status": "superseded", "class": "closed", "superseded_by": "0002", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "present"}},
+    {"number": "0002", "status": "ruled", "class": "decided", "stage": "build", "cards": ["now-lists"], "supersedes": ["0001"], "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "present"}},
     {"number": "0003", "status": "proposed", "class": "open", "cards": ["blocked-spec-list"]},
     {"number": "0004", "status": "withdrawn", "class": "closed"},
     {"number": "0005", "status": "awaiting-cells", "class": "open"},
     {"number": "0006", "status": "applied", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "away"}},
-    {"number": "0007", "status": "acknowledged", "class": "decided"},
+    {"number": "0007", "status": "acknowledged", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "present"}},
     {"number": "0008", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "away"}},
     {"number": "0009", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "standing rule"}},
-    {"number": "0010", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "standing rule"}}
+    {"number": "0010", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "standing rule"}},
+    {"number": "0011", "status": "ruled", "class": "decided", "cards": ["facts-fields"], "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "away"}},
+    {"number": "0012", "status": "ruled", "class": "decided", "ruled_by": {"person": "pablo", "mode": "present"}}
   ],
   "stages": [
     {"id": "discover", "phase": "discovery", "done": "2026-10-06", "exit": [{"text": "The shape is ruled", "met": "2026-10-05"}]},
     {"id": "build", "phase": "building", "gates": ["0002"], "appetite": "two waves", "exit": [{"text": "The slice passes its gate"}]}
   ],
   "current_stage": "build",
-  "specs": [{"name": "sample-spec", "path": "docs/specs/sample-spec.md", "title": "Sample spec", "status": "ruled"}],
+  "runs": [
+    {"path": "docs/runs/2026-10-22-sample-run.md", "name": "2026-10-22-sample-run", "waves": 1, "rounds": 4, "findings": 2,
+     "$comment": "a run record (hestia 0042): read for its facts (facts.wave, facts.round, facts.finding) and as a kb document"}
+  ],
+  "specs": [
+    {"name": "amended-spec", "path": "docs/specs/amended-spec.md", "title": "Amended spec", "status": "ruled"},
+    {"name": "sample-spec", "path": "docs/specs/sample-spec.md", "title": "Sample spec", "status": "ruled"}
+  ],
   "skipped_silently": ["working-on/tickets.md", "working-on/jira-map.md", "working-on/assumptions.md"],
   "problems": [
     {"path": "working-on/bad-yaml.md", "unread": true, "reason": "front-matter is not YAML (an unquoted colon in next)"},
     {"path": "working-on/dropped.md", "unread": false, "reason": "unknown card status \"dropped\""},
     {"path": "working-on/done/stale-status.md", "unread": false, "reason": "status \"now\" on a card under done/"}
   ],
+  "facts": {
+    "$comment": [
+      "Hestia 0042 (frontmatter-fact-ledger, crossing agent-slack 0022, ruled 2026-10-26): the facts the laptop indexer",
+      "extracts from sample/ into its ledger (kind, v, key, payload, seq) and forwards to POST /v1/facts (facts-batch.json,",
+      "hestia's). Each file is checked against its kind's schema (schemas/) first. Owner of the schemas and the enums:",
+      "Hephaistos (Q5). Writers: the working-on, fse, supervise and spec-craft skills (their edits follow this file).",
+      "Readers: record's indexer (hestia's cards), then Hestia's projections and the system reader through the facts API."
+    ],
+    "v": 1,
+    "schemas": {
+      "decision": "schemas/decision.schema.json",
+      "card": "schemas/card.schema.json",
+      "run record": "schemas/run-record.schema.json",
+      "spec": "schemas/spec.schema.json"
+    },
+    "kinds": {
+      "decision": {"from": "working-on/decisions/NNNN-slug.md", "key": ["factory", "initiative", "number"]},
+      "card": {"from": "working-on/<slug>.md, working-on/done/<slug>.md", "key": ["factory", "initiative", "slug"]},
+      "wave": {"from": "docs/runs/*.md waves[]", "key": ["factory", "initiative", "run", "wave"]},
+      "round": {"from": "docs/runs/*.md waves[].rounds[]", "key": ["factory", "initiative", "run", "card", "kind", "start"]},
+      "finding": {"from": "docs/runs/*.md findings[]", "key": ["factory", "initiative", "run", "n"]},
+      "amendment": {"from": "docs/specs/*.md frontmatter amendments[]", "key": ["factory", "initiative", "spec", "n"]},
+      "forecast_extension": {"from": "~/.local/state/factory/forecast/<session>.json, not an initiative file", "sample": "../forecast-state.json"}
+    },
+    "enums": {
+      "ruled_mode": ["present", "away", "standing rule"],
+      "cause": ["approach", "execution", "gate", "environment", "unclear"],
+      "cause_used_by": ["round.cause", "finding.kind", "amendment.cause"],
+      "note": "Hard to undo (review.md, Reversibility): a value is added, never renamed. cause: approach = the approach or its context was wrong or missing; execution = the way was right, the work was not; gate = the gate or the spec was wrong or unclear; environment = environment or process (rebase, limit, tooling, CI); unclear = not known, never guessed."
+    },
+    "rules": [
+      "Every decision, card, run record (one with waves or findings) and spec its schema accepts gives its facts; a file named TEMPLATE*.md is not a record.",
+      "A field absent or empty in the file is absent from the payload: nothing is backfilled from prose or guessed (review.md, Trade-offs). The listed payloads are held key by key.",
+      "Times are kept as written (RFC 3339 with an offset, minutes enough); dates as YYYY-MM-DD.",
+      "decision.ruled_by is the person and decision.ruled_mode the mode, by accepted_reading.ruled_by_reading; a written ruled_mode is the mode, and it must agree with ruled_by's (see reader_refuses).",
+      "decision.forecast is {lo, hi} in minutes, from a band at the start of the frontmatter `forecast:` (`60-100m`, `1.5-3h`, `40-90 min ...`, as Argos reads it); no band at the start, no forecast.",
+      "decision.raised_in is set only when the decision was raised in the mailbox (Q6).",
+      "run is the run record's file name without .md; a finding's n and an amendment's n are 1-based places in their lists.",
+      "A file its schema refuses is a counted warning (the `facts` count factory check and /kb/freshness show) and gives no fact; it is still read for the kb as before."
+    ],
+    "decision": [
+      {"number": "0011", "status": "ruled", "raised": "2026-10-20", "raised_at": "2026-10-20T09:15-03:00", "raised_by": "sample-fse",
+       "raised_in": "01M5DDDDDDDDDDDDDDDDDDDDDD", "owner": "operator", "ruled": "2026-10-20", "ruled_at": "2026-10-20T09:52-03:00",
+       "ruled_by": "pablo", "ruled_mode": "away", "options": ["a", "b"], "recommended": "b", "chosen": "b",
+       "forecast": {"lo": 60, "hi": 100}, "cards": ["facts-fields"]},
+      {"number": "0012", "status": "ruled", "raised": "2026-10-21", "raised_at": "2026-10-21T14:00-03:00", "raised_by": "sample-fse",
+       "owner": "operator", "ruled": "2026-10-21", "ruled_at": "2026-10-21T16:30-03:00",
+       "ruled_by": "pablo", "ruled_mode": "present", "options": ["a", "b"], "recommended": "a", "chosen": "b",
+       "forecast": {"lo": 40, "hi": 90}},
+      {"number": "0002", "status": "ruled", "raised": "2026-10-02", "raised_by": "sample-fse", "owner": "operator", "ruled": "2026-10-05",
+       "ruled_by": "pablo", "ruled_mode": "present", "options": ["a", "b"], "chosen": "b", "stage": "build", "cards": ["now-lists"], "supersedes": ["0001"],
+       "$comment": "a record written before 0042: no new field, ruled_by operator read as pablo, present"}
+    ],
+    "card": [
+      {"slug": "facts-fields", "status": "done", "created": "2026-10-20", "done": "2026-10-22", "review": "pass", "review_rounds": 2},
+      {"slug": "shipped", "status": "done", "review": "pass", "$comment": "a card written before 0042: no created, done or review_rounds"}
+    ],
+    "wave": [
+      {"run": "2026-10-22-sample-run", "wave": 1, "supervisor": "sup-sample", "cards": ["facts-fields"],
+       "launched": "2026-10-20T10:00-03:00", "merged": "2026-10-22T11:30-03:00"}
+    ],
+    "round": [
+      {"run": "2026-10-22-sample-run", "wave": 1, "card": "facts-fields", "kind": "build", "start": "2026-10-20T10:00-03:00", "end": "2026-10-20T10:40-03:00", "result": "n/a"},
+      {"run": "2026-10-22-sample-run", "wave": 1, "card": "facts-fields", "kind": "review", "start": "2026-10-20T10:41-03:00", "end": "2026-10-20T10:55-03:00", "result": "fail", "reviewer": "ff-review", "cause": "gate"},
+      {"run": "2026-10-22-sample-run", "wave": 1, "card": "facts-fields", "kind": "build", "start": "2026-10-22T10:00-03:00", "end": "2026-10-22T10:30-03:00", "result": "n/a", "cause": "gate"},
+      {"run": "2026-10-22-sample-run", "wave": 1, "card": "facts-fields", "kind": "review", "start": "2026-10-22T10:31-03:00", "end": "2026-10-22T10:45-03:00", "result": "pass", "reviewer": "ff-review2"}
+    ],
+    "round_note": "reason (and a finding's or amendment's what) is one line kept with the fact as text and never counted; left out of the payloads above.",
+    "finding": [
+      {"run": "2026-10-22-sample-run", "n": 1, "kind": "environment", "to": "hephaistos", "card": "facts-fields"},
+      {"run": "2026-10-22-sample-run", "n": 2, "kind": "execution", "to": "sample-fse"}
+    ],
+    "amendment": [
+      {"spec": "amended-spec", "n": 1, "date": "2026-10-21", "cause": "gate", "card": "facts-fields"}
+    ],
+    "warnings": [],
+    "must_refuse": [
+      {"name": "ruled_mode outside the enum", "schema": "decision", "frontmatter": {"status": "ruled", "ruled_by": "pablo", "ruled_mode": "sometimes"}},
+      {"name": "raised_at a date with no time", "schema": "decision", "frontmatter": {"status": "proposed", "raised_at": "2026-10-20"}},
+      {"name": "ruled_at with no offset", "schema": "decision", "frontmatter": {"status": "ruled", "ruled_at": "2026-10-20T09:52"}},
+      {"name": "raised_in not a thread id", "schema": "decision", "frontmatter": {"status": "proposed", "raised_in": "thread 01M5DDDDDDDDDDDDDDDDDDDDDD"}},
+      {"name": "review_rounds not a whole number", "schema": "card", "frontmatter": {"status": "done", "review_rounds": "two"}},
+      {"name": "review_rounds below zero", "schema": "card", "frontmatter": {"status": "done", "review_rounds": -1}},
+      {"name": "created not a date", "schema": "card", "frontmatter": {"status": "now", "created": "last week"}},
+      {"name": "round cause outside the enum", "schema": "run record", "frontmatter": {"waves": [{"wave": 1, "rounds": [{"card": "x", "kind": "review", "result": "fail", "cause": "flaky"}]}]}},
+      {"name": "finding without a kind", "schema": "run record", "frontmatter": {"findings": [{"to": "hephaistos", "what": "one line"}]}},
+      {"name": "amendment without a cause", "schema": "spec", "frontmatter": {"amendments": [{"date": "2026-10-21", "card": "x"}]}},
+      {"name": "amendment date with a time", "schema": "spec", "frontmatter": {"amendments": [{"date": "2026-10-21T10:00-03:00", "cause": "gate"}]}}
+    ],
+    "reader_refuses": [
+      {"name": "ruled_mode disagrees with ruled_by", "frontmatter": {"status": "ruled", "ruled_by": "pablo (away mode)", "ruled_mode": "present"},
+       "reading": "schema-valid, but the two disagree: a counted warning and no decision fact (never guess which one is right)"}
+    ]
+  },
   "readers_today": {
     "record": {
       "where": "~/hestia-monorepo/record/internal/kb/workingon/read.go, graph.go; record/internal/portfolio",
@@ -91,7 +198,10 @@
         "0006 and 0007: the portfolio treats applied and acknowledged as waiting; awaiting-cells is left out of proposed",
         "0006: ruled_by \"operator away mode, recommendation taken\" makes no person and no RULED_BY (the reading before ruling 5); wanted: person pablo, mode away",
         "0008, 0009, 0010: ruled_by \"pablo by away mode\", \"pablo (standing rule)\", \"pablo by standing rule\" each become a person node named as written; wanted: person pablo plus its mode",
-        "boundary and repos are not read at all (nothing to compare)"
+        "boundary and repos are not read at all (nothing to compare)",
+        "0001, 0002, 0007: ruled_by \"operator\" is person operator with RULED_BY to it; wanted (2026-10-26): person pablo, mode present",
+        "0011: ruled_by \"pablo (away mode)\" not split at the parentheses; 0012 makes person pablo (wanted, beside the operator owner)",
+        "facts (0042): no schema check, no fact ledger yet; specs with frontmatter read for title and status only (amended-spec agrees there)"
       ]
     },
     "deltagos": {
@@ -103,7 +213,9 @@
         "assumptions.md: an unread problem (\"no frontmatter\"); not in its ledger list",
         "done/stale-status.md: status now kept (only an empty status becomes done), no problem",
         "0005, 0006, 0007: \"unknown decision status\" for awaiting-cells, applied, acknowledged",
-        "0006, 0008, 0009, 0010: ruled_by kept as one string as written; no person and mode read from it"
+        "0006, 0008, 0009, 0010: ruled_by kept as one string as written; no person and mode read from it",
+        "0001, 0002, 0007, 0011: ruled_by \"operator\", \"pablo (away mode)\" kept as written",
+        "0011, 0012: forecast kept as the band string; forecast_top 100 from `60-100m`, 0 from `40-90 min of ...` (its regexp is anchored at the end; the facts read {lo 40, hi 90}, as Argos does); the other 0042 fields are not read"
       ]
     }
   }
