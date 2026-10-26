@@ -60,10 +60,12 @@
   },
   "node_types": {
     "workingon": [
+      "bitacora",
       "card",
       "decision",
       "initiative",
       "person",
+      "run",
       "seat",
       "spec",
       "stage",
@@ -121,7 +123,7 @@
       "snapshot": {
         "factory": "lodestar",
         "index": {
-          "version": "1e26f1af98bc4ef31bf2411bda9910aa8c0975e5c9ac69c772a5315e2df55d78",
+          "version": "305d2e05371037c9c2487163e3b0ce60b34bb45d51a99832d91228466a494628",
           "kb_commit": "9f1c2a7d0b3e4f5a6b7c8d9e0f1a2b3c4d5e6f70",
           "indexed_at": "2026-10-02T08:30:00.123456Z"
         },
@@ -255,6 +257,12 @@
         ],
         "nodes": [
           {
+            "id": "bitacora:fx/fse_bitacora",
+            "type": "bitacora",
+            "title": "FSE (fx) — bitácora",
+            "status": ""
+          },
+          {
             "id": "card:fx/seed-rows",
             "type": "card",
             "title": "Seed the rows",
@@ -328,6 +336,12 @@
             "type": "runbook",
             "title": "Redeploy Hestia",
             "status": "active"
+          },
+          {
+            "id": "run:fx/2026-10-01-walk",
+            "type": "run",
+            "title": "2026-10-01 — the walk's first run",
+            "status": "closed"
           },
           {
             "id": "seat:fx/w1-walker",
@@ -610,7 +624,7 @@
           "factory": "lodestar",
           "documents": 5,
           "chunks": 6,
-          "nodes": 20,
+          "nodes": 22,
           "edges": 27,
           "kept_embeddings": 0
         },
@@ -628,7 +642,7 @@
           "factory": "lodestar",
           "documents": 5,
           "chunks": 6,
-          "nodes": 20,
+          "nodes": 22,
           "edges": 27,
           "kept_embeddings": 0
         },
@@ -647,7 +661,7 @@
           "factory": "lodestar",
           "documents": 5,
           "chunks": 6,
-          "nodes": 20,
+          "nodes": 22,
           "edges": 27,
           "kept_embeddings": 0
         },
