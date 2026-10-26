@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "working-on/schemas/spec.schema.json",
+  "title": "spec frontmatter (docs/specs/<name>.md)",
+  "$comment": "Hestia 0042 (frontmatter-fact-ledger, crossing agent-slack 0022). spec-craft writes a spec with no frontmatter: a `# ` title and a `status:` line above the first `## `, and that stays valid (a spec with no frontmatter is checked as the empty object). A spec that is amended carries frontmatter with `amendments:`, the list the laptop indexer reads into `amendment` facts (key spec, n, n being the amendment's 1-based place in amendments). Frontmatter wins for title and status. A spec that fails is a counted warning and gives no fact (still read for the kb as before). Owner: Hephaistos. The cause enum is the run-record schema's.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "title": {"type": ["string", "null"]},
+    "status": {"type": ["string", "null"]},
+    "amendments": {
+      "type": ["array", "null"],
+      "description": "NEW (0042, Q-c): every amendment, oldest first; the body keeps its `## Amendment <date>` text",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["date", "cause"],
+        "properties": {
+          "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+          "cause": {"$ref": "#/$defs/cause"},
+          "card": {"type": ["string", "null"], "description": "the card whose build or review proved the spec wrong, by slug"},
+          "what": {"type": ["string", "null"], "description": "one line, kept and never counted"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "cause": {
+      "description": "the cause enum (0042 Q5, Hephaistos); the same values as run-record.schema.json $defs.cause",
+      "oneOf": [
+        {"const": "approach", "description": "approach or context was wrong or missing"},
+        {"const": "execution", "description": "the way was right, the work was not"},
+        {"const": "gate", "description": "the gate or the spec asked the wrong thing, or was unclear"},
+        {"const": "environment", "description": "environment or process"},
+        {"const": "unclear", "description": "not known when written; never guessed"}
+      ]
+    }
+  }
+}

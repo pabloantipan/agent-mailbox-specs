@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "working-on/schemas/run-record.schema.json",
+  "title": "run record frontmatter (docs/runs/YYYY-MM-DD-<slug>.md)",
+  "$comment": "Hestia 0042 (frontmatter-fact-ledger, crossing agent-slack 0022). The supervisor writes `waves:` (supervise skill); 0042 adds a round's `cause` and a run's `findings:`. The laptop indexer checks a run record against this schema and writes the facts `wave` (key run, wave), `round` (key run, card, kind, start) and `finding` (key run, n, n being the finding's 1-based place in findings); a record that fails is a counted warning and gives no fact (its text is still a kb document). Owner: Hephaistos. New fields are optional, so run records written before 0042 stay valid. `reason` and `what` are one line of text, kept and never counted. The cause enum is the same in round.cause, finding.kind and the spec schema's amendment cause. A file named TEMPLATE*.md is a template, not a record, and is not checked.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "waves": {"type": ["array", "null"], "items": {"$ref": "#/$defs/wave"}},
+    "findings": {
+      "type": ["array", "null"],
+      "description": "NEW (0042, Q-g): what the run found and was not asked, each with its kind and whom it went to",
+      "items": {"$ref": "#/$defs/finding"}
+    }
+  },
+  "$defs": {
+    "time": {"type": ["string", "null"], "description": "RFC 3339 with an offset, minutes enough (2026-10-26T02:00-03:00); anything else (older prose such as `in progress`) is valid, kept as written and read as no time"},
+    "cause": {
+      "description": "the cause enum (0042 Q5, Hephaistos): why a round was needed, what kind of thing a finding is, why a spec was amended",
+      "oneOf": [
+        {"const": "approach", "description": "approach or context: the way chosen, or the context the seat was given, was wrong or missing"},
+        {"const": "execution", "description": "execution: the way was right, the work was not (a bug, an unmet gate item, a slip)"},
+        {"const": "gate", "description": "gate or spec: the gate or the spec asked the wrong thing, or was unclear"},
+        {"const": "environment", "description": "environment or process: rebase, conflict, usage limit, tooling, CI, machine, protocol"},
+        {"const": "unclear", "description": "not known when written; never guessed"}
+      ]
+    },
+    "wave": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "wave": {"type": ["integer", "string"]},
+        "supervisor": {"type": ["string", "null"]},
+        "task": {"type": ["string", "null"]},
+        "cards": {"anyOf": [{"type": ["string", "null"]}, {"type": "array", "items": {"type": "string"}}]},
+        "launched": {"$ref": "#/$defs/time"},
+        "merged": {"$ref": "#/$defs/time"},
+        "rounds": {"type": ["array", "null"], "items": {"$ref": "#/$defs/round"}}
+      }
+    },
+    "round": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "card": {"type": ["string", "null"]},
+        "kind": {"type": ["string", "null"], "description": "build, review or take, as written"},
+        "start": {"$ref": "#/$defs/time"},
+        "end": {"$ref": "#/$defs/time"},
+        "result": {"type": ["string", "null"], "description": "pass, fail or n/a, as written"},
+        "reviewer": {"type": ["string", "null"]},
+        "reason": {"type": ["string", "null"]},
+        "cause": {
+          "description": "NEW (0042, Q-b): why this round was needed. Written on a review that fails and on a build that answers a failed review or redoes work (rebase, limit); left out of a first build and a first review.",
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/cause"}]
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"$ref": "#/$defs/cause"},
+        "to": {"type": ["string", "null"], "description": "whom it went to: a seat, a cell's FSE, hephaistos, pablo"},
+        "card": {"type": ["string", "null"], "description": "the card it was found in or placed as, by slug"},
+        "what": {"type": ["string", "null"], "description": "one line, kept and never counted"}
+      }
+    }
+  }
+}
