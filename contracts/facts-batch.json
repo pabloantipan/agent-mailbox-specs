@@ -61,6 +61,7 @@
     "the ledger holds one row per (factory, kind, key): a row whose v and payload equal the held one's is unchanged (its seq kept, no history); any other replaces it and writes a facts_history row",
     "a later row for the same (factory, kind, key) is the truth: a quarantined row that is sent again keeping the rules is projected, and a projected row replaced by a quarantined one has its projection removed (the projection never holds a version the ledger no longer has; `replaced` below)",
     "a U+0000 anywhere in a row's key or payload (a string or a field name) quarantines the row, whatever its kind, and never refuses the batch: the row is kept with each U+0000 written as the six-character text \\u0000 (a key holding one is keyed by that text), and it is never projected, on Rebuild too: a key or payload holding that text is quarantined",
+    "a row whose content Postgres refuses to hold as sent (a lone surrogate escape, bytes that are not UTF-8, a number past numeric's range, or any refusal of a value not met yet) is quarantined, never refusing the batch: the ledger keeps the row exactly as sent in its column raw (bytea), payload {}, the reason naming the refusal and ending \"kept raw\", keyed by the row's key or, when that is refused too, by {\"raw_sha256\": <hex sha256 of the key as sent, compact>}; it is never projected, and Rebuild leaves it as it is",
     "the projections are a function of the ledger: rebuilt from it, they are equal"
   ],
   "kinds": {
@@ -188,7 +189,7 @@
     ]
   },
   "never_refused": {
-    "$comment": "Rows whose content Hestia cannot project, each case posted alone by a key of `factory` as {\"factory\": `factory`, \"after_seq\": 0, \"rows\": `rows`} on a ledger that holds none of them: answered 200, every row as `answers` says, in order (`reason_contains` a substring of its reason). `ledger` is what the ledger then holds for each row, key and payload compared by value; `projections` the rows each table then holds. A U+0000 is kept as the text \\u0000 and never projected; a number past 2147483647 is quarantined (the review of facts-ingest, F1 and F2; the FSE's ruling).",
+    "$comment": "Rows whose content Hestia cannot project, each case posted alone by a key of `factory` as {\"factory\": `factory`, \"after_seq\": 0, \"rows\": `rows`} on a ledger that holds none of them (the text \"<0xff>\" in a row stands for the one byte 0xff, which this file cannot hold): answered 200, every row as `answers` says, in order (`reason_contains` a substring of its reason). `ledger` is what the ledger then holds for each row, key and payload compared by value; `raw` true is a row kept raw (the ledger's raw is the row as sent, payload {}). `projections` the rows each table then holds. A U+0000 is kept as the text \\u0000 and never projected; a number past 2147483647 is quarantined (the review of facts-ingest, F1 and F2; the FSE's ruling).",
     "cases": [
       {"name": "an unknown kind whose payload holds U+0000",
        "rows": [{"kind": "spec_status", "v": 1, "key": {"initiative": "i", "spec": "s"}, "payload": {"x": "a\u0000b"}, "seq": 1}],
@@ -214,7 +215,36 @@
        "rows": [{"kind": "card", "v": 1, "key": {"initiative": "i", "slug": "many-rounds"}, "payload": {"slug": "many-rounds", "status": "done", "review_rounds": 2147483648}, "seq": 1}],
        "answers": [{"result": "stored", "state": "quarantined", "reason_contains": "review_rounds 2147483648 is not a whole number from 0 to 2147483647"}],
        "ledger": [{"kind": "card", "key": {"initiative": "i", "slug": "many-rounds"}, "state": "quarantined"}],
-       "projections": {"fact_card": 0}}
+       "projections": {"fact_card": 0}},
+      {"name": "an unknown kind whose payload holds a lone surrogate escape",
+       "rows": [{"kind": "spec_status", "v": 1, "key": {"initiative": "i", "spec": "s"}, "payload": {"x": "a\ud800b"}, "seq": 1}],
+       "answers": [{"result": "stored", "state": "quarantined", "reason_contains": "kept raw"}],
+       "ledger": [{"kind": "spec_status", "key": {"initiative": "i", "spec": "s"}, "payload": {}, "raw": true, "state": "quarantined"}],
+       "projections": {}},
+      {"name": "a valid card beside an unknown kind whose payload is a lone low surrogate",
+       "rows": [{"kind": "card", "v": 1, "key": {"initiative": "sample-initiative", "slug": "facts-fields"}, "seq": 1,
+                 "payload": {"slug": "facts-fields", "status": "done", "created": "2026-10-20", "done": "2026-10-22", "review": "pass", "review_rounds": 2}},
+                {"kind": "spec_status", "v": 1, "key": {"initiative": "i", "spec": "s"}, "payload": {"x": "\udc00"}, "seq": 2}],
+       "answers": [{"result": "stored", "state": "projected"},
+                   {"result": "stored", "state": "quarantined", "reason_contains": "kept raw"}],
+       "ledger": [{"kind": "card", "key": {"initiative": "sample-initiative", "slug": "facts-fields"}, "state": "projected"},
+                  {"kind": "spec_status", "key": {"initiative": "i", "spec": "s"}, "payload": {}, "raw": true, "state": "quarantined"}],
+       "projections": {"fact_card": 1}},
+      {"name": "an unknown kind whose payload holds a byte that is not UTF-8",
+       "rows": [{"kind": "spec_status", "v": 1, "key": {"initiative": "i", "spec": "s"}, "payload": {"x": "a<0xff>b"}, "seq": 1}],
+       "answers": [{"result": "stored", "state": "quarantined", "reason_contains": "kept raw"}],
+       "ledger": [{"kind": "spec_status", "key": {"initiative": "i", "spec": "s"}, "payload": {}, "raw": true, "state": "quarantined"}],
+       "projections": {}},
+      {"name": "an unknown kind whose payload holds a number past numeric's range",
+       "rows": [{"kind": "spec_status", "v": 1, "key": {"initiative": "i", "spec": "s"}, "payload": {"x": 1e200000}, "seq": 1}],
+       "answers": [{"result": "stored", "state": "quarantined", "reason_contains": "kept raw"}],
+       "ledger": [{"kind": "spec_status", "key": {"initiative": "i", "spec": "s"}, "payload": {}, "raw": true, "state": "quarantined"}],
+       "projections": {}},
+      {"name": "an unknown kind whose key holds a lone surrogate escape",
+       "rows": [{"kind": "spec_status", "v": 1, "key": {"initiative": "i", "spec": "\ud800"}, "payload": {"x": "y"}, "seq": 1}],
+       "answers": [{"result": "stored", "state": "quarantined", "reason_contains": "kept raw"}],
+       "ledger": [{"kind": "spec_status", "key": {"raw_sha256": "62f9c2b0f496c82584e385554c50bd988c78a008aa52f2b8faf7c2b6b5011c44"}, "payload": {}, "raw": true, "state": "quarantined"}],
+       "projections": {}}
     ]
   },
   "must_refuse": [
