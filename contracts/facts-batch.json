@@ -47,7 +47,9 @@
     "factory is required and is the key's own factory",
     "after_seq is the sender's cursor: the last seq Hestia answered for this factory, 0 before the first; a whole number, 0 or more",
     "a key outside batch_keys or row_keys, or one that differs from them only by case, refuses the batch",
-    "rows may be empty: an empty batch is answered 200 with last_seq after_seq"
+    "rows may be empty: an empty batch is answered 200 with last_seq after_seq",
+    "Hestia does not check after_seq against what it holds for the factory (it keeps no cursor of its own): a resend, or a laptop ledger rebuilt and sent again from 0, is safe, because the ledger is idempotent by (factory, kind, key)",
+    "no tombstones: a file removed at the laptop leaves its fact at Hestia as it was last sent (0042 Q8, kept forever); there is no row that deletes a fact"
   ],
   "row_rules": [
     "kind is a name, ^[a-z][a-z0-9_]{0,63}$; a kind Hestia does not know is kept, not refused",
@@ -56,7 +58,7 @@
     "payload is an object; a field it does not know is kept with it",
     "seq is the sender's change sequence (its own ledger's), a whole number past after_seq and past the row before it in the batch",
     "the ledger holds one row per (factory, kind, key): a row whose v and payload equal the held one's is unchanged (its seq kept, no history); any other replaces it and writes a facts_history row",
-    "a later row for the same (factory, kind, key) is the truth: a quarantined row that is sent again keeping the rules is projected, and a projected one replaced by a quarantined one leaves its projection",
+    "a later row for the same (factory, kind, key) is the truth: a quarantined row that is sent again keeping the rules is projected, and a projected row replaced by a quarantined one has its projection removed (the projection never holds a version the ledger no longer has; `replaced` below)",
     "the projections are a function of the ledger: rebuilt from it, they are equal"
   ],
   "kinds": {
@@ -165,6 +167,22 @@
                       "fact_forecast_extension": 1},
       "note": "the same after the first batch and after it is sent again"
     }
+  },
+  "replaced": {
+    "$comment": "Sent after `rows` (and its resend), each batch in order, by the same key: a projected row replaced by a quarantined one loses its projection, and sent again keeping the rules it is projected again. Each step writes one facts_history row; the ledger keeps one row for the key.",
+    "steps": [
+      {"name": "the decision 0011 replaced by a version that breaks its rules",
+       "after_seq": 15,
+       "row": {"kind": "decision", "v": 1, "key": {"initiative": "sample-initiative", "number": "0011"}, "seq": 16,
+               "payload": {"number": "0011", "status": "ruled", "ruled_by": "pablo", "ruled_mode": "sometimes"}},
+       "answer": {"result": "stored", "state": "quarantined"}, "reason_contains": "ruled_mode \"sometimes\" is not present, away or standing rule",
+       "after": {"ledger": 15, "facts_history": 16, "fact_decision": 1, "projected_numbers": ["0002"]}},
+      {"name": "the decision 0011 sent again as rows[0] holds it",
+       "after_seq": 16,
+       "row": "rows[0] with seq 17",
+       "answer": {"result": "stored", "state": "projected"},
+       "after": {"ledger": 15, "facts_history": 17, "fact_decision": 2, "projected_numbers": ["0002", "0011"]}}
+    ]
   },
   "must_refuse": [
     {"name": "malformed", "status": 400, "key": "factory", "body": "{\"factory\":", "error_contains": "not a facts batch"},
