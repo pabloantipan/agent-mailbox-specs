@@ -49,16 +49,18 @@
     "a key outside batch_keys or row_keys, or one that differs from them only by case, refuses the batch",
     "rows may be empty: an empty batch is answered 200 with last_seq after_seq",
     "Hestia does not check after_seq against what it holds for the factory (it keeps no cursor of its own): a resend, or a laptop ledger rebuilt and sent again from 0, is safe, because the ledger is idempotent by (factory, kind, key)",
-    "no tombstones: a file removed at the laptop leaves its fact at Hestia as it was last sent (0042 Q8, kept forever); there is no row that deletes a fact"
+    "no tombstones: a file removed at the laptop leaves its fact at Hestia as it was last sent (0042 Q8, kept forever); there is no row that deletes a fact",
+    "no row's content fails the batch: only the structural cases of must_refuse refuse it whole; a row whose content Hestia cannot project (a rule broken, a number past 2147483647, a U+0000) is quarantined and the rows beside it land (`never_refused` below)"
   ],
   "row_rules": [
     "kind is a name, ^[a-z][a-z0-9_]{0,63}$; a kind Hestia does not know is kept, not refused",
-    "v is a whole number from 1; a v Hestia does not know for a kind is kept, not refused",
+    "v is a whole number from 1 to 2147483647; a v Hestia does not know for a kind is kept, not refused",
     "key is a non-empty object whose values are non-empty strings or whole numbers: a known kind's key fields less factory, which is the batch's",
     "payload is an object; a field it does not know is kept with it",
     "seq is the sender's change sequence (its own ledger's), a whole number past after_seq and past the row before it in the batch",
     "the ledger holds one row per (factory, kind, key): a row whose v and payload equal the held one's is unchanged (its seq kept, no history); any other replaces it and writes a facts_history row",
     "a later row for the same (factory, kind, key) is the truth: a quarantined row that is sent again keeping the rules is projected, and a projected row replaced by a quarantined one has its projection removed (the projection never holds a version the ledger no longer has; `replaced` below)",
+    "a U+0000 anywhere in a row's key or payload (a string or a field name) quarantines the row, whatever its kind, and never refuses the batch: the row is kept with each U+0000 written as the six-character text \\u0000 (a key holding one is keyed by that text), and it is never projected, on Rebuild too: a key or payload holding that text is quarantined",
     "the projections are a function of the ledger: rebuilt from it, they are equal"
   ],
   "kinds": {
@@ -79,6 +81,7 @@
     "card.review_rounds is a whole number from 0",
     "round.cause, finding.kind and amendment.cause are one of expected.json facts.enums.cause",
     "forecast_extension.add_min is a whole number from 1 to 10080 and end is at plus add_min minutes; why is not empty",
+    "every whole number of these rules, a key field or a payload field (wave, n, review_rounds, add_min, forecast lo and hi, any other), is at most 2147483647; above it the row is quarantined",
     "a field absent from the payload is absent from the projection (NULL), never guessed"
   ],
   "factory": "lodestar",
@@ -184,6 +187,36 @@
        "after": {"ledger": 15, "facts_history": 17, "fact_decision": 2, "projected_numbers": ["0002", "0011"]}}
     ]
   },
+  "never_refused": {
+    "$comment": "Rows whose content Hestia cannot project, each case posted alone by a key of `factory` as {\"factory\": `factory`, \"after_seq\": 0, \"rows\": `rows`} on a ledger that holds none of them: answered 200, every row as `answers` says, in order (`reason_contains` a substring of its reason). `ledger` is what the ledger then holds for each row, key and payload compared by value; `projections` the rows each table then holds. A U+0000 is kept as the text \\u0000 and never projected; a number past 2147483647 is quarantined (the review of facts-ingest, F1 and F2; the FSE's ruling).",
+    "cases": [
+      {"name": "an unknown kind whose payload holds U+0000",
+       "rows": [{"kind": "spec_status", "v": 1, "key": {"initiative": "i", "spec": "s"}, "payload": {"x": "a\u0000b"}, "seq": 1}],
+       "answers": [{"result": "stored", "state": "quarantined", "reason_contains": "payload x holds U+0000"}],
+       "ledger": [{"kind": "spec_status", "key": {"initiative": "i", "spec": "s"}, "payload": {"x": "a\\u0000b"}, "state": "quarantined"}],
+       "projections": {}},
+      {"name": "a card whose key holds U+0000",
+       "rows": [{"kind": "card", "v": 1, "key": {"initiative": "i", "slug": "s\u0000t"}, "payload": {"slug": "s\u0000t", "status": "done"}, "seq": 1}],
+       "answers": [{"result": "stored", "state": "quarantined", "reason_contains": "key slug holds U+0000"}],
+       "ledger": [{"kind": "card", "key": {"initiative": "i", "slug": "s\\u0000t"}, "payload": {"slug": "s\\u0000t", "status": "done"}, "state": "quarantined"}],
+       "projections": {"fact_card": 0}},
+      {"name": "a valid card beside a wave keyed above 2147483647",
+       "rows": [{"kind": "card", "v": 1, "key": {"initiative": "sample-initiative", "slug": "facts-fields"}, "seq": 1,
+                 "payload": {"slug": "facts-fields", "status": "done", "created": "2026-10-20", "done": "2026-10-22", "review": "pass", "review_rounds": 2}},
+                {"kind": "wave", "v": 1, "key": {"initiative": "sample-initiative", "run": "2026-10-22-sample-run", "wave": 3000000000}, "seq": 2,
+                 "payload": {"run": "2026-10-22-sample-run", "wave": 3000000000, "supervisor": "sup-sample"}}],
+       "answers": [{"result": "stored", "state": "projected"},
+                   {"result": "stored", "state": "quarantined", "reason_contains": "key wave 3000000000 is not a whole number from 1 to 2147483647"}],
+       "ledger": [{"kind": "card", "key": {"initiative": "sample-initiative", "slug": "facts-fields"}, "state": "projected"},
+                  {"kind": "wave", "key": {"initiative": "sample-initiative", "run": "2026-10-22-sample-run", "wave": 3000000000}, "state": "quarantined"}],
+       "projections": {"fact_card": 1, "fact_wave": 0}},
+      {"name": "a card whose review_rounds is above 2147483647",
+       "rows": [{"kind": "card", "v": 1, "key": {"initiative": "i", "slug": "many-rounds"}, "payload": {"slug": "many-rounds", "status": "done", "review_rounds": 2147483648}, "seq": 1}],
+       "answers": [{"result": "stored", "state": "quarantined", "reason_contains": "review_rounds 2147483648 is not a whole number from 0 to 2147483647"}],
+       "ledger": [{"kind": "card", "key": {"initiative": "i", "slug": "many-rounds"}, "state": "quarantined"}],
+       "projections": {"fact_card": 0}}
+    ]
+  },
   "must_refuse": [
     {"name": "malformed", "status": 400, "key": "factory", "body": "{\"factory\":", "error_contains": "not a facts batch"},
     {"name": "no factory", "status": 400, "key": "factory", "body": "{\"after_seq\":0,\"rows\":[]}", "error_contains": "factory is required"},
@@ -209,6 +242,9 @@
     {"name": "a row with no v", "status": 400, "key": "factory",
      "rows": ["rows[0]", {"kind": "card", "key": {"initiative": "i", "slug": "s"}, "payload": {}, "seq": 2}],
      "error_contains": "row 1: v is not a whole number from 1"},
+    {"name": "a v above 2147483647", "status": 400, "key": "factory",
+     "rows": ["rows[0]", {"kind": "card", "v": 2147483648, "key": {"initiative": "i", "slug": "s"}, "payload": {}, "seq": 2}],
+     "error_contains": "row 1: v is not a whole number from 1 to 2147483647"},
     {"name": "a row with no key", "status": 400, "key": "factory",
      "rows": ["rows[0]", {"kind": "card", "v": 1, "payload": {"slug": "s"}, "seq": 2}],
      "error_contains": "row 1: key is required"},
