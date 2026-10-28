@@ -3,7 +3,11 @@
 #   DIR/init/   an initiative whose working-on/ is a git repo with dated commits: five cards a-e of
 #               stage `build`, a, b, c, d moved to done/ at 01:00, 01:10, 04:00, 08:00 UTC on
 #               2026-10-20; record 0001 (ruled, cards a b c f: f still to cut), 0002 (proposed,
-#               the stage gate, owner pablo); d waits on `next: "pablo: rule 0002"`, e depends on d
+#               the stage gate, owner pablo); d waits on `next: "pablo: rule 0002"`, e depends on d.
+#               Rulings: 0001 ruled `pablo` at init (2026-10-19 12:00, before every window; ruled_at from
+#               git); 0003 proposed at init, ruled `pablo (away mode)` at 02:30 (ruled_at from git,
+#               the commit that set status: ruled); 0004 added ruled at 07:15 by `operator` with
+#               `ruled_at: 2026-10-20T07:10:00+00:00` (ruled_at from the field)
 #   DIR/state/  a factory state dir: away-log.jsonl with one autonomous window (00:00-06:00) and
 #               Argos's pulse-history.jsonl (two seats every 5 min, 00:00-06:00; usage limit
 #               02:00-03:00; no row 05:05-05:25, a 30-min gap)
@@ -44,8 +48,9 @@ card d 'next: "pablo: rule 0002"
 '
 card e 'depends_on: [d]
 '
-printf -- '---\ntitle: one\nstatus: ruled\nstage: build\ncards: [a, b, c, f]\n---\n' > "$W/decisions/0001-one.md"
+printf -- '---\ntitle: one\nstatus: ruled\nruled_by: pablo\nstage: build\ncards: [a, b, c, f]\n---\n' > "$W/decisions/0001-one.md"
 printf -- '---\ntitle: two\nstatus: proposed\nowner: pablo\ncards: []\n---\n' > "$W/decisions/0002-two.md"
+printf -- '---\ntitle: three\nstatus: proposed\nowner: pablo\n---\n' > "$W/decisions/0003-three.md"
 g() { git -c user.name=t -c user.email=t@example.invalid -c commit.gpgsign=false -c init.defaultBranch=main -C "$W" "$@"; }
 commit() {  # commit ISO_UTC MESSAGE
   GIT_AUTHOR_DATE="$1+00:00" GIT_COMMITTER_DATE="$1+00:00" g commit -q -m "$2"
@@ -55,7 +60,11 @@ g add -A && commit 2026-10-19T12:00:00 "init"
 mv_done() { g mv "$1.md" "done/$1.md" && commit "$2" "chore(cards): $1 done"; }
 mv_done a 2026-10-20T01:00:00
 mv_done b 2026-10-20T01:10:00
+printf -- '---\ntitle: three\nstatus: ruled\nowner: pablo\nruled_by: pablo (away mode)\n---\n' > "$W/decisions/0003-three.md"
+g add -A && commit 2026-10-20T02:30:00 "docs(decisions): 0003 ruled"
 mv_done c 2026-10-20T04:00:00
+printf -- '---\ntitle: four\nstatus: ruled\nruled_by: operator\nruled_at: 2026-10-20T07:10:00+00:00\n---\n' > "$W/decisions/0004-four.md"
+g add -A && commit 2026-10-20T07:15:00 "docs(decisions): 0004 ruled"
 mv_done d 2026-10-20T08:00:00
 
 # ---------- the factory state ----------

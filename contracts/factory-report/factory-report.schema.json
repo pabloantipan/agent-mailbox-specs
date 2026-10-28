@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/factory-report/factory-report.schema.json",
   "title": "factory report --json",
-  "description": "What `factory report <initiative> --json` (~/claudecode/scripts/factory/report.py) prints: the two charts of the autonomous-run report (chart 1: progress along the window; chart 2: where each roadmap track is) as numbers with their sources. Writer: Hephaistos (factory). Reader: Deltagos (organizer card lf57, the Overview section over a user-picked window). Times: every time is an integer epoch in seconds (UTC) unless the field name ends in _iso or is `generated` (ISO 8601 with the writer's local offset, for display only); a reader computes with the epoch ints. The sample is expected.json for the fixture make-fixture.sh builds.",
+  "description": "What `factory report <initiative> --json` (~/claudecode/scripts/factory/report.py) prints: the two charts of the autonomous-run report (chart 1: progress along the window; chart 2: where each roadmap track is) as numbers with their sources. Writer: Hephaistos (factory). Reader: Deltagos (organizer card lf57, the Overview section over a user-picked window). Times: every time is an integer epoch in seconds (UTC) unless the field name ends in _iso or is `generated` (ISO 8601 with the writer's local offset, for display only); a reader computes with the epoch ints. The sample is expected.json for the fixture make-fixture.sh builds. Rulings: `rulings` lists the decision records ruled in the window (--json only; --text does not show them).",
   "type": "object",
   "required": [
     "initiative",
@@ -386,6 +386,79 @@
                 "description": "Per env column: local = pct (null when none planned); any other env \"?\" (no deploy record is read yet)."
               }
             }
+          }
+        }
+      }
+    },
+    "rulings": {
+      "type": "array",
+      "description": "Decision records (working-on/decisions/<NNNN>-*.md, status ruled or superseded) whose ruling time falls in the window, read at the last commit of working-on/ before window.until, in ruled_at order. Absent when window is null; [] when none.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "file",
+          "source",
+          "ruled_at",
+          "ruled_at_iso",
+          "ruled_by",
+          "mode"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The record number as in its file name, e.g. \"0003\"."
+          },
+          "title": {
+            "type": "string",
+            "description": "The record's title: (\"\" when none)."
+          },
+          "file": {
+            "type": "string",
+            "description": "Path relative to working-on/."
+          },
+          "source": {
+            "enum": [
+              "ruled_at",
+              "git"
+            ],
+            "description": "Where ruled_at came from: ruled_at = the record's own ruled_at field (RFC 3339 with an offset); git = the committer time of the first commit of working-on/ where the record's status is ruled (or superseded), used when the field is absent or unreadable."
+          },
+          "commit": {
+            "type": "string",
+            "description": "When source is git: abbreviated hash of that commit."
+          },
+          "ruled_at": {
+            "type": "integer",
+            "description": "When it was ruled, epoch s."
+          },
+          "ruled_at_iso": {
+            "type": "string",
+            "description": "ruled_at as ISO 8601 with the local offset (display only)."
+          },
+          "ruled_by": {
+            "type": "string",
+            "description": "The person who ruled, read from ruled_by as specs contracts/working-on/expected.json accepted_reading.ruled_by_reading gives it: `pablo (away mode)` is pablo; `operator` is the factory's operator (FACTORY_OPERATOR, pablo here); a Themis ruling is themis. \"\" when ruled_by is empty."
+          },
+          "mode": {
+            "oneOf": [
+              {
+                "enum": [
+                  "present",
+                  "away",
+                  "standing rule"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How it was ruled (working-on facts.enums.ruled_mode): the record's ruled_mode when written and in agreement, else read from ruled_by (no mode written = present). null when ruled_mode and ruled_by disagree or ruled_mode is not a mode (then note says so; never guessed)."
+          },
+          "note": {
+            "type": "string",
+            "description": "Present only when something was read around: ruled_at unreadable or without an offset (read from git), or ruled_mode disagreeing with ruled_by."
           }
         }
       }
