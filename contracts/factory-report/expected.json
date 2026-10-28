@@ -19,22 +19,22 @@
       {
         "t": 1792458000,
         "slug": "a",
-        "commit": "f5fdd12"
+        "commit": "60eceeb"
       },
       {
         "t": 1792458600,
         "slug": "b",
-        "commit": "7be2fee"
+        "commit": "5e511bb"
       },
       {
         "t": 1792468800,
         "slug": "c",
-        "commit": "c463ebe"
+        "commit": "9696df4"
       },
       {
         "t": 1792483200,
         "slug": "d",
-        "commit": "d834dfa"
+        "commit": "d277111"
       }
     ],
     "lines": [
@@ -45,8 +45,8 @@
           "b"
         ],
         "commits": [
-          "f5fdd12",
-          "7be2fee"
+          "60eceeb",
+          "5e511bb"
         ],
         "done": 2,
         "pct": 50,
@@ -58,7 +58,7 @@
           "c"
         ],
         "commits": [
-          "c463ebe"
+          "9696df4"
         ],
         "done": 3,
         "pct": 75,
@@ -70,7 +70,7 @@
           "d"
         ],
         "commits": [
-          "d834dfa"
+          "d277111"
         ],
         "done": 4,
         "pct": 100,
@@ -97,7 +97,7 @@
   },
   "tracks": {
     "drawn": true,
-    "rev": "d834dfa",
+    "rev": "d277111",
     "rev_time": 1792483200,
     "envs": [
       "local"
@@ -161,5 +161,28 @@
       }
     ],
     "goal": "Goal, stage build done: 2 cards left (e, f); in its way: 0002 (pablo)."
-  }
+  },
+  "rulings": [
+    {
+      "id": "0003",
+      "title": "three",
+      "file": "decisions/0003-three.md",
+      "source": "git",
+      "commit": "40c3ec3",
+      "ruled_at": 1792463400,
+      "ruled_at_iso": "2026-10-20T02:30:00+00:00",
+      "ruled_by": "pablo",
+      "mode": "away"
+    },
+    {
+      "id": "0004",
+      "title": "four",
+      "file": "decisions/0004-four.md",
+      "source": "ruled_at",
+      "ruled_at": 1792480200,
+      "ruled_at_iso": "2026-10-20T07:10:00+00:00",
+      "ruled_by": "pablo",
+      "mode": "present"
+    }
+  ]
 }

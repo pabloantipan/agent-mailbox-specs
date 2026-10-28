@@ -10,7 +10,7 @@ Cumulative share of the 4 cards that passed review (moved to working-on/done/) b
 08:00  ##################################  1 card (d)                                                   100%
 09:00  window end
 
-Local % = local cards passed review (in working-on/done/) / local cards planned (done, open, and still to cut), per roadmap stage, at d834dfa (2026-10-20 08:00).
+Local % = local cards passed review (in working-on/done/) / local cards planned (done, open, and still to cut), per roadmap stage, at d277111 (2026-10-20 08:00).
 Environments: local only (FACTORY_REPORT_ENVS=local): this factory deploys nowhere else.
 
                                           local
