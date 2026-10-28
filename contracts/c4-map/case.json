@@ -1,0 +1,24 @@
+{
+  "contract": "c4-map",
+  "description": "The base-map index c4-map writes (map.json) and the two generated pages, for the synthetic fixture in claudecode tests/c4-map/fixture/ (an invented ferry-ticket shop, initiative `harbor`). The fixture's four repos are made git repos with one commit each, with author and committer `fixture <fixture@example.com>` and both dates 2026-10-01T00:00:00+00:00 (claudecode tests/c4-map/lib.sh), so the shas in expected.json hold.",
+  "fixture": "claudecode tests/c4-map/fixture/ (built by tests/c4-map/lib.sh `fixture`)",
+  "commands": [
+    ["c4-map", "gen", "<fixture>"],
+    ["c4-map", "gen", "<fixture>", "--modules", "harbor_api", "--modules-from", "<fixture>/codebase-memory/harbor-api.json"]
+  ],
+  "outputs": {
+    "docs/architecture/map.json": "expected.json",
+    "docs/architecture/containers.md": "expected-containers.md",
+    "docs/architecture/modules.md": "expected-modules.md"
+  },
+  "compare": "byte-equal, every file",
+  "writer": "claudecode bin/c4-map; test tests/c4-map/cases/contract.sh (reads this folder; a missing file fails)",
+  "readers": [
+    "claudecode bin/diagram-check: reads map.json nodes[].grounding (tests/c4-map/cases/diagram-check.sh, on the fixture, not this file)",
+    "Deltagos map lens (organizer docs/ux/specs/map-and-roadmap.md): no test reads it yet"
+  ],
+  "must_refuse": [
+    {"case": "schema other than c4-map/1", "reader": "Deltagos", "reason": "a new major changes the shape"},
+    {"case": "map.json that is not JSON, or nodes without grounding", "reader": "diagram-check", "reason": "exit 2: cannot run"}
+  ]
+}

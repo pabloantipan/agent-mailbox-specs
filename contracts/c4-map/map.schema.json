@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/c4-map/map.schema.json",
+  "title": "c4-map index (docs/architecture/map.json)",
+  "description": "What `c4-map gen` (~/claudecode/bin/c4-map; spec claudecode docs/specs/c4-base-map.md, FR-12) writes to an initiative's docs/architecture/map.json: one index of the base map, its three levels (L1 context, curated; L2 containers and L3 modules, generated) with every drawn node, its grounding and its edges. Writer: c4-map (Hephaistos, factory). Readers: bin/diagram-check (the ungrounded flag: a drawn node whose grounding is empty) and the Deltagos map lens (organizer docs/ux/specs/map-and-roadmap.md: the map rendered once from the level SVGs, node ids kept as element ids, a lens is classes on those ids; a container opens into its modules; a node's grounding paths shown). The sample is expected.json for the synthetic fixture claudecode tests/c4-map/fixture/ (an invented ferry-ticket shop). Deterministic: the same inputs give the same bytes; no wall-clock time. Versioned by `schema`; a reader refuses another major.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "initiative", "system", "inputs", "levels", "nodes", "edges"],
+  "properties": {
+    "schema": {"const": "c4-map/1", "description": "The format and its version."},
+    "initiative": {"type": "string", "description": "The initiative id (working-on/initiative.yaml `id`)."},
+    "system": {"type": "string", "description": "The id of the system (c4.json `system`): the L1 node of kind system whose containers L2 draws, and the id of the L2 boundary subgraph."},
+    "inputs": {
+      "type": "object",
+      "description": "Each repo of initiative.yaml `repos:` that exists: its HEAD sha (40 hex), or null when the directory is not a git repo of its own. The map was made from these.",
+      "additionalProperties": {"type": ["string", "null"]}
+    },
+    "levels": {
+      "type": "array",
+      "description": "One entry per level diagram found: context (L1), containers (L2), and one modules entry (L3) per container that has one. Ordered context, containers, modules by container.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["level", "page", "svg"],
+        "properties": {
+          "level": {"enum": ["context", "containers", "modules"]},
+          "page": {"type": "string", "description": "The page holding the diagram, relative to docs/architecture/ (c4.json `pages`; default context.md, containers.md, modules.md)."},
+          "svg": {"type": "string", "description": "The rendered SVG `mermaid2svg <page> --check` writes for that diagram: <page>-<n>.svg, n the diagram's position among the page's mermaid blocks, relative to docs/architecture/. Each node is an element with id `flowchart-<id>-<k>` (mmdc 11.12 on lodestar; another mermaid build may prefix it with `<svg-id>-`), each subgraph an element with id `<id>`."},
+          "container": {"type": "string", "description": "modules only: the container id the diagram opens."}
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "description": "Every node a level diagram draws, sorted by level (context, containers, modules) then id. An id is unique within its level; an external may appear at L1 and at L2 under the same id. A grounding row with no drawn node is not here (c4-map check flags it `undrawn`).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "level", "kind", "parent", "status", "grounding"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Za-z0-9_]+$", "description": "The stable id (snake_case; c4-map check flags any other as `bad id`). Never renamed by a regeneration (c4.json `ids` lock)."},
+          "label": {"type": "string", "description": "The text drawn, HTML tags replaced by spaces."},
+          "level": {"enum": ["context", "containers", "modules"]},
+          "kind": {"enum": ["person", "system", "container", "store", "external", "module", null], "description": "From the node's grounding row; null when it has none."},
+          "parent": {"type": ["string", "null"], "description": "The subgraph that holds the node in its diagram: at L2 the system id for containers and stores, null for externals; at L3 the container id; at L1 null unless drawn in a subgraph."},
+          "status": {"enum": ["exists", "ruled", "retiring", null], "description": "exists; ruled (ruled to be built, grounded by its record); retiring. null when the node has no grounding row."},
+          "grounding": {
+            "type": "array",
+            "description": "The evidence that the node is real, empty when ungrounded (no row, or a blank evidence cell): diagram-check flags `ungrounded: <id>` for a drawn node whose grounding is empty at any level.",
+            "items": {"$ref": "#/$defs/evidence"}
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Every edge a level diagram draws, deduplicated, sorted by level then from, to.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "level", "evidence"],
+        "properties": {
+          "from": {"type": "string"},
+          "to": {"type": "string"},
+          "level": {"enum": ["context", "containers", "modules"]},
+          "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}, "description": "From the level's `| from | to | evidence |` table; empty when it has no row."}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ref"],
+      "properties": {
+        "kind": {"enum": ["repo", "deploy", "pipeline", "cluster", "external", "record", "curated"]},
+        "ref": {"type": "string", "description": "repo: <dir>@<short sha> (a container) or <dir>/<path> (a module); deploy: <dir>/<file>[ key <KEY>] or an adapter's own reference; record: the record number; curated: the page. Never a value."}
+      }
+    }
+  }
+}
