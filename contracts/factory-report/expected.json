@@ -1,0 +1,165 @@
+{
+  "initiative": "fixture",
+  "root": "<fixture>/init",
+  "generated": "2026-10-21T00:00:00+00:00",
+  "window": {
+    "since": 1792454400,
+    "until": 1792486800,
+    "kind": "given",
+    "source": "--since/--until",
+    "since_iso": "2026-10-20T00:00:00+00:00",
+    "until_iso": "2026-10-20T09:00:00+00:00"
+  },
+  "progress": {
+    "denominator": {
+      "count": 4,
+      "kind": "cards that passed review (moved to working-on/done/) in the window"
+    },
+    "moves": [
+      {
+        "t": 1792458000,
+        "slug": "a",
+        "commit": "f5fdd12"
+      },
+      {
+        "t": 1792458600,
+        "slug": "b",
+        "commit": "7be2fee"
+      },
+      {
+        "t": 1792468800,
+        "slug": "c",
+        "commit": "c463ebe"
+      },
+      {
+        "t": 1792483200,
+        "slug": "d",
+        "commit": "d834dfa"
+      }
+    ],
+    "lines": [
+      {
+        "t": 1792458600,
+        "cards": [
+          "a",
+          "b"
+        ],
+        "commits": [
+          "f5fdd12",
+          "7be2fee"
+        ],
+        "done": 2,
+        "pct": 50,
+        "hashes": 17
+      },
+      {
+        "t": 1792468800,
+        "cards": [
+          "c"
+        ],
+        "commits": [
+          "c463ebe"
+        ],
+        "done": 3,
+        "pct": 75,
+        "hashes": 26
+      },
+      {
+        "t": 1792483200,
+        "cards": [
+          "d"
+        ],
+        "commits": [
+          "d834dfa"
+        ],
+        "done": 4,
+        "pct": 100,
+        "hashes": 34
+      }
+    ],
+    "dead": [
+      {
+        "start": 1792461600,
+        "end": 1792465200,
+        "cause": "usage limit, every seat stopped",
+        "source": "pulse-history.jsonl",
+        "minutes": 60
+      },
+      {
+        "start": 1792472400,
+        "end": 1792474200,
+        "source": "pulse-history.jsonl",
+        "cause": "no pulse row: no live seat, machine asleep or Argos down",
+        "minutes": 30
+      }
+    ],
+    "notes": []
+  },
+  "tracks": {
+    "drawn": true,
+    "rev": "d834dfa",
+    "rev_time": 1792483200,
+    "envs": [
+      "local"
+    ],
+    "tracks": [
+      {
+        "id": "base",
+        "title": "The base",
+        "done": "2026-10-01",
+        "gates": [],
+        "roadmap": true,
+        "done_cards": [],
+        "open_cards": [],
+        "to_cut": [],
+        "passed": 0,
+        "planned": 0,
+        "pct": null,
+        "left": [],
+        "waits": [],
+        "env": {
+          "local": null
+        }
+      },
+      {
+        "id": "build",
+        "title": "The build",
+        "done": "",
+        "gates": [
+          "0002"
+        ],
+        "roadmap": true,
+        "done_cards": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "open_cards": [
+          "e"
+        ],
+        "to_cut": [
+          "f"
+        ],
+        "passed": 4,
+        "planned": 6,
+        "pct": 67,
+        "left": [
+          "e",
+          "f"
+        ],
+        "waits": [
+          {
+            "what": "0002",
+            "who": "pablo",
+            "from": "stage gate"
+          }
+        ],
+        "env": {
+          "local": 67
+        }
+      }
+    ],
+    "goal": "Goal, stage build done: 2 cards left (e, f); in its way: 0002 (pablo)."
+  }
+}

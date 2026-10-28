@@ -1,0 +1,11 @@
+{
+  "contract": "factory-report",
+  "fixture": "make-fixture.sh DIR, then source DIR/env.sh",
+  "command": ["factory", "report", "DIR/init", "--since", "2026-10-20 00:00", "--until", "2026-10-20 09:00"],
+  "json": {"flag": "--json", "expected": "expected.json"},
+  "text": {"flag": "--text", "expected": "expected.txt", "compare": "byte-equal, the trailing newline included"},
+  "ignore_fields": ["root"],
+  "ignore_why": {
+    "root": "the fixture's absolute path (DIR/init), different on every run; expected.json holds the placeholder <fixture>/init"
+  }
+}
