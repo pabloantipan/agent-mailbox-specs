@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/factory-report/factory-report.schema.json",
+  "title": "factory report --json",
+  "description": "What `factory report <initiative> --json` (~/claudecode/scripts/factory/report.py) prints: the two charts of the autonomous-run report (chart 1: progress along the window; chart 2: where each roadmap track is) as numbers with their sources. Writer: Hephaistos (factory). Reader: Deltagos (organizer card lf57, the Overview section over a user-picked window). Times: every time is an integer epoch in seconds (UTC) unless the field name ends in _iso or is `generated` (ISO 8601 with the writer's local offset, for display only); a reader computes with the epoch ints. The sample is expected.json for the fixture make-fixture.sh builds.",
+  "type": "object",
+  "required": [
+    "initiative",
+    "root",
+    "generated",
+    "window"
+  ],
+  "properties": {
+    "initiative": {
+      "type": "string",
+      "description": "The initiative id (working-on/initiative.yaml `id`, else the root's directory name)."
+    },
+    "root": {
+      "type": "string",
+      "description": "Absolute path of the initiative root on the writer's machine. Machine-specific: the contract test ignores it (case.json ignore_fields)."
+    },
+    "generated": {
+      "type": "string",
+      "description": "When the report was drawn (FACTORY_NOW or now), ISO 8601 with the local offset."
+    },
+    "why": {
+      "type": "string",
+      "description": "Present only when window is null: the one line saying why no window resolved (e.g. autonomous mode is not on now)."
+    },
+    "window": {
+      "description": "The window drawn, or null when none resolved (then `why` is set and progress/tracks are absent).",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "since",
+            "until",
+            "kind",
+            "source",
+            "since_iso",
+            "until_iso"
+          ],
+          "properties": {
+            "since": {
+              "type": "integer",
+              "description": "Window start, epoch s."
+            },
+            "until": {
+              "type": "integer",
+              "description": "Window end, epoch s (inclusive)."
+            },
+            "kind": {
+              "enum": [
+                "given",
+                "autonomous",
+                "current"
+              ],
+              "description": "given: --since/--until (what Deltagos passes for a user-picked window); autonomous: the last autonomous window that ended (default); current: the one on now, up to now."
+            },
+            "source": {
+              "type": "string",
+              "description": "Where the window came from: --since/--until, away-log.jsonl/away-archive/, or away."
+            },
+            "since_iso": {
+              "type": "string",
+              "description": "since as ISO 8601 with the local offset (display only)."
+            },
+            "until_iso": {
+              "type": "string",
+              "description": "until as ISO 8601 with the local offset (display only)."
+            }
+          }
+        }
+      ]
+    },
+    "progress": {
+      "description": "Chart 1: cards that passed review (added under working-on/done/, git committer time) in the window, cumulative, with dead time.",
+      "type": "object",
+      "required": [
+        "denominator",
+        "moves",
+        "lines",
+        "dead",
+        "notes"
+      ],
+      "properties": {
+        "denominator": {
+          "type": "object",
+          "required": [
+            "count",
+            "kind"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Cards moved to done/ in the window: 100% of chart 1. 0 means the text is one line (no card moved)."
+            },
+            "kind": {
+              "type": "string",
+              "description": "What count counts, in words."
+            }
+          }
+        },
+        "moves": {
+          "type": "array",
+          "description": "Every card added under done/ in the window, first add per slug, in time order.",
+          "items": {
+            "type": "object",
+            "required": [
+              "t",
+              "slug",
+              "commit"
+            ],
+            "properties": {
+              "t": {
+                "type": "integer",
+                "description": "Committer time of the move, epoch s."
+              },
+              "slug": {
+                "type": "string",
+                "description": "The card's file name without .md."
+              },
+              "commit": {
+                "type": "string",
+                "description": "Abbreviated hash of the commit that added it to done/."
+              }
+            }
+          }
+        },
+        "lines": {
+          "type": "array",
+          "description": "The bar rows: moves less than --gap minutes (20) apart share a line, drawn at the last move's time.",
+          "items": {
+            "type": "object",
+            "required": [
+              "t",
+              "cards",
+              "commits",
+              "done",
+              "pct",
+              "hashes"
+            ],
+            "properties": {
+              "t": {
+                "type": "integer",
+                "description": "Time of the line (its last move), epoch s."
+              },
+              "cards": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Slugs moved in this line."
+              },
+              "commits": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Their commits, same order."
+              },
+              "done": {
+                "type": "integer",
+                "description": "Cumulative cards done at this line."
+              },
+              "pct": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "round(100 * done / denominator.count)."
+              },
+              "hashes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 34,
+                "description": "Filled cells of the 34-cell text bar: round(34 * done / count)."
+              }
+            }
+          }
+        },
+        "dead": {
+          "type": "array",
+          "description": "Dead time drawn in x, clipped to the window; overlapping causes merge into one span.",
+          "items": {
+            "type": "object",
+            "required": [
+              "start",
+              "end",
+              "cause",
+              "source",
+              "minutes"
+            ],
+            "properties": {
+              "start": {
+                "type": "integer",
+                "description": "Epoch s."
+              },
+              "end": {
+                "type": "integer",
+                "description": "Epoch s."
+              },
+              "cause": {
+                "type": "string",
+                "description": "usage limit, every seat stopped | no pulse row: no live seat, machine asleep or Argos down | memory outage; merged causes are joined by \" + \"."
+              },
+              "source": {
+                "type": "string",
+                "description": "pulse-history.jsonl | away digest, key ram:critical; merged sources joined by \"; \"."
+              },
+              "minutes": {
+                "type": "integer",
+                "description": "round((end - start) / 60)."
+              }
+            }
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Lines printed under the denominator line, e.g. that dead time is not drawn (no pulse history) or drawn only from a later time."
+        }
+      }
+    },
+    "tracks": {
+      "description": "Chart 2: each roadmap stage as a track, read from git at the last commit of working-on/ before window.until (a rerun prints the same numbers).",
+      "type": "object",
+      "required": [
+        "drawn"
+      ],
+      "properties": {
+        "drawn": {
+          "type": "boolean",
+          "description": "false: no tracks (no git repo, no commit before until, or no roadmap and no stage: on any card); then only why (and maybe rev) are set."
+        },
+        "why": {
+          "type": "string",
+          "description": "When drawn is false: the one line saying why."
+        },
+        "rev": {
+          "type": "string",
+          "description": "Abbreviated hash of the commit the tracks are read at."
+        },
+        "rev_time": {
+          "type": "integer",
+          "description": "That commit's committer time, epoch s."
+        },
+        "envs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The environment columns (FACTORY_REPORT_ENVS, default [\"local\"]). Only local is computed; any other is \"?\"."
+        },
+        "goal": {
+          "type": "string",
+          "description": "The shortest-path line: the current stage, cards left and what is in its way (up to 3), or why no goal is drawn."
+        },
+        "tracks": {
+          "type": "array",
+          "description": "Roadmap stages in roadmap order (roadmap: true), then stage: values not in the roadmap, then the unstaged track (id \"\").",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "done",
+              "gates",
+              "roadmap",
+              "done_cards",
+              "open_cards",
+              "to_cut",
+              "passed",
+              "planned",
+              "pct",
+              "left",
+              "waits",
+              "env"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stage id; \"\" for cards with no stage:."
+              },
+              "title": {
+                "type": "string"
+              },
+              "done": {
+                "type": "string",
+                "description": "The stage's done date (roadmap.yaml), \"\" while open."
+              },
+              "gates": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Decision record numbers that gate the stage."
+              },
+              "roadmap": {
+                "type": "boolean",
+                "description": "true for a roadmap.yaml stage."
+              },
+              "done_cards": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Slugs of this stage in done/."
+              },
+              "open_cards": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Open slugs of this stage."
+              },
+              "to_cut": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Slugs named in cards: of a ruled record of this stage (or of a stage gate) that exist nowhere yet."
+              },
+              "passed": {
+                "type": "integer",
+                "description": "len(done_cards)."
+              },
+              "planned": {
+                "type": "integer",
+                "description": "done + open + to_cut."
+              },
+              "pct": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "round(100 * passed / planned); null when planned is 0."
+              },
+              "left": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "open_cards then to_cut."
+              },
+              "waits": {
+                "type": "array",
+                "description": "What the stage waits on: stage gates not ruled, open depends_on, decide:, next: owners.",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "what",
+                    "who",
+                    "from"
+                  ],
+                  "properties": {
+                    "what": {
+                      "type": "string",
+                      "description": "A record number, a slug, or \"<slug>: <text>\"."
+                    },
+                    "who": {
+                      "type": "string",
+                      "description": "Who it waits on (an owner), \"\" when unknown."
+                    },
+                    "from": {
+                      "type": "string",
+                      "description": "stage gate | <slug> depends_on | <slug> decide | <slug> next."
+                    }
+                  }
+                }
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": [
+                    "integer",
+                    "string",
+                    "null"
+                  ]
+                },
+                "description": "Per env column: local = pct (null when none planned); any other env \"?\" (no deploy record is read yet)."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

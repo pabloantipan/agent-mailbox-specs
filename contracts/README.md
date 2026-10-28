@@ -49,10 +49,11 @@ to follow.
 | H5, H6, H7 | `auth.json` | Keycloak realm `record/deploy/hestia/keycloak/hestia-realm.json` and enrolment `record/internal/enroll` (`auth_contract_test.go`); `GET /v1/auth/verify` | record `internal/auth/auth_contract_test.go`, `internal/handler/auth_contract_test.go`, `factory_name_integration_test.go`, `cmd/discuss-record/key_role_test.go`; gateway `deploy/hestia/test/verify-stub` and `gw-test.sh` (all read it; the file lists every one) | written |
 | H4 | `kb-snapshot.json` | record forwarder `internal/forward` (`kb_send_test.go`), `internal/kb/snapshot_codec_test.go` | record `internal/model/kb_snapshot_contract_test.go`, `internal/handler/kb_snapshot_contract_integration_test.go` (read it; record vendors `specs/contracts/kb-snapshot.json`, equal today) | written |
 | L2 | `index-initiatives.json` | the factory installer (Hephaistos), the operator's hand: no test writes it yet | record `deploy/lodestar/install.sh`: `internal/contracts/indexinitiatives_test.go` `TestInstallReadsIndexInitiatives` (renders every case); record `deploy/lodestar/index.sh`: no test reads it yet | written; install.sh reads it |
+| lf57 | `factory-report/` (`make-fixture.sh` builds the fixture initiative and factory state; `case.json` the command, window and `ignore_fields`; `expected.json` the `--json` output, `expected.txt` the `--text` output, byte-equal; `factory-report.schema.json` the shape and field meanings) | Hephaistos (factory): `factory report` (`~/claudecode/scripts/factory/report.py`), `scripts/factory/test/report.sh` (builds the fixture with `make-fixture.sh`, compares both outputs; reads it) | Deltagos (organizer card lf57, the Overview section over a user-picked window; its "Copy as text" must equal `expected.txt`): no test reads it yet | written; Deltagos to follow |
 
 Owners (decisions.md 2026-10-25): hestia's FSE for the record side, the
 organizer's FSE for the Deltagos side, Hephaistos for the mailbox, the
-working-on sample and skill, and this folder. Hestia 0042 adds: the
+working-on sample and skill, `factory-report/`, and this folder. Hestia 0042 adds: the
 working-on schemas, their enums and `forecast-state.json` are Hephaistos's
 (Q5); `facts-batch.json` (H12) is hestia's FSE's, in this folder.
 
