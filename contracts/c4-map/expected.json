@@ -1,0 +1,290 @@
+{
+  "schema": "c4-map/1",
+  "initiative": "harbor",
+  "system": "harbor",
+  "inputs": {
+    "harbor-web": "6c88101a9927fc236611cf36b91a72d8cfa9157b",
+    "harbor-api": "def7c12df7040c01491e7321d473f1a7ee873dde",
+    "harbor-ledger": "0989d681142ab5aece60e98b3d4bd79f01c665d7"
+  },
+  "levels": [
+    {
+      "level": "context",
+      "page": "context.md",
+      "svg": "context.md-1.svg"
+    },
+    {
+      "level": "containers",
+      "page": "containers.md",
+      "svg": "containers.md-1.svg"
+    },
+    {
+      "level": "modules",
+      "page": "modules.md",
+      "svg": "modules.md-1.svg",
+      "container": "harbor_api"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "card_gateway",
+      "label": "Card gateway",
+      "level": "context",
+      "kind": "external",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "id": "clerk",
+      "label": "Clerk",
+      "level": "context",
+      "kind": "person",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "id": "harbor",
+      "label": "Harbor ferry-ticket shop",
+      "level": "context",
+      "kind": "system",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "record",
+          "ref": "0001"
+        }
+      ]
+    },
+    {
+      "id": "mail_relay",
+      "label": "Mail relay",
+      "level": "context",
+      "kind": "external",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "id": "traveller",
+      "label": "Traveller",
+      "level": "context",
+      "kind": "person",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "id": "card_gateway",
+      "label": "Card gateway",
+      "level": "containers",
+      "kind": "external",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "deploy",
+          "ref": "harbor-api/deploy/k8s.yaml key CARD_GATEWAY_URL"
+        }
+      ]
+    },
+    {
+      "id": "harbor_api",
+      "label": "harbor-api",
+      "level": "containers",
+      "kind": "container",
+      "parent": "harbor",
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "repo",
+          "ref": "harbor-api@def7c12"
+        },
+        {
+          "kind": "deploy",
+          "ref": "harbor-api/deploy/k8s.yaml"
+        }
+      ]
+    },
+    {
+      "id": "harbor_db",
+      "label": "harbor_db",
+      "level": "containers",
+      "kind": "store",
+      "parent": "harbor",
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "deploy",
+          "ref": "fakedeploy qa harbor-ledger"
+        },
+        {
+          "kind": "deploy",
+          "ref": "harbor-api/deploy/k8s.yaml key API_DB_HOST"
+        }
+      ]
+    },
+    {
+      "id": "ledger",
+      "label": "harbor-ledger",
+      "level": "containers",
+      "kind": "container",
+      "parent": "harbor",
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "repo",
+          "ref": "harbor-ledger@0989d68"
+        }
+      ]
+    },
+    {
+      "id": "mail_relay",
+      "label": "Mail relay",
+      "level": "containers",
+      "kind": "external",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "deploy",
+          "ref": "harbor-api/deploy/k8s.yaml key MAIL_RELAY_URL"
+        }
+      ]
+    },
+    {
+      "id": "web",
+      "label": "harbor-web",
+      "level": "containers",
+      "kind": "container",
+      "parent": "harbor",
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "repo",
+          "ref": "harbor-web@6c88101"
+        }
+      ]
+    },
+    {
+      "id": "harbor_api__booking",
+      "label": "booking",
+      "level": "modules",
+      "kind": "module",
+      "parent": "harbor_api",
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "repo",
+          "ref": "harbor-api/src/booking"
+        }
+      ]
+    },
+    {
+      "id": "harbor_api__pricing",
+      "label": "pricing",
+      "level": "modules",
+      "kind": "module",
+      "parent": "harbor_api",
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "repo",
+          "ref": "harbor-api/src/pricing"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "clerk",
+      "to": "harbor",
+      "level": "context",
+      "evidence": []
+    },
+    {
+      "from": "harbor",
+      "to": "card_gateway",
+      "level": "context",
+      "evidence": []
+    },
+    {
+      "from": "harbor",
+      "to": "mail_relay",
+      "level": "context",
+      "evidence": []
+    },
+    {
+      "from": "traveller",
+      "to": "harbor",
+      "level": "context",
+      "evidence": []
+    },
+    {
+      "from": "harbor_api",
+      "to": "card_gateway",
+      "level": "containers",
+      "evidence": [
+        {
+          "kind": "deploy",
+          "ref": "harbor-api/deploy/k8s.yaml key CARD_GATEWAY_URL"
+        }
+      ]
+    },
+    {
+      "from": "harbor_api",
+      "to": "harbor_db",
+      "level": "containers",
+      "evidence": [
+        {
+          "kind": "deploy",
+          "ref": "harbor-api/deploy/k8s.yaml key API_DB_HOST"
+        }
+      ]
+    },
+    {
+      "from": "harbor_api",
+      "to": "ledger",
+      "level": "containers",
+      "evidence": [
+        {
+          "kind": "deploy",
+          "ref": "harbor-api/deploy/k8s.yaml key LEDGER_URL"
+        }
+      ]
+    },
+    {
+      "from": "web",
+      "to": "harbor_api",
+      "level": "containers",
+      "evidence": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    }
+  ]
+}
