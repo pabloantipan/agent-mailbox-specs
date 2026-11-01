@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/claim.schema.json",
+  "title": "atlax claim (the body a starting card posts to Hestia)",
+  "description": "Which card, in which factory, is changing which elements of which artifact. Posted when a card starts; an overlap with an open claim warns both FSEs and blocks nothing; publish or card close releases it (implementation.md step 5, ruled 2026-10-31). Names only: Hestia never holds element content, so designations are strings and nothing else is accepted. Writer: the card's start (factory side, from the card's `touches:`). Reader: Hestia's claims API (a Hestia card, its FSE). Sample: claim.sample.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["card", "factory", "artifact", "designations"],
+  "properties": {
+    "card": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$", "description": "<initiative>/<card slug>, the card file's name without .md."},
+    "factory": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "The factory running the card."},
+    "artifact": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "The artifact id (plant.yaml `artifact`). One claim per artifact a card touches."},
+    "designations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The designations the card adds, changes or retires in that artifact. Strings only: no element content.",
+      "items": {"type": "string", "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$"}
+    }
+  }
+}

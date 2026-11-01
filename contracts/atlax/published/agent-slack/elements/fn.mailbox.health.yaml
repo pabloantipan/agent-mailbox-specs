@@ -1,0 +1,18 @@
+# One atlax element: the mailbox's health view, authored and live.
+designation: fn:mailbox.health
+product: prod:agent-slack.api.GET_projects_pid_health
+kind: http
+summary: One row per open thread with its age, last speaker and stall state.
+authored: true
+lifecycle: live
+owner: hephaistos
+ruled_by: decisions.md 2026-10-31 (the atlas, item 3; corrected the same day)
+terminal:
+  method: GET
+  path: /projects/{pid}/health
+contract:
+  repo: specs
+  path: health-golden.json
+test:
+  path: api/internal/api/health_load_test.go
+  name: TestHealthRowFieldsMatchGolden

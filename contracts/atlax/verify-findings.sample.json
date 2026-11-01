@@ -1,0 +1,88 @@
+{
+  "schema": "atlax-verify/1",
+  "artifact": "agent-slack",
+  "card": "agent-slack/thread-list-tags",
+  "base": "origin/main",
+  "base_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204",
+  "head_sha": "8f3c2a1d9e4b7c6a5f0e1d2c3b4a59687f6e5d4c",
+  "atlax_sha": "3a1f9c0e7b2d4f6a8c0e2b4d6f8a0c2e4b6d8f0a",
+  "change_order": {
+    "modifies": [
+      "fn:mailbox.threads.list",
+      "rule.push-retry"
+    ],
+    "adds": [],
+    "retires": [],
+    "frozen_at": "2026-11-02T14:05:00Z"
+  },
+  "exit": 1,
+  "findings": [
+    {
+      "kind": "redline",
+      "blocking": true,
+      "designation": "fn:mailbox.health",
+      "message": "fn:mailbox.health is authored and live; its thread rows lost `quiet_seconds`, which health-golden.json thread_fields lists",
+      "authored": "thread_fields: id, subject, status, kind, participants, messages, since_decision, quiet_seconds, age_seconds",
+      "derived": "thread_fields: id, subject, status, kind, participants, messages, since_decision, age_seconds"
+    },
+    {
+      "kind": "shadow",
+      "blocking": true,
+      "designation": "fn:mailbox.threads.list",
+      "message": "new route GET /projects/{pid}/{view} overlaps authored GET /projects/{pid}/threads",
+      "shadowed_by": {
+        "designation": "prod:agent-slack.api.GET_projects_pid_view",
+        "method": "GET",
+        "path": "/projects/{pid}/{view}",
+        "at": "api/internal/api/server.go:104"
+      }
+    },
+    {
+      "kind": "book-guard",
+      "blocking": true,
+      "designation": "fn:mailbox.health",
+      "message": "authored element file changed, but the change order does not list fn:mailbox.health",
+      "path": "atlax/elements/fn.mailbox.health.yaml"
+    },
+    {
+      "kind": "row-test",
+      "blocking": false,
+      "designation": "rule.push-retry",
+      "message": "R1 passes",
+      "row": "R1",
+      "row_lifecycle": "live",
+      "test": {
+        "path": "api/cmd/discuss-api/push_test.go",
+        "name": "TestNothingIsMarkedPushedOnANon202/shedding_with_retry-after"
+      },
+      "result": "pass",
+      "gate_row": false
+    },
+    {
+      "kind": "row-test",
+      "blocking": false,
+      "designation": "rule.push-retry",
+      "message": "R2 is planned and its test does not exist yet; the card changes R2, so it is a gate row",
+      "row": "R2",
+      "row_lifecycle": "planned",
+      "test": {
+        "path": "api/cmd/discuss-api/push_test.go",
+        "name": "TestA503WithRetryAfterIsHonoured"
+      },
+      "result": "missing",
+      "gate_row": true
+    },
+    {
+      "kind": "ext-break",
+      "blocking": true,
+      "designation": "fn:mailbox.threads.list",
+      "message": "the branch renames thread list keys (Subject -> subject) that organizer reads; the change order modifies fn:mailbox.threads.list, so the merge may go ahead once organizer's FSE is told",
+      "consumer": {
+        "artifact": "organizer",
+        "designation": "prod:organizer.discuss.ThreadsByStatus",
+        "owner": "organizer-fse"
+      },
+      "ext": "ext:agent-slack#fn:mailbox.threads.list"
+    }
+  ]
+}

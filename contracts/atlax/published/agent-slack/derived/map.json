@@ -1,0 +1,207 @@
+{
+  "schema": "c4-map/1",
+  "initiative": "agent-slack",
+  "system": "discuss",
+  "inputs": {
+    "api": "50de4f29ff59cb8db0ff80b5777bfbafd986e204",
+    "docs": "6a31d6de2517cfdae1ff7a620aa9218156976ed0",
+    "ops": "bd77660b2ddf611ed495b4ca3b207a5840addcbf",
+    "record": "2e9f8b0f709a805096ab889e3e054652ab14a9b8",
+    "specs": "e94ce1b9719043f8314f42550c8558827d7614a9",
+    "ui": "e32e94e8ca0e1414bdd1c3d924977874f3d33339"
+  },
+  "levels": [
+    {
+      "level": "context",
+      "page": "context.md",
+      "svg": "context.md-1.svg"
+    },
+    {
+      "level": "containers",
+      "page": "containers.md",
+      "svg": "containers.md-1.svg"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "claude_code",
+      "label": "Claude Code sessions",
+      "level": "context",
+      "kind": "external",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "id": "discuss",
+      "label": "discuss mailbox",
+      "level": "context",
+      "kind": "system",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "id": "hestia",
+      "label": "Hestia record",
+      "level": "context",
+      "kind": "external",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "id": "pablo",
+      "label": "Operator",
+      "level": "context",
+      "kind": "person",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "id": "hestia",
+      "label": "Hestia record",
+      "level": "containers",
+      "kind": "external",
+      "parent": null,
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "external",
+          "ref": "record"
+        }
+      ]
+    },
+    {
+      "id": "mailbox_api",
+      "label": "discuss-api",
+      "level": "containers",
+      "kind": "container",
+      "parent": "discuss",
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "repo",
+          "ref": "api@50de4f2"
+        }
+      ]
+    },
+    {
+      "id": "mailbox_db",
+      "label": "mailbox SQLite",
+      "level": "containers",
+      "kind": "store",
+      "parent": "discuss",
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "repo",
+          "ref": "api/internal/store"
+        }
+      ]
+    },
+    {
+      "id": "mailbox_ui",
+      "label": "mailbox UI",
+      "level": "containers",
+      "kind": "container",
+      "parent": "discuss",
+      "status": "exists",
+      "grounding": [
+        {
+          "kind": "repo",
+          "ref": "ui@e32e94e"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "claude_code",
+      "to": "discuss",
+      "level": "context",
+      "evidence": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "from": "discuss",
+      "to": "hestia",
+      "level": "context",
+      "evidence": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "from": "pablo",
+      "to": "discuss",
+      "level": "context",
+      "evidence": [
+        {
+          "kind": "curated",
+          "ref": "context.md"
+        }
+      ]
+    },
+    {
+      "from": "mailbox_api",
+      "to": "hestia",
+      "level": "containers",
+      "evidence": [
+        {
+          "kind": "repo",
+          "ref": "api/cmd/discuss-api/push.go"
+        }
+      ]
+    },
+    {
+      "from": "mailbox_api",
+      "to": "mailbox_db",
+      "level": "containers",
+      "evidence": [
+        {
+          "kind": "repo",
+          "ref": "api/internal/store"
+        }
+      ]
+    },
+    {
+      "from": "mailbox_ui",
+      "to": "mailbox_api",
+      "level": "containers",
+      "evidence": [
+        {
+          "kind": "repo",
+          "ref": "ui/app.js"
+        }
+      ]
+    }
+  ]
+}

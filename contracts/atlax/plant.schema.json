@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/plant.schema.json",
+  "title": "atlax nameplate (atlax/plant.yaml)",
+  "description": "The nameplate of one artifact (proposition 1): its id, owner and the norm version it follows. One per artifact repo, at atlax/plant.yaml; copied unchanged to artifacts/<artifact>/plant.yaml in the atlax repo on publish. Writer: the artifact's FSE (Hephaistos for agent-slack). Readers: `atlax verify`, `atlax publish` (the folder name), `atlax check` (resolves ext:<artifact>), atlax-agent. Samples: plant.sample.yaml, published/agent-slack/plant.yaml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact", "owner", "norm"],
+  "properties": {
+    "artifact": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "The artifact id: its repo slug. Names artifacts/<artifact>/ in the atlax repo and is the <artifact> of every ext:<artifact>#<designation>. Never reused."},
+    "owner": {"type": "string", "minLength": 1, "description": "The seat that owns the slice (the artifact's FSE)."},
+    "norm": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "The Atlas norm version followed, quoted (\"0.1\"). A reader refuses a norm it does not know."},
+    "purpose": {"type": "string", "description": "One line: what the artifact is for."},
+    "repo": {"type": "string", "description": "Where its code lives (host/owner/name); PUBLISHED repeats it."},
+    "c4_system": {"type": "string", "pattern": "^[A-Za-z0-9_]+$", "description": "The c4-map node id of the system this artifact realizes, so derived/map.json and the elements join."}
+  }
+}

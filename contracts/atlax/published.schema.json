@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/published.schema.json",
+  "title": "atlax PUBLISHED stamp (artifacts/<artifact>/PUBLISHED)",
+  "description": "The stamp `atlax publish` writes into an artifact's folder in the atlax repo: four `key: value` lines (a YAML mapping; sha and time quoted), saying which main of which repo the folder was copied from, when, and by which factory. Publishing the same sha twice is a no-op; the newer main wins. Writer: `atlax publish` (run by atlax-agent's watcher). Readers: `atlax check`, atlax-agent's freshness report (folder sha equals main's), Deltagos and Elenx (the source of what they draw). The published folder sample is published/agent-slack/: PUBLISHED, plant.yaml, elements/ (copies of the artifact's atlax/elements/), derived/map.json (c4-map/1, contracts/c4-map/map.schema.json, written by `c4-map gen` at that sha).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "repo",
+    "sha",
+    "time",
+    "factory"
+  ],
+  "properties": {
+    "repo": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The source repo (host/owner/name), as plant.yaml `repo`."
+    },
+    "sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "The main commit the folder was copied and derived from. Quoted: an all-digit sha would read as a number."
+    },
+    "time": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "When it was published, UTC. Quoted: unquoted, a YAML reader makes it a timestamp."
+    },
+    "factory": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "The factory (machine) that published it."
+    }
+  }
+}

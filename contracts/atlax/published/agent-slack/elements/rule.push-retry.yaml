@@ -1,0 +1,29 @@
+# One atlax element: the pusher's retry rule (ruling 4 of 2026-10-25), born
+# authored from that decision record with lifecycle planned. Each row has its
+# own lifecycle and names the test that proves it; the element goes live when
+# every row is live.
+designation: rule.push-retry
+product: prod:agent-slack.api.pusher
+kind: rule
+summary: How the mailbox pusher waits after the record sheds load.
+authored: true
+lifecycle: planned
+owner: hephaistos
+ruled_by: decisions.md 2026-10-25 (five rulings, item 4); 2026-10-31 (the atlas, item 3)
+consumes:
+  - ext:hestia#fn:record.ingest
+rows:
+  - row: R1
+    when: {status: 429, header: Retry-After}
+    then: wait Retry-After seconds, mark nothing pushed
+    lifecycle: live
+    test:
+      path: api/cmd/discuss-api/push_test.go
+      name: TestNothingIsMarkedPushedOnANon202/shedding_with_retry-after
+  - row: R2
+    when: {status: 503, header: Retry-After}
+    then: wait Retry-After seconds, mark nothing pushed
+    lifecycle: planned
+    test:
+      path: api/cmd/discuss-api/push_test.go
+      name: TestA503WithRetryAfterIsHonoured

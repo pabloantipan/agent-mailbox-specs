@@ -1,0 +1,21 @@
+# One atlax element: the mailbox's thread list, authored and live.
+# Lives in the artifact repo as atlax/elements/fn.mailbox.threads.list.yaml
+# (the designation with ':' written '.'). Only what is written on purpose is
+# here; what exists in code, atlax publish derives.
+designation: fn:mailbox.threads.list
+product: prod:agent-slack.api.GET_projects_pid_threads
+kind: http
+summary: Lists a project's threads, newest first, optionally by status.
+authored: true
+lifecycle: live
+owner: hephaistos
+ruled_by: decisions.md 2026-10-31 (the atlas, item 3; corrected the same day)
+terminal:
+  method: GET
+  path: /projects/{pid}/threads
+contract:
+  repo: specs
+  path: contracts/mailbox-threads.json
+test:
+  path: api/internal/api/contract_test.go
+  name: TestThreadListKeysMatchSample
