@@ -8,7 +8,6 @@
    "body": {
     "artifact": "agent-mailbox-api",
     "card": "agent-slack/thread-list-tags",
-    "claimed_at": "2026-11-02T14:05:00Z",
     "designations": [
      "fn:mailbox.threads.list"
     ],
