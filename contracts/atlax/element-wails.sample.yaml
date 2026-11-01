@@ -1,0 +1,15 @@
+# One atlax element of kind wails: Deltagos's board, a Go method the desktop
+# frontend calls through Wails. Lives in the agent-organizer repo as
+# atlax/elements/fn.organizer.App.GetBoard.yaml. Unauthored: `atlax derive`
+# finds it (one element per exported method of each value in wails.Run's
+# Bind:), so it never raises a finding; authored, a changed signature or a
+# method no longer bound is a redline.
+designation: fn:organizer.App.GetBoard
+kind: wails
+summary: The board the window draws, across initiatives.
+authored: false
+lifecycle: live
+owner: organizer-fse
+terminal:
+  binding: App.GetBoard
+  signature: () BoardView

@@ -1,0 +1,9 @@
+# atlax/overrides.yaml in an artifact repo: only what the extractors cannot
+# read. This one is invented: a CLI whose commands sit in a map, so no switch
+# lists them, and a debug binding nobody should promise.
+short: organizer
+cli:
+  commands: [status, board, sync]
+  ignore: [help]
+wails:
+  ignore: [App.DebugDump]
