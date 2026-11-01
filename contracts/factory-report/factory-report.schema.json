@@ -439,26 +439,27 @@
           },
           "ruled_by": {
             "type": "string",
-            "description": "The person who ruled, read from ruled_by as specs contracts/working-on/expected.json accepted_reading.ruled_by_reading gives it: `pablo (away mode)` is pablo; `operator` is the factory's operator (FACTORY_OPERATOR, pablo here); a Themis ruling is themis. \"\" when ruled_by is empty."
+            "description": "The person who ruled, read from ruled_by as specs contracts/working-on/expected.json accepted_reading.ruled_by_reading gives it: `pablo (autonomous mode)` and the old `pablo (away mode)` are pablo; a bare `(autonomous mode)` or `(away mode)`, and `operator`, are the factory's operator (FACTORY_OPERATOR, pablo here); a Themis ruling is themis. \"\" when ruled_by is empty or refused (accepted_reading.ruled_by_refused: an unknown parenthesized note, an unclosed parenthesis, an unlisted old wording; never read as present)."
           },
           "mode": {
             "oneOf": [
               {
                 "enum": [
                   "present",
-                  "away",
-                  "standing rule"
+                  "autonomous",
+                  "standing rule",
+                  "away"
                 ]
               },
               {
                 "type": "null"
               }
             ],
-            "description": "How it was ruled (working-on facts.enums.ruled_mode): the record's ruled_mode when written and in agreement, else read from ruled_by (no mode written = present). null when ruled_mode and ruled_by disagree or ruled_mode is not a mode (then note says so; never guessed)."
+            "description": "How it was ruled (working-on facts.enums.ruled_mode): the record's ruled_mode when written and in agreement, else read from ruled_by (no mode written = present). The writer writes autonomous for autonomous mode (decisions.md 2026-11-01); away is its old name, written by the writer before that date and still valid for a reader, which shows it as autonomous. null when ruled_mode and ruled_by disagree, ruled_mode is not a mode, or ruled_by is refused (then note says so; never guessed)."
           },
           "note": {
             "type": "string",
-            "description": "Present only when something was read around: ruled_at unreadable or without an offset (read from git), or ruled_mode disagreeing with ruled_by."
+            "description": "Present only when something was read around: ruled_at unreadable or without an offset (read from git), ruled_mode disagreeing with ruled_by, or ruled_by refused (`ruled_by '<value>' refused: ...`; the writer also counts refusals on stderr)."
           }
         }
       }
