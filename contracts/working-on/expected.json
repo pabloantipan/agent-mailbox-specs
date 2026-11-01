@@ -42,6 +42,12 @@
       "patterns": ["jira-report-*.md", "jira-*.md with no front-matter"],
       "rule": "A ledger in working-on/ is not a card: skipped silently, no problem, no warning."
     },
+    "atlax_fields": {
+      "touches": "a card's `touches:` is a list of atlax designations (fn:, prod:, loc:, evt., data., rule.), the elements its diff touches; informational. Absent or empty reads as [].",
+      "change_order": "a card's `change_order:` is a mapping {adds, modifies, retires}, each a list of designations: the authored elements the card adds (born lifecycle planned), changes and retires. Absent reads as all three empty; a missing key reads as []. Anything else is refused by `atlax verify`. An optional `frozen_at` (RFC 3339) inside it only records the time of the freeze commit.",
+      "freeze": "the change order is read as committed at the commit where the card's status first became now (or doing), following the card back through true renames (a git mv into done/, say); a card born now freezes at its first commit. A designation listed later is not in the change order: a later change is a new card, or an amend line the FSE writes.",
+      "readers": "both fields are optional; a reader that does not use them reads the card as before (the record and Deltagos render neither yet). Writer: the working-on and spec-craft skills; reader: `atlax verify --card` (claudecode scripts/atlax)."
+    },
     "unread": "A card or record whose front-matter is missing, unclosed or not YAML, or a decision whose file name is not NNNN-slug.md, is reported as an unread problem and contributes nothing else."
   },
   "initiative": {"id": "sample-initiative", "title": "Sample initiative, the working-on format's reference tree", "status": "active"},
@@ -54,6 +60,11 @@
      "threads": ["01M5CCCCCCCCCCCCCCCCCCCCCC"], "spec": ["docs/specs/sample-spec.md#goals"]},
     {"slug": "blocked-spec-list", "path": "working-on/blocked-spec-list.md", "status": "blocked",
      "spec": ["docs/specs/sample-spec.md#goals", "decisions 0002"], "waits_on_decision": "0003"},
+    {"slug": "change-order", "path": "working-on/change-order.md", "status": "next", "repos": ["sample-repo"],
+     "depends_on": ["now-lists"], "boundary": ["sample-repo/c.go"], "spec": ["docs/specs/sample-spec.md#goals"],
+     "touches": ["fn:sample.items.list", "fn:sample.items.create", "rule.sample-retry"],
+     "change_order": {"adds": ["fn:sample.items.create"], "modifies": ["fn:sample.items.list", "rule.sample-retry"], "retires": []},
+     "$comment": "the atlax fields (accepted_reading.atlax_fields); every other card has neither and reads touches [] and change_order {adds [], modifies [], retires []}"},
     {"slug": "dropped", "path": "working-on/dropped.md", "status": "dropped"},
     {"slug": "shipped", "path": "working-on/done/shipped.md", "status": "done", "done_folder": true},
     {"slug": "stale-status", "path": "working-on/done/stale-status.md", "status": "done", "status_as_written": "now", "done_folder": true},
@@ -190,7 +201,7 @@
   "readers_today": {
     "record": {
       "where": "~/hestia-monorepo/record/internal/kb/workingon/read.go, graph.go; record/internal/portfolio",
-      "agrees": ["every card's list fields (lenient list type), spec as a list", "crossing statuses kept as written", "bad-yaml.md skipped with a warning"],
+      "agrees": ["every card's list fields (lenient list type), spec as a list", "crossing statuses kept as written", "bad-yaml.md skipped with a warning", "change-order.md read as the other cards; touches and change_order not read, nothing rendered yet (2026-10-31)"],
       "differs": [
         "tickets.md, jira-map.md, assumptions.md: a warning each (\"no frontmatter\"); no ledger exemption",
         "dropped.md: read with status dropped, no problem raised",
@@ -206,7 +217,7 @@
     },
     "deltagos": {
       "where": "~/organizer/internal/scan/scan.go, decisions.go; organizer/internal/model/model.go, decision.go",
-      "agrees": ["now-lists.md", "dropped.md reported as unknown status", "tickets.md and jira-map.md skipped silently", "bad-yaml.md an unread problem"],
+      "agrees": ["now-lists.md", "change-order.md read, no problem; touches and change_order not read, nothing rendered yet (2026-10-31)", "dropped.md reported as unknown status", "tickets.md and jira-map.md skipped silently", "bad-yaml.md an unread problem"],
       "differs": [
         "next-scalars.md: unread (yaml.v3: cannot unmarshal !!str into []string for repos, depends_on, boundary, threads)",
         "blocked-spec-list.md: unread (cannot unmarshal !!seq into string for spec)",
