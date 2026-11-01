@@ -8,8 +8,9 @@ Fails, never skips (contracts/README.md rule 3), when:
   - a decision, card, run record or spec in sample/ (other than one expected.json lists as unread)
     does not hold to its kind's schema, or a facts.must_refuse case is accepted, or a
     facts.reader_refuses case is refused by the schema (the reader refuses it, not the schema);
-  - a decision's `crossing:` does not read as expected.json says (accepted_reading.crossing: the
-    scalar as written, a whole number in decimal; `0019` is 19, `0012` is 12, never the octal 10);
+  - a decision's record numbers (crossing, superseded_by, supersedes) do not read as expected.json
+    says (accepted_reading.crossing, record_numbers: the scalar as written, in decimal; `0019` is
+    19, `0012` is 12, `0020` is record 0020, never a float or an octal);
   - a run record's findings or a spec's amendments differ from facts.finding and facts.amendment.
 
 Needs python3 and PyYAML only. The validator covers the JSON Schema keywords these schemas use
@@ -131,21 +132,42 @@ def frontmatter(path):
     return {} if fm is None else (yaml.load(fm, Loader=_StrDates) or {})
 
 
-def read_crossing(path):
-    """accepted_reading.crossing: the scalar as written, digits read as a decimal whole number."""
+RECORD_NUMBERS = ("crossing", "superseded_by", "supersedes")
+
+
+def _digits(node, field):
+    raw = node.value.strip() if isinstance(node, yaml.ScalarNode) else None
+    if raw is None:
+        raise ValueError(f"{field} is not a scalar")
+    if raw in ("", "~", "null"):
+        return None
+    if not re.fullmatch(r"[0-9]+", raw):
+        raise ValueError(f"{field} {raw!r} is not a number")
+    return int(raw, 10)
+
+
+def read_number(path, field):
+    """accepted_reading.record_numbers: the scalar as written, digits read in decimal.
+
+    crossing is the whole number; superseded_by and supersedes name a record, written as its
+    four-digit number ("0020"), as a decision's number is. A YAML library's own resolution of
+    the scalar is never used (yaml.v3: 0019 a float, 0020 the octal 16).
+    """
     fm = frontmatter_text(path)
     if fm is None:
         return None
-    node = yaml.compose(fm)
-    for k, v in node.value:
-        if k.value == "crossing":
-            raw = v.value.strip() if isinstance(v, yaml.ScalarNode) else None
-            if not raw or raw in ("~", "null"):
-                return None
-            if not re.fullmatch(r"[0-9]+", raw):
-                raise ValueError(f"crossing {raw!r} is not a number")
-            return int(raw, 10)
-    return None
+    for k, v in yaml.compose(fm).value:
+        if k.value != field:
+            continue
+        if field == "supersedes":
+            items = v.value if isinstance(v, yaml.SequenceNode) else [v]
+            nums = [_digits(x, field) for x in items]
+            return [f"{n:04d}" for n in nums if n is not None]
+        n = _digits(v, field)
+        if n is None:
+            return None
+        return n if field == "crossing" else f"{n:04d}"
+    return [] if field == "supersedes" else None
 
 
 def main():
@@ -193,29 +215,36 @@ def main():
     for p in specs:
         holds("spec", rel(p))
 
-    # accepted_reading.crossing: an unquoted zero-padded number is the whole number, in decimal.
+    # accepted_reading.crossing and record_numbers: a record number is its digits as written, in decimal.
     check("crossing" in exp["accepted_reading"], "expected.json accepted_reading.crossing is written")
+    check(sorted(exp["accepted_reading"].get("record_numbers", {}).get("fields", [])) == sorted(RECORD_NUMBERS),
+          f"expected.json accepted_reading.record_numbers names {', '.join(RECORD_NUMBERS)}")
     by_number = {os.path.basename(p)[:4]: p for p in decisions}
     for d in exp["decisions"]:
         p = by_number.get(d["number"])
         if p is None:
             check(False, f"decision {d['number']} present in sample/")
             continue
-        try:
-            got = read_crossing(p)
-        except ValueError as e:
-            check(False, f"decision {d['number']}: {e}")
-            continue
-        check(got == d.get("crossing"), f"decision {d['number']} reads crossing {got!r}, expected {d.get('crossing')!r}")
+        for field in RECORD_NUMBERS:
+            want = d.get(field, [] if field == "supersedes" else None)
+            try:
+                got = read_number(p, field)
+            except ValueError as e:
+                check(False, f"decision {d['number']}: {e}")
+                continue
+            check(got == want, f"decision {d['number']} reads {field} {got!r}, expected {want!r}")
     for f in exp["facts"]["decision"]:
-        if "crossing" in f:
-            check(read_crossing(by_number[f["number"]]) == f["crossing"],
-                  f"decision fact {f['number']} carries crossing {f['crossing']}")
+        for field in RECORD_NUMBERS:
+            if field in f:
+                check(read_number(by_number[f["number"]], field) == f[field],
+                      f"decision fact {f['number']} carries {field} {f[field]!r}")
     # The sample exercises the traps: a YAML library alone gets these wrong.
-    raw_0016 = frontmatter(by_number["0016"]).get("crossing")
-    raw_0017 = frontmatter(by_number["0017"]).get("crossing")
-    check(raw_0016 == "0019" and raw_0017 == 10,
-          f"YAML 1.1 alone reads 0016's crossing as {raw_0016!r} and 0017's as {raw_0017!r} (the reading is 19 and 12)")
+    traps = [("0016", "crossing", "0019"), ("0017", "crossing", 10), ("0018", "crossing", "0008"),
+             ("0018", "superseded_by", 16), ("0020", "crossing", 8)]
+    for n, field, yaml11 in traps:
+        got = frontmatter(by_number[n]).get(field)
+        check(got == yaml11 and got != read_number(by_number[n], field),
+              f"YAML 1.1 alone reads {n}'s {field} as {got!r}; the reading is {read_number(by_number[n], field)!r}")
 
     # Run records' findings and specs' amendments are the facts expected.json lists.
     exp_runs = {r["name"]: r for r in exp["runs"]}

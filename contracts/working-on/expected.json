@@ -55,7 +55,11 @@
       "freeze": "the change order is read as committed at the commit where the card's status first became now (or doing), following the card back through true renames (a git mv into done/, say); a card born now freezes at its first commit. A designation listed later is not in the change order: a later change is a new card, or an amend line the FSE writes.",
       "readers": "both fields are optional; a reader that does not use them reads the card as before (the record and Deltagos render neither yet). Writer: the working-on and spec-craft skills; reader: `atlax verify --card` (claudecode scripts/atlax)."
     },
-    "crossing": "Card agent-slack facts-writers (hestia thread 01M6BY1FVP9VTAYXGF8586K926, organizer 0157's `crossing: 0019`): a decision's `crossing:` is written unquoted, `crossing: NNNN` (the themis, fse and working-on skills), and reads as the whole number its digits say in decimal, leading zeros dropped: `0019` is 19, `0012` is 12, `\"0017\"` is 17, `19` is 19. The reader takes the scalar as written, not as its YAML library resolves it (Go yaml.v3: `0019` the float 19.0, `0012` the octal 10; PyYAML: `0019` the string \"0019\", `0012` 10). Empty is no crossing. Sample: decisions 0016 and 0017.",
+    "crossing": "Card agent-slack facts-writers (hestia thread 01M6BY1FVP9VTAYXGF8586K926, organizer 0157's `crossing: 0019`): a decision's `crossing:` is written unquoted, `crossing: NNNN` (the themis, fse and working-on skills), and reads as the whole number its digits say in decimal, leading zeros dropped: `0019` is 19, `0012` is 12, `\"0017\"` is 17, `19` is 19. The reader takes the scalar as written, not as its YAML library resolves it (Go yaml.v3: `0019` the float 19.0, `0012` the octal 10; PyYAML: `0019` the string \"0019\", `0012` 10). Empty is no crossing. Sample: decisions 0016 to 0020; the same rule for every record-number field is accepted_reading.record_numbers.",
+    "record_numbers": {
+      "fields": ["crossing", "superseded_by", "supersedes"],
+      "rule": "Card agent-slack facts-writers (2026-11-01): a decision field that holds a record number (crossing, superseded_by, each item of supersedes) is read from its digits as written, in decimal, never as the YAML library resolves the scalar. The skills write them unquoted (`crossing: NNNN`, `supersedes: [NNNN]`), and Go yaml.v3 resolves a padded number with an 8 or 9 to a float (`0019` 19.0, `0008` 8.0) and one without to an octal integer (`0012` 10, `0020` 16, `0010` 8); PyYAML gives the string for the first and the same octal for the second. A reader takes the scalar's text (Go: the yaml.Node's Value) and reads it in decimal. crossing is the whole number (accepted_reading.crossing); superseded_by and supersedes name a record and are written here as its four-digit number (`0020`), as a decision's number is. A quoted value reads the same. Sample: decisions 0016 to 0020."
+    },
     "unread": "A card or record whose front-matter is missing, unclosed or not YAML, or a decision whose file name is not NNNN-slug.md, is reported as an unread problem and contributes nothing else."
   },
   "initiative": {"id": "sample-initiative", "title": "Sample initiative, the working-on format's reference tree", "status": "active"},
@@ -101,7 +105,12 @@
     {"number": "0016", "status": "ruled", "class": "decided", "crossing": 19, "ruled_by": {"person": "pablo", "mode": "present"},
      "$comment": "`crossing: 0019` unquoted, as the skills write it: crossing 19 (accepted_reading.crossing)"},
     {"number": "0017", "status": "ruled", "class": "decided", "crossing": 12, "ruled_by": {"person": "pablo", "mode": "present"},
-     "$comment": "`crossing: 0012` unquoted: crossing 12, never the octal 10 (accepted_reading.crossing)"}
+     "$comment": "`crossing: 0012` unquoted: crossing 12, never the octal 10 (accepted_reading.crossing)"},
+    {"number": "0018", "status": "superseded", "class": "closed", "crossing": 8, "superseded_by": "0020", "ruled_by": {"person": "pablo", "mode": "present"},
+     "$comment": "`crossing: 0008` (yaml.v3: float 8.0) is 8; `superseded_by: 0020` (octal 16) is record 0020 (accepted_reading.record_numbers)"},
+    {"number": "0019", "status": "superseded", "class": "closed", "superseded_by": "0020", "ruled_by": {"person": "pablo", "mode": "present"}},
+    {"number": "0020", "status": "ruled", "class": "decided", "crossing": 10, "supersedes": ["0018", "0019"], "ruled_by": {"person": "pablo", "mode": "present"},
+     "$comment": "`crossing: 0010` (octal 8) is 10; `supersedes: [0018, 0019]` (yaml.v3: floats) are records 0018 and 0019"}
   ],
   "stages": [
     {"id": "discover", "phase": "discovery", "done": "2026-10-06", "exit": [{"text": "The shape is ruled", "met": "2026-10-05"}]},
@@ -244,7 +253,7 @@
         "0008, 0009, 0010: ruled_by \"pablo by away mode\", \"pablo (standing rule)\", \"pablo by standing rule\" each become a person node named as written; wanted: person pablo plus its mode",
         "boundary and repos are not read at all (nothing to compare)",
         "0001, 0002, 0007: ruled_by \"operator\" is person operator with RULED_BY to it, and every owner: operator makes person operator; wanted (2026-10-26): person pablo (mode present for ruled_by), no person operator",
-        "0016, 0017 (2026-11-01, hestia thread 01M6BY1FVP9VTAYXGF8586K926): `crossing: 0019` resolves to the float 19.0 and the record is refused; `crossing: 0012` is read as the octal 10; wanted: 19 and 12 (accepted_reading.crossing)",
+        "0016 to 0020 (2026-11-01, hestia thread 01M6BY1FVP9VTAYXGF8586K926): record numbers are read as yaml.v3 resolves them: `crossing: 0019` and `0008` are floats and the record is refused, `crossing: 0012` and `0010` are the octals 10 and 8, `superseded_by: 0020` is 16, `supersedes: [0018, 0019]` floats; wanted: the digits as written (accepted_reading.crossing, record_numbers)",
         "0011: ruled_by \"pablo (away mode)\" not split at the parentheses; 0012 makes person pablo (wanted, beside the operator owner)",
         "facts (0042): no schema check, no fact ledger yet; specs with frontmatter read for title and status only (amended-spec agrees there)",
         "2026-11-01 (ruled_by says autonomous mode): the mode value is away where autonomous is wanted (0006, 0008, 0011 and every away form of ruled_by_reading); 0013 `pablo (autonomous mode)`, 0014 `(autonomous mode)`, 0015 `(away mode)` are not read as pablo, autonomous; ruled_by_refused values are read as a person, mode present, where a refusal is wanted (hestia's card)"
