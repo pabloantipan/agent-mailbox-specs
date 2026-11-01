@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/element.schema.json",
   "title": "atlax element (atlax/elements/<designation>.yaml)",
-  "description": "One element of an artifact's atlax slice, one file per element (ruled 2026-10-31), named by its designation with ':' written '.'. Holds only what is written on purpose; what exists in code is derived by `atlax publish` and is not here. Norm: Atlas (docs/atlas/manifesto.md), maturity binary (`authored`) plus `lifecycle`. Writers: the artifact's FSE, Daedalus and builders, through a card's change order. Readers: `atlax verify`, `atlax publish`, `atlax check` (claudecode bin/atlax), the Deltagos map lens, Elenx C4, Daedalus. Samples: element.sample.yaml, element-consumer.sample.yaml, element-wails.sample.yaml, element-cli.sample.yaml, published/agent-mailbox-api/elements/*.yaml.",
+  "description": "One element of an artifact's atlax slice, one file per element (ruled 2026-10-31), named by its designation with ':' written '.'. Holds only what is written on purpose; what exists in code is derived by `atlax publish` and is not here. Norm: Atlas (docs/atlas/manifesto.md), maturity binary (`authored`) plus `lifecycle`. Writers: the artifact's FSE, Daedalus and builders, through a card's change order. Readers: `atlax verify`, `atlax publish`, `atlax check` (claudecode bin/atlax), the Deltagos map lens, Elenx C4, Daedalus. Samples: element.sample.yaml, element-scope.sample.yaml, element-consumer.sample.yaml, element-wails.sample.yaml, element-cli.sample.yaml, published/agent-mailbox-api/elements/*.yaml.",
   "type": "object",
   "additionalProperties": false,
   "required": ["designation", "kind", "authored", "lifecycle", "owner"],
@@ -31,13 +31,14 @@
         "entity": {"type": "string"}
       }
     },
+    "scope": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+(:[A-Za-z0-9_.-]+)*$", "description": "The auth scope a caller needs to reach the terminal (kb:read, ingest:write), one scope (atlax-tool-followups-2 V3). Optional. `atlax verify` warns when an http element's scope differs from the artifact's route-scope contract, when plant.yaml contracts.route_scopes names one (the record: specs contracts/auth.json routes)."},
     "contract": {
       "type": "object",
       "additionalProperties": false,
       "required": ["repo", "path"],
       "description": "The shared contract sample that states the promise (specs/contracts/README.md).",
       "properties": {
-        "repo": {"type": "string", "description": "The repo holding the sample, by its directory under the initiative root (specs)."},
+        "repo": {"type": "string", "description": "The repo holding the sample, by its directory under the initiative root (specs). When plant.yaml contracts.repo names it, `atlax verify` reads the sample from the contracts source (CONTRACTS_DIR on the factory, else contracts.remote at contracts.ref), not from a sibling checkout."},
         "path": {"type": "string", "description": "The sample's path inside that repo."}
       }
     },

@@ -6,14 +6,15 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "short": {"type": "string", "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$", "description": "The <short> in derived fn:<short>.<Struct>.<Method> and fn:<short>.cli.<command> designations; default the artifact id without a leading `agent-`."},
+    "short": {"type": "string", "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$", "description": "The <short> in derived fn:<short>.<Struct>.<Method> and fn:<short>.cli.<command> designations, when plant.yaml names no short (plant.yaml short wins; verify warns when they differ); default the artifact id without a leading `agent-`."},
     "cli": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "dispatch": {"type": "array", "items": {"type": "string", "pattern": "^[^:]*:[A-Za-z_][A-Za-z0-9_]*$"}, "description": "dir:func, each a function whose switch on an argument's [0] lists the commands, when main's dispatch cannot be followed."},
         "commands": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "The commands verbatim, when no switch can be read. Wins over dispatch. Taken as present: a command removed from the code still derives from here, so an authored one listed here can never redline; prefer dispatch, and keep this list by hand. Each command's evidence is its line in this file."},
-        "ignore": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "Commands that are never elements."}
+        "ignore": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "Commands that are never elements."},
+        "flags_only": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[^:\\s]*$"}, "description": "Directories (cmd/kbcheck; . for the module root) whose main reads os.Args only to parse flags and dispatches no command: no warning, and no command is made up (atlax-tool-followups-2 V5). A main that hands os.Args[1:] to a flag set's Parse, directly or through the functions it passes it to, and reads no positional argument back, is read so with go/ast and needs no entry."}
       }
     },
     "wails": {

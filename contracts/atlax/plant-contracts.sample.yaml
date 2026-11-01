@@ -1,0 +1,18 @@
+# A nameplate that names its designations' short and where its contract
+# samples come from (atlax-tool-followups-2 V3, V4, V7), modelled on the
+# record: its fn: designations are fn:record.*, not fn:mailbox-record.*; its
+# elements' contract.repo specs is read from the specs remote at main (or
+# CONTRACTS_DIR on the factory), never from a sibling checkout's luck; and
+# its route scopes are specs contracts/auth.json.
+artifact: agent-mailbox-record
+owner: fse
+norm: "0.1"
+short: record
+purpose: The record for discuss, every factory's append-only event ledger and its reads.
+repo: github.com/pabloantipan/agent-mailbox-record
+c4_system: discuss
+contracts:
+  repo: specs
+  remote: git@github.com:pabloantipan/agent-mailbox-specs.git
+  ref: main
+  route_scopes: contracts/auth.json
