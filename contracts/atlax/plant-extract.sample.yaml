@@ -1,0 +1,17 @@
+# A nameplate that tells the extractors about the artifact's own code
+# (atlax-tool-followups U5, U8), modelled on the record: its routes are
+# registered through router methods (rt.scoped, rt.developer,
+# rt.scopedHandler) rather than mux.HandleFunc, a test-helper package serves
+# routes of its own that are not the artifact's, and one element's test sits
+# behind the integration build tag.
+artifact: agent-mailbox-record
+owner: fse
+norm: "0.1"
+purpose: The record for discuss, every factory's append-only event ledger and its reads.
+repo: github.com/pabloantipan/agent-mailbox-record
+c4_system: discuss
+extract:
+  go_route_wrappers: [rt.scoped, rt.developer, rt.scopedHandler]
+  exclude: [internal/auth/oidctest]
+test:
+  go_tags: [integration]

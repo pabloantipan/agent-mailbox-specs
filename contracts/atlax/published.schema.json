@@ -31,6 +31,10 @@
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]*$",
       "description": "The factory (machine) that published it."
+    },
+    "map": {
+      "enum": ["derived", "none"],
+      "description": "Where derived/map.json came from when not from the initiative (atlax-tool-followups U10). Absent: the initiative's docs/architecture/map.json (or ATLAX_MAP) as committed. derived: `atlax publish` made it from the slice at this sha (c4-map/1: the system, the artifact as a container, the artifacts it consumes as externals with an edge each, a module per Go package holding a route, binding or command; no levels, nothing rendered). none: no map could be made; the folder has no derived/map.json."
     }
   }
 }

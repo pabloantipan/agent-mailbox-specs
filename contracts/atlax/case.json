@@ -6,9 +6,12 @@
     {"sample": "element-consumer.sample.yaml", "schema": "element.schema.json", "what": "an element in another artifact whose consumes: reads ext:agent-mailbox-api#fn:mailbox.threads.list"},
     {"sample": "element-wails.sample.yaml", "schema": "element.schema.json", "what": "an element of kind wails: a Go method bound to Deltagos's frontend (binding, types-only signature), as atlax derive reads it"},
     {"sample": "element-cli.sample.yaml", "schema": "element.schema.json", "what": "an element of kind cli: an organizer subcommand, authored (contract and test)"},
+    {"sample": "element-any.sample.yaml", "schema": "element.schema.json", "what": "an http element whose pattern names no method: terminal.method ANY (atlax-tool-followups U7)"},
     {"sample": "overrides.sample.yaml", "schema": "overrides.schema.json", "what": "atlax/overrides.yaml: what the Wails and CLI extractors are told when the shape cannot be read"},
     {"sample": "plant.sample.yaml", "schema": "plant.schema.json", "what": "atlax/plant.yaml, the artifact's nameplate"},
+    {"sample": "plant-extract.sample.yaml", "schema": "plant.schema.json", "what": "a nameplate with extract (route wrappers, excluded test helpers) and test (build tags), modelled on the record (atlax-tool-followups U5, U8)"},
     {"sample": "published/agent-mailbox-api/PUBLISHED", "schema": "published.schema.json", "what": "the stamp of a published folder"},
+    {"sample": "published-derived.sample.yaml", "schema": "published.schema.json", "what": "the stamp of a folder whose derived/map.json atlax publish made from the slice (map: derived; atlax-tool-followups U10)"},
     {"sample": "published/agent-mailbox-api/plant.yaml", "schema": "plant.schema.json", "what": "the nameplate as published", "equals": "plant.sample.yaml"},
     {"sample": "published/agent-mailbox-api/elements/fn.mailbox.threads.list.yaml", "schema": "element.schema.json", "what": "a published element (http, authored, live)", "equals": "element.sample.yaml"},
     {"sample": "published/agent-mailbox-api/elements/fn.mailbox.health.yaml", "schema": "element.schema.json", "what": "a published element (http, authored, live)"},
@@ -42,7 +45,8 @@
     "atlax-agent, the Deltagos map lens, Elenx C4, Daedalus: no test reads it yet",
     "claudecode bin/atlax-watch (card atlax-agent G1): platform/artifacts.yaml; claudecode tests/atlax t8-t11 check what atlax writes against these samples",
     "the record's laptop indexer (hestia's card atlax-claims): the claims files; no test reads them yet",
-    "claudecode bin/atlax verify, touches, derive (card atlax-wails-extractor W1-W4): kinds wails and cli, atlax/overrides.yaml; tests/atlax t16-t17 check the fixture's element files and overrides against these schemas"
+    "claudecode bin/atlax verify, touches, derive (card atlax-wails-extractor W1-W4): kinds wails and cli, atlax/overrides.yaml; tests/atlax t16-t17 check the fixture's element files and overrides against these schemas",
+    "claudecode bin/atlax verify, touches, derive, publish, check, claim, card-check (card atlax-tool-followups U1-U13): plant extract and test, method ANY, the undeclared finding, PUBLISHED map; tests/atlax u1-u13 (cases/u<row>-*.sh, one per row; U11 claimed_at moves to the joint merge with hestia atlax-reclaim, specs feat/atlax-claimed-at) check what atlax writes against these schemas"
   ],
   "must_refuse": [
     {"schema": "element.schema.json", "reason": "the IEC symbol is never written: one spelling (decisions.md 2026-10-31, item 2)",
@@ -94,6 +98,20 @@
     {"schema": "artifacts.schema.json", "reason": "notify names the cell and the recipient",
      "case": {"artifacts": [{"slug": "agent-mailbox-api", "remote": "git@github.com:pabloantipan/agent-mailbox-api.git", "notify": {"to": "pablo"}}]}},
     {"schema": "claims-state.schema.json", "reason": "a fact is one of the two claim kinds",
-     "case": {"card": "agent-slack/x", "artifact": "agent-mailbox-api", "facts": [{"kind": "atlax_overlap", "v": 1, "at": "2026-11-02T14:05:00Z", "body": {}}]}}
+     "case": {"card": "agent-slack/x", "artifact": "agent-mailbox-api", "facts": [{"kind": "atlax_overlap", "v": 1, "at": "2026-11-02T14:05:00Z", "body": {}}]}},
+    {"schema": "element.schema.json", "reason": "an http terminal names its method; a pattern with no method is ANY (atlax-tool-followups U7)",
+     "case": {"designation": "fn:record.cell.noseat", "kind": "http", "authored": false, "lifecycle": "live", "owner": "fse", "terminal": {"path": "/projects/{cell}"}}},
+    {"schema": "element.schema.json", "reason": "the any-method spelling is ANY, never * or an empty string",
+     "case": {"designation": "fn:record.cell.noseat", "kind": "http", "authored": false, "lifecycle": "live", "owner": "fse", "terminal": {"method": "*", "path": "/projects/{cell}"}}},
+    {"schema": "plant.schema.json", "reason": "a route wrapper is a function or receiver.method name as written at the call, not a call",
+     "case": {"artifact": "agent-mailbox-record", "owner": "fse", "norm": "0.1", "extract": {"go_route_wrappers": ["rt.scoped("]}}},
+    {"schema": "plant.schema.json", "reason": "extract holds go_route_wrappers and exclude only",
+     "case": {"artifact": "agent-mailbox-record", "owner": "fse", "norm": "0.1", "extract": {"routes": ["GET /x"]}}},
+    {"schema": "plant.schema.json", "reason": "a build tag is one word, never flags for go test",
+     "case": {"artifact": "agent-mailbox-record", "owner": "fse", "norm": "0.1", "test": {"go_tags": ["integration -race"]}}},
+    {"schema": "published.schema.json", "reason": "map is said only when not the initiative's: derived or none",
+     "case": {"repo": "github.com/pabloantipan/agent-mailbox-api", "sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "time": "2026-10-31T23:40:12Z", "factory": "lodestar", "map": "initiative"}},
+    {"schema": "verify-findings.schema.json", "reason": "an undeclared route is information, never blocking",
+     "case": {"schema": "atlax-verify/1", "artifact": "agent-mailbox-api", "card": "agent-slack/x", "base": "origin/main", "base_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "head_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "change_order": {"modifies": [], "adds": [], "retires": [], "frozen_at": "2026-11-02T14:05:00Z"}, "exit": 1, "findings": [{"kind": "undeclared", "blocking": true, "designation": "prod:agent-mailbox-api.GET_x", "message": "x", "derived": "GET /x at a.go:1"}]}}
   ]
 }
