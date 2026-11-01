@@ -12,7 +12,7 @@
     "raised_by": {"type": ["string", "null"]},
     "owner": {"type": ["string", "null"]},
     "ruled": {"$ref": "#/$defs/date"},
-    "ruled_by": {"type": ["string", "null"], "description": "one scalar: `<person>` or `<person> (<mode>)`; old variants are read as expected.json accepted_reading.ruled_by_reading gives them"},
+    "ruled_by": {"type": ["string", "null"], "description": "one scalar: `<person>`, `<person> (autonomous mode)` or `<person> (standing rule)`; old variants are read as expected.json accepted_reading.ruled_by_reading gives them, and a value it does not know is refused by the reader (accepted_reading.ruled_by_refused), never read as present"},
     "options": {"$ref": "#/$defs/list"},
     "chosen": {"type": ["string", "null"], "description": "one of options; a question record writes `Q1 <alt>, Q2 <alt>`"},
     "cards": {"$ref": "#/$defs/list"},
@@ -31,7 +31,8 @@
       "oneOf": [
         {"type": "null"},
         {"const": "present", "description": "the owner ruled in words, in a session or a thread (ruled_by `pablo`, old `operator`)"},
-        {"const": "away", "description": "autonomous mode took the recommendation (ruled_by `pablo (away mode)`, old `pablo by away mode`, `operator away mode, recommendation taken`)"},
+        {"const": "autonomous", "description": "autonomous mode took the recommendation (ruled_by `pablo (autonomous mode)`, or a bare `(autonomous mode)`; old `pablo (away mode)`, a bare `(away mode)`, `pablo by away mode`, `operator away mode, recommendation taken`)"},
+        {"const": "away", "description": "the old name of autonomous (decisions.md 2026-11-01), still accepted and read as autonomous; a writer writes autonomous"},
         {"const": "standing rule", "description": "a standing ruling covered it (ruled_by `pablo (standing rule)`, old `pablo by standing rule`; a Themis ruling `themis (FR-4 x)`)"}
       ]
     },
