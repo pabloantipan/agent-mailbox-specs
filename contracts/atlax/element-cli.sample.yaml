@@ -1,0 +1,19 @@
+# One atlax element of kind cli: `organizer status`, a command the same
+# binary runs when its first argument names one. Lives in the agent-organizer
+# repo as atlax/elements/fn.organizer.cli.status.yaml. Authored here to show
+# the shape a promise takes: a command with its contract sample and test;
+# `atlax verify` raises a redline when the command is no longer dispatched.
+designation: fn:organizer.cli.status
+kind: cli
+summary: Prints the factory's status as text, for a terminal or a script.
+authored: true
+lifecycle: planned
+owner: organizer-fse
+terminal:
+  command: status
+contract:
+  repo: specs
+  path: contracts/organizer/status.txt
+test:
+  path: internal/cli/cli_test.go
+  name: TestStatusPrintsInitiatives

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/element.schema.json",
   "title": "atlax element (atlax/elements/<designation>.yaml)",
-  "description": "One element of an artifact's atlax slice, one file per element (ruled 2026-10-31), named by its designation with ':' written '.'. Holds only what is written on purpose; what exists in code is derived by `atlax publish` and is not here. Norm: Atlas (docs/atlas/manifesto.md), maturity binary (`authored`) plus `lifecycle`. Writers: the artifact's FSE, Daedalus and builders, through a card's change order. Readers: `atlax verify`, `atlax publish`, `atlax check` (claudecode bin/atlax), the Deltagos map lens, Elenx C4, Daedalus. Samples: element.sample.yaml, element-consumer.sample.yaml, published/agent-mailbox-api/elements/*.yaml.",
+  "description": "One element of an artifact's atlax slice, one file per element (ruled 2026-10-31), named by its designation with ':' written '.'. Holds only what is written on purpose; what exists in code is derived by `atlax publish` and is not here. Norm: Atlas (docs/atlas/manifesto.md), maturity binary (`authored`) plus `lifecycle`. Writers: the artifact's FSE, Daedalus and builders, through a card's change order. Readers: `atlax verify`, `atlax publish`, `atlax check` (claudecode bin/atlax), the Deltagos map lens, Elenx C4, Daedalus. Samples: element.sample.yaml, element-consumer.sample.yaml, element-wails.sample.yaml, element-cli.sample.yaml, published/agent-mailbox-api/elements/*.yaml.",
   "type": "object",
   "additionalProperties": false,
   "required": ["designation", "kind", "authored", "lifecycle", "owner"],
@@ -10,7 +10,7 @@
     "designation": {"$ref": "#/$defs/designation", "description": "The one stable tag (proposition 4), written form only: `fn:` `prod:` `loc:` or `evt.` `data.` `rule.`. Never reused; a retired element keeps it."},
     "product": {"type": "string", "pattern": "^prod:[A-Za-z0-9_.-]+$", "description": "The product aspect when the designation is a function: the artifact part that realizes it (builds on the c4-map locked ids)."},
     "location": {"type": "array", "items": {"type": "string", "pattern": "^loc:[A-Za-z0-9_.-]+$"}, "description": "Where it runs. Written by Talos on a deploy commit (Operation)."},
-    "kind": {"enum": ["http", "cli", "outbound", "event", "data", "rule"], "description": "http: a route the artifact serves; cli: a command; outbound: a call it makes to another artifact; event: one it emits; data: an entity it keeps; rule: a decision table (rows)."},
+    "kind": {"enum": ["http", "wails", "cli", "outbound", "event", "data", "rule"], "description": "http: a route the artifact serves; wails: a Go method bound to a desktop frontend by Wails (`Bind:` in wails.Run's options); cli: a command; outbound: a call it makes to another artifact; event: one it emits; data: an entity it keeps; rule: a decision table (rows)."},
     "summary": {"type": "string", "description": "One line: what it does for whom."},
     "authored": {"type": "boolean", "description": "true: a promise, part of the membrane; changes only through a change order that lists it, and a drift is a redline. false: organic; never a finding. Only a human promotes (or a decision record rules it born authored)."},
     "lifecycle": {"$ref": "#/$defs/lifecycle", "description": "Independent of authored. An element born authored from a decision record enters planned and goes live when its tests pass."},
@@ -19,11 +19,13 @@
     "terminal": {
       "type": "object",
       "additionalProperties": false,
-      "description": "How to find it in code. http and outbound: method and path (Go 1.22 mux pattern; verify's shadow check compares them). cli: command. event: topic. data: store and entity.",
+      "description": "How to find it in code. http and outbound: method and path (Go 1.22 mux pattern; verify's shadow check compares them). wails: binding (Struct.Method) and signature (types only, as atlax derives it: a changed one is a redline when authored). cli: command (the words after the binary). event: topic. data: store and entity.",
       "properties": {
         "method": {"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]},
         "path": {"type": "string", "pattern": "^/"},
-        "command": {"type": "string"},
+        "binding": {"type": "string", "pattern": "^(go\\.[A-Za-z_][A-Za-z0-9_]*\\.)?[A-Za-z_][A-Za-z0-9_]*\\.[A-Z][A-Za-z0-9_]*$", "description": "wails: the bound struct and its exported method, Struct.Method for a type in package main, else as Wails exposes it, go.<pkg>.Struct.Method."},
+        "signature": {"type": "string", "pattern": "^\\(", "description": "wails: the parameter and result types, gofmt spelling, no names, `interface{}` written `any`: \"(string, int) ([]model.Ticket, error)\"."},
+        "command": {"type": "string", "minLength": 1},
         "topic": {"type": "string"},
         "store": {"type": "string"},
         "entity": {"type": "string"}
@@ -72,12 +74,20 @@
       "else": {"properties": {"rows": false}}
     },
     {
-      "if": {"required": ["authored", "kind"], "properties": {"authored": {"const": true}, "kind": {"enum": ["http", "cli", "outbound", "event", "data"]}}},
+      "if": {"required": ["authored", "kind"], "properties": {"authored": {"const": true}, "kind": {"enum": ["http", "wails", "cli", "outbound", "event", "data"]}}},
       "then": {"required": ["contract", "test", "terminal"]}
     },
     {
       "if": {"required": ["kind"], "properties": {"kind": {"enum": ["http", "outbound"]}}},
       "then": {"required": ["terminal"], "properties": {"terminal": {"required": ["method", "path"]}}}
+    },
+    {
+      "if": {"required": ["kind"], "properties": {"kind": {"const": "wails"}}},
+      "then": {"required": ["terminal"], "properties": {"terminal": {"required": ["binding", "signature"]}}}
+    },
+    {
+      "if": {"required": ["kind"], "properties": {"kind": {"const": "cli"}}},
+      "then": {"required": ["terminal"], "properties": {"terminal": {"required": ["command"]}}}
     }
   ],
   "$defs": {
