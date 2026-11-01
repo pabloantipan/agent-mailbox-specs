@@ -111,6 +111,8 @@
      "case": {"artifact": "agent-mailbox-record", "owner": "fse", "norm": "0.1", "test": {"go_tags": ["integration -race"]}}},
     {"schema": "published.schema.json", "reason": "map is said only when not the initiative's: derived or none",
      "case": {"repo": "github.com/pabloantipan/agent-mailbox-api", "sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "time": "2026-10-31T23:40:12Z", "factory": "lodestar", "map": "initiative"}},
+    {"schema": "claim.schema.json", "reason": "claimed_at is UTC, the fact's at",
+     "case": {"card": "agent-slack/thread-list-tags", "factory": "lodestar", "artifact": "agent-mailbox-api", "designations": ["fn:mailbox.threads.list"], "claimed_at": "2026-11-02 14:05"}},
     {"schema": "verify-findings.schema.json", "reason": "an undeclared route is information, never blocking",
      "case": {"schema": "atlax-verify/1", "artifact": "agent-mailbox-api", "card": "agent-slack/x", "base": "origin/main", "base_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "head_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "change_order": {"modifies": [], "adds": [], "retires": [], "frozen_at": "2026-11-02T14:05:00Z"}, "exit": 1, "findings": [{"kind": "undeclared", "blocking": true, "designation": "prod:agent-mailbox-api.GET_x", "message": "x", "derived": "GET /x at a.go:1"}]}}
   ]

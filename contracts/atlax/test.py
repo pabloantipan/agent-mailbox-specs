@@ -12,7 +12,7 @@ Reads case.json. Fails, never skips (contracts/README.md rule 3), when:
   - the published folder lacks PUBLISHED, plant.yaml, elements/ or derived/map.json;
   - platform/artifacts.yaml's sample lists a slug twice;
   - a claims-state fact's body does not hold to its kind's schema (claim, claim-release) or names
-    another card or artifact than its file.
+    another card or artifact than its file, or its at is not the body's claimed_at / released_at.
 
 Needs python3 and PyYAML only. The validator below covers the JSON Schema
 keywords these schemas use and refuses any other, so a schema can never pass
@@ -212,6 +212,13 @@ def main():
     for i, f in enumerate(st.get("facts", [])):
         if f["kind"] == "atlax_claim_released":
             check(f["at"] == f["body"]["released_at"], f"claims-state facts[{i}] at is its released_at")
+        if f["kind"] == "atlax_claim" and "claimed_at" in f["body"]:
+            check(f["at"] == f["body"]["claimed_at"], f"claims-state facts[{i}] at is its claimed_at")
+    # U11: the same designations claimed again after a release are a new claim: the bodies differ.
+    claim = load(os.path.join(HERE, "claim.sample.json"))
+    again = dict(claim, claimed_at="2026-11-03T09:00:00Z")
+    check("claimed_at" in claim and again != claim,
+          "claim.sample.json carries claimed_at, so a re-claim of the same designations is a new body")
     bad = {"kind": "atlax_claim", "v": 1, "at": "2026-11-02T14:05:00Z",
            "body": {"card": "agent-slack/x", "factory": "lodestar", "artifact": "agent-mailbox-api",
                     "designations": [{"designation": "fn:mailbox.threads.list"}]}}
