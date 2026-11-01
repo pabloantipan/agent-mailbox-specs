@@ -95,6 +95,248 @@
     ],
     "notes": []
   },
+  "waves": {
+    "source": "run records under runs/ and docs/runs/ (frontmatter waves:), as written now",
+    "records": [
+      "docs/runs/2026-10-15-sup0.md",
+      "runs/2026-10-20-sup1.md"
+    ],
+    "lines": [
+      {
+        "t": 1792458600,
+        "cards": [
+          {
+            "slug": "a",
+            "waves": [
+              "sup1/1"
+            ],
+            "label": "sup1/1"
+          },
+          {
+            "slug": "b",
+            "waves": [
+              "sup2/1"
+            ],
+            "label": "sup2/1"
+          }
+        ],
+        "waves": [
+          "sup1/1",
+          "sup2/1"
+        ],
+        "round_count": 7,
+        "failed": 2,
+        "failed_by_cause": {
+          "execution": 1,
+          "no cause given": 1
+        },
+        "build_minutes": 68
+      },
+      {
+        "t": 1792468800,
+        "cards": [
+          {
+            "slug": "c",
+            "waves": [
+              "sup1/1"
+            ],
+            "label": "sup1/1"
+          }
+        ],
+        "waves": [
+          "sup1/1"
+        ],
+        "round_count": 2,
+        "failed": 0,
+        "failed_by_cause": {},
+        "build_minutes": 35
+      },
+      {
+        "t": 1792483200,
+        "cards": [
+          {
+            "slug": "d",
+            "waves": [],
+            "label": "no wave"
+          }
+        ],
+        "waves": [],
+        "round_count": 0,
+        "failed": 0,
+        "failed_by_cause": {},
+        "build_minutes": 0
+      }
+    ],
+    "waves": [
+      {
+        "key": "sup2/1",
+        "record": "runs/2026-10-20-sup1.md",
+        "wave": 1,
+        "supervisor": "sup2",
+        "task": "b and e",
+        "cards": [
+          "b",
+          "e"
+        ],
+        "launched": 1792440000,
+        "launched_iso": "2026-10-19T20:00:00+00:00",
+        "merged": null,
+        "merged_iso": null,
+        "rounds": [
+          {
+            "card": "b",
+            "kind": "review",
+            "start": 1792455600,
+            "end": 1792456200,
+            "result": "fail",
+            "reviewer": "b-rev",
+            "reason": "B1 unmet, no cause written",
+            "cause": null,
+            "start_iso": "2026-10-20T00:20:00+00:00",
+            "end_iso": "2026-10-20T00:30:00+00:00"
+          },
+          {
+            "card": "b",
+            "kind": "build",
+            "start": 1792456260,
+            "end": 1792458000,
+            "result": "n/a",
+            "reviewer": null,
+            "reason": "B1 fixed (flow map, as 22 organizer records write rounds)",
+            "cause": null,
+            "start_iso": "2026-10-20T00:31:00+00:00",
+            "end_iso": "2026-10-20T01:00:00+00:00"
+          },
+          {
+            "card": "b",
+            "kind": "review",
+            "start": 1792458120,
+            "end": 1792458480,
+            "result": "pass",
+            "reviewer": "b-rev",
+            "reason": "unmet none",
+            "cause": null,
+            "start_iso": "2026-10-20T01:02:00+00:00",
+            "end_iso": "2026-10-20T01:08:00+00:00"
+          },
+          {
+            "card": "e",
+            "kind": "build",
+            "start": 1792474800,
+            "end": null,
+            "result": "n/a",
+            "reviewer": null,
+            "reason": "in progress",
+            "cause": null,
+            "start_iso": "2026-10-20T05:40:00+00:00",
+            "end_iso": null
+          }
+        ],
+        "round_count": 4,
+        "failed": 1,
+        "failed_by_cause": {
+          "no cause given": 1
+        },
+        "build_minutes": 29
+      },
+      {
+        "key": "sup1/1",
+        "record": "runs/2026-10-20-sup1.md",
+        "wave": 1,
+        "supervisor": "sup1",
+        "task": "a and c",
+        "cards": [
+          "a",
+          "c"
+        ],
+        "launched": 1792454700,
+        "launched_iso": "2026-10-20T00:05:00+00:00",
+        "merged": 1792469100,
+        "merged_iso": "2026-10-20T04:05:00+00:00",
+        "rounds": [
+          {
+            "card": "a",
+            "kind": "build",
+            "start": 1792455000,
+            "end": 1792456800,
+            "result": "n/a",
+            "reviewer": null,
+            "reason": "built",
+            "cause": null,
+            "start_iso": "2026-10-20T00:10:00+00:00",
+            "end_iso": "2026-10-20T00:40:00+00:00"
+          },
+          {
+            "card": "a",
+            "kind": "review",
+            "start": 1792456860,
+            "end": 1792457100,
+            "result": "fail",
+            "reviewer": "a-rev",
+            "reason": "A2 unmet",
+            "cause": "execution",
+            "start_iso": "2026-10-20T00:41:00+00:00",
+            "end_iso": "2026-10-20T00:45:00+00:00"
+          },
+          {
+            "card": "a",
+            "kind": "build",
+            "start": 1792457160,
+            "end": 1792457700,
+            "result": "n/a",
+            "reviewer": null,
+            "reason": "A2 fixed",
+            "cause": "execution",
+            "start_iso": "2026-10-20T00:46:00+00:00",
+            "end_iso": "2026-10-20T00:55:00+00:00"
+          },
+          {
+            "card": "a",
+            "kind": "review",
+            "start": 1792457760,
+            "end": 1792457940,
+            "result": "pass",
+            "reviewer": "a-rev",
+            "reason": "unmet none",
+            "cause": null,
+            "start_iso": "2026-10-20T00:56:00+00:00",
+            "end_iso": "2026-10-20T00:59:00+00:00"
+          },
+          {
+            "card": "c",
+            "kind": "build",
+            "start": 1792465500,
+            "end": 1792467600,
+            "result": "n/a",
+            "reviewer": null,
+            "reason": "built",
+            "cause": null,
+            "start_iso": "2026-10-20T03:05:00+00:00",
+            "end_iso": "2026-10-20T03:40:00+00:00"
+          },
+          {
+            "card": "c",
+            "kind": "review",
+            "start": 1792467660,
+            "end": 1792468500,
+            "result": "pass",
+            "reviewer": "c-rev",
+            "reason": "unmet none",
+            "cause": null,
+            "start_iso": "2026-10-20T03:41:00+00:00",
+            "end_iso": "2026-10-20T03:55:00+00:00"
+          }
+        ],
+        "round_count": 6,
+        "failed": 1,
+        "failed_by_cause": {
+          "execution": 1
+        },
+        "build_minutes": 74
+      }
+    ],
+    "notes": []
+  },
   "tracks": {
     "drawn": true,
     "rev": "d277111",
