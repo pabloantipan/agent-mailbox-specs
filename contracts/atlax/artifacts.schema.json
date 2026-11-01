@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/artifacts.schema.json",
+  "title": "atlax artifact list (platform/artifacts.yaml in the atlax repo)",
+  "description": "The artifacts of the platform model, each by its repo slug and the git remote whose main is published. An artifact is a deployable repo (decisions.md 2026-10-31); specs, docs and tooling repos are not listed. Writer: atlax-agent, through a platform/ PR it merges itself (card atlax-agent G4). Reader: atlax-watch (claudecode scripts/atlax/watch.py, card atlax-agent G1): `git ls-remote <remote> refs/heads/main` per row, publishing a new sha from a bare mirror; a slug listed twice, or a row without slug or remote, stops the run. Every factory reads the same list, so any factory publishes any artifact. Sample: artifacts.sample.yaml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifacts"],
+  "properties": {
+    "artifacts": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slug", "remote"],
+        "properties": {
+          "slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "The artifact id: its repo slug, as its plant.yaml `artifact` and its artifacts/<slug>/ folder. Unique in the list (test.py checks it)."},
+          "remote": {"type": "string", "minLength": 1, "description": "A git remote the watcher can `git ls-remote` with the factory's own login (ssh or https). Its main is what gets published."},
+          "note": {"type": "string", "description": "One line for people: whose it is, why it is not seeded yet."}
+        }
+      }
+    }
+  }
+}

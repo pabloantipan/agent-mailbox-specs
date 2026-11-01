@@ -1,0 +1,32 @@
+{
+ "artifact": "agent-mailbox-api",
+ "branch": "feat/thread-list-tags",
+ "card": "agent-slack/thread-list-tags",
+ "facts": [
+  {
+   "at": "2026-11-02T14:05:00Z",
+   "body": {
+    "artifact": "agent-mailbox-api",
+    "card": "agent-slack/thread-list-tags",
+    "designations": [
+     "fn:mailbox.threads.list"
+    ],
+    "factory": "lodestar"
+   },
+   "kind": "atlax_claim",
+   "v": 1
+  },
+  {
+   "at": "2026-11-02T18:20:41Z",
+   "body": {
+    "artifact": "agent-mailbox-api",
+    "card": "agent-slack/thread-list-tags",
+    "factory": "lodestar",
+    "reason": "published",
+    "released_at": "2026-11-02T18:20:41Z"
+   },
+   "kind": "atlax_claim_released",
+   "v": 1
+  }
+ ]
+}
