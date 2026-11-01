@@ -21,7 +21,7 @@
     "supersedes": {"$ref": "#/$defs/list"},
     "superseded_by": {"type": ["string", "integer", "null"]},
     "stage": {"type": ["string", "null"]},
-    "crossing": {"type": ["string", "integer", "null"]},
+    "crossing": {"type": ["string", "integer", "null"], "description": "the crossing's number in ~/agent-slack/working-on/decisions/, read as the whole number its digits say in decimal: the skills write it unquoted (`crossing: NNNN`), and an unquoted zero-padded number is that whole number, so `crossing: 0019` is crossing 19 and `crossing: 0012` is 12. A reader takes the scalar as written, not as its YAML library resolves it: YAML 1.2 (Go yaml.v3) resolves `0019` to the float 19.0 and `0012` to the octal 10, YAML 1.1 (PyYAML) `0019` to the string \"0019\" and `0012` to 10; none of those is refused or read as the octal. A quoted `\"0019\"` and a bare `19` are 19 too. Empty (`crossing:`) is no crossing. expected.json accepted_reading.crossing", "examples": ["0019", 19]},
     "supervisor": {"type": ["string", "null"]},
 
     "raised_at": {"$ref": "#/$defs/datetime", "description": "NEW (0042): when the question was put to the owner, RFC 3339 with an offset; minutes are enough"},
