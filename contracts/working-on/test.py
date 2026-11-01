@@ -280,6 +280,16 @@ def main():
         errs = []
         validate(m["frontmatter"], schemas["decision"], schemas["decision"], f"reader_refuses[{i}]", errs)
         check(not errs, f"reader_refuses[{i}] is schema-valid (the reader refuses it): {m['name']}")
+        for w in m.get("written", []):
+            field = w.split(":", 1)[0]
+            node = dict((k.value, v) for k, v in yaml.compose(w).value)[field]
+            items = node.value if isinstance(node, yaml.SequenceNode) else [node]
+            try:
+                [_digits(x, field) for x in items]
+                refused = False
+            except ValueError:
+                refused = True
+            check(refused, f"reader_refuses[{i}]: `{w}` is no record number")
 
     print(f"\n{passes} passed, {len(fails)} failed")
     return 1 if fails else 0
