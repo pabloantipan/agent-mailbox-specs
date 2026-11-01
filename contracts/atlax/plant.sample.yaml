@@ -1,9 +1,9 @@
 # The nameplate of one artifact: atlax/plant.yaml in its repo. The artifact
 # id is the repo slug and names its folder in the atlax repo
 # (artifacts/<artifact>/). norm is quoted: unquoted, 0.10 would read as 0.1.
-artifact: agent-slack
+artifact: agent-mailbox-api
 owner: hephaistos
 norm: "0.1"
 purpose: The leaderless mailbox and wake channel a cell of agents talks through.
-repo: github.com/pabloantipan/agent-slack
+repo: github.com/pabloantipan/agent-mailbox-api
 c4_system: discuss

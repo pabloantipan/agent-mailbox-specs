@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/element.schema.json",
   "title": "atlax element (atlax/elements/<designation>.yaml)",
-  "description": "One element of an artifact's atlax slice, one file per element (ruled 2026-10-31), named by its designation with ':' written '.'. Holds only what is written on purpose; what exists in code is derived by `atlax publish` and is not here. Norm: Atlas (docs/atlas/manifesto.md), maturity binary (`authored`) plus `lifecycle`. Writers: the artifact's FSE, Daedalus and builders, through a card's change order. Readers: `atlax verify`, `atlax publish`, `atlax check` (claudecode bin/atlax), the Deltagos map lens, Elenx C4, Daedalus. Samples: element.sample.yaml, element-consumer.sample.yaml, published/agent-slack/elements/*.yaml.",
+  "description": "One element of an artifact's atlax slice, one file per element (ruled 2026-10-31), named by its designation with ':' written '.'. Holds only what is written on purpose; what exists in code is derived by `atlax publish` and is not here. Norm: Atlas (docs/atlas/manifesto.md), maturity binary (`authored`) plus `lifecycle`. Writers: the artifact's FSE, Daedalus and builders, through a card's change order. Readers: `atlax verify`, `atlax publish`, `atlax check` (claudecode bin/atlax), the Deltagos map lens, Elenx C4, Daedalus. Samples: element.sample.yaml, element-consumer.sample.yaml, published/agent-mailbox-api/elements/*.yaml.",
   "type": "object",
   "additionalProperties": false,
   "required": ["designation", "kind", "authored", "lifecycle", "owner"],

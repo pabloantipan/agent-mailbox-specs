@@ -1,6 +1,6 @@
 {
   "schema": "atlax-verify/1",
-  "artifact": "agent-slack",
+  "artifact": "agent-mailbox-api",
   "card": "agent-slack/thread-list-tags",
   "base": "origin/main",
   "base_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204",
@@ -31,10 +31,10 @@
       "designation": "fn:mailbox.threads.list",
       "message": "new route GET /projects/{pid}/{view} overlaps authored GET /projects/{pid}/threads",
       "shadowed_by": {
-        "designation": "prod:agent-slack.api.GET_projects_pid_view",
+        "designation": "prod:agent-mailbox-api.GET_projects_pid_view",
         "method": "GET",
         "path": "/projects/{pid}/{view}",
-        "at": "api/internal/api/server.go:104"
+        "at": "internal/api/server.go:104"
       }
     },
     {
@@ -52,7 +52,7 @@
       "row": "R1",
       "row_lifecycle": "live",
       "test": {
-        "path": "api/cmd/discuss-api/push_test.go",
+        "path": "cmd/discuss-api/push_test.go",
         "name": "TestNothingIsMarkedPushedOnANon202/shedding_with_retry-after"
       },
       "result": "pass",
@@ -66,7 +66,7 @@
       "row": "R2",
       "row_lifecycle": "planned",
       "test": {
-        "path": "api/cmd/discuss-api/push_test.go",
+        "path": "cmd/discuss-api/push_test.go",
         "name": "TestA503WithRetryAfterIsHonoured"
       },
       "result": "missing",
@@ -76,13 +76,13 @@
       "kind": "ext-break",
       "blocking": true,
       "designation": "fn:mailbox.threads.list",
-      "message": "the branch renames thread list keys (Subject -> subject) that organizer reads; the change order modifies fn:mailbox.threads.list, so the merge may go ahead once organizer's FSE is told",
+      "message": "the branch renames thread list keys (Subject -> subject) that agent-organizer reads; the change order modifies fn:mailbox.threads.list, so the merge may go ahead once organizer's FSE is told",
       "consumer": {
-        "artifact": "organizer",
-        "designation": "prod:organizer.discuss.ThreadsByStatus",
+        "artifact": "agent-organizer",
+        "designation": "prod:agent-organizer.discuss.ThreadsByStatus",
         "owner": "organizer-fse"
       },
-      "ext": "ext:agent-slack#fn:mailbox.threads.list"
+      "ext": "ext:agent-mailbox-api#fn:mailbox.threads.list"
     }
   ]
 }

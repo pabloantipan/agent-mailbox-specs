@@ -3,7 +3,7 @@
 # (the designation with ':' written '.'). Only what is written on purpose is
 # here; what exists in code, atlax publish derives.
 designation: fn:mailbox.threads.list
-product: prod:agent-slack.api.GET_projects_pid_threads
+product: prod:agent-mailbox-api.GET_projects_pid_threads
 kind: http
 summary: Lists a project's threads, newest first, optionally by status.
 authored: true
@@ -17,5 +17,5 @@ contract:
   repo: specs
   path: contracts/mailbox-threads.json
 test:
-  path: api/internal/api/contract_test.go
+  path: internal/api/contract_test.go
   name: TestThreadListKeysMatchSample

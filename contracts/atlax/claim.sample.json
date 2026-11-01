@@ -1,7 +1,7 @@
 {
   "card": "agent-slack/thread-list-tags",
   "factory": "lodestar",
-  "artifact": "agent-slack",
+  "artifact": "agent-mailbox-api",
   "designations": [
     "fn:mailbox.threads.list"
   ]

@@ -2,9 +2,9 @@
   "schema": "atlax-check/1",
   "atlax_sha": "c7e2b9a4f1d6083e5a2c7b4f9d1e6a3c8b5f2d07",
   "artifacts": {
-    "agent-slack": "8f3c2a1d9e4b7c6a5f0e1d2c3b4a59687f6e5d4c",
-    "hestia": "2e9f8b0f709a805096ab889e3e054652ab14a9b8",
-    "organizer": "d41b7e09c3a5f2860e1b4d7a9c2f5e8b1a4d7c03"
+    "agent-mailbox-api": "8f3c2a1d9e4b7c6a5f0e1d2c3b4a59687f6e5d4c",
+    "agent-mailbox-record": "2e9f8b0f709a805096ab889e3e054652ab14a9b8",
+    "agent-organizer": "d41b7e09c3a5f2860e1b4d7a9c2f5e8b1a4d7c03"
   },
   "exit": 1,
   "findings": [
@@ -12,19 +12,19 @@
       "kind": "consumer-notice",
       "blocking": false,
       "designation": "fn:mailbox.threads.list",
-      "message": "agent-slack published a change to fn:mailbox.threads.list (keys tagged: Subject -> subject); organizer's ThreadsByStatus reads it",
-      "consumer": {"artifact": "organizer", "designation": "prod:organizer.discuss.ThreadsByStatus", "owner": "organizer-fse"},
-      "ext": "ext:agent-slack#fn:mailbox.threads.list",
+      "message": "agent-mailbox-api published a change to fn:mailbox.threads.list (keys tagged: Subject -> subject); agent-organizer's ThreadsByStatus reads it",
+      "consumer": {"artifact": "agent-organizer", "designation": "prod:agent-organizer.discuss.ThreadsByStatus", "owner": "organizer-fse"},
+      "ext": "ext:agent-mailbox-api#fn:mailbox.threads.list",
       "change": {"from_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "to_sha": "8f3c2a1d9e4b7c6a5f0e1d2c3b4a59687f6e5d4c", "what": "modified"},
-      "notice": "notices/organizer.agent-slack.fn.mailbox.threads.list.8f3c2a1.md"
+      "notice": "notices/agent-organizer.agent-mailbox-api.fn.mailbox.threads.list.8f3c2a1.md"
     },
     {
       "kind": "ext-break",
       "blocking": true,
       "designation": "fn:mailbox.search",
-      "message": "organizer consumes ext:agent-slack#fn:mailbox.search, which agent-slack's published folder does not hold",
-      "consumer": {"artifact": "organizer", "designation": "prod:organizer.discuss.Search", "owner": "organizer-fse"},
-      "ext": "ext:agent-slack#fn:mailbox.search"
+      "message": "agent-organizer consumes ext:agent-mailbox-api#fn:mailbox.search, which agent-mailbox-api's published folder does not hold",
+      "consumer": {"artifact": "agent-organizer", "designation": "prod:agent-organizer.discuss.Search", "owner": "organizer-fse"},
+      "ext": "ext:agent-mailbox-api#fn:mailbox.search"
     }
   ]
 }

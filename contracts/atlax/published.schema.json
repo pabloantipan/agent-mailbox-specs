@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/published.schema.json",
   "title": "atlax PUBLISHED stamp (artifacts/<artifact>/PUBLISHED)",
-  "description": "The stamp `atlax publish` writes into an artifact's folder in the atlax repo: four `key: value` lines (a YAML mapping; sha and time quoted), saying which main of which repo the folder was copied from, when, and by which factory. Publishing the same sha twice is a no-op; the newer main wins. Writer: `atlax publish` (run by atlax-agent's watcher). Readers: `atlax check`, atlax-agent's freshness report (folder sha equals main's), Deltagos and Elenx (the source of what they draw). The published folder sample is published/agent-slack/: PUBLISHED, plant.yaml, elements/ (copies of the artifact's atlax/elements/), derived/map.json (c4-map/1, contracts/c4-map/map.schema.json, written by `c4-map gen` at that sha).",
+  "description": "The stamp `atlax publish` writes into an artifact's folder in the atlax repo: four `key: value` lines (a YAML mapping; sha and time quoted), saying which main of which repo the folder was copied from, when, and by which factory. Publishing the same sha twice is a no-op; the newer main wins. Writer: `atlax publish` (run by atlax-agent's watcher). Readers: `atlax check`, atlax-agent's freshness report (folder sha equals main's), Deltagos and Elenx (the source of what they draw). The published folder sample is published/agent-mailbox-api/: PUBLISHED, plant.yaml, elements/ (copies of the artifact's atlax/elements/), derived/map.json (c4-map/1, contracts/c4-map/map.schema.json, written by `c4-map gen` at that sha).",
   "type": "object",
   "additionalProperties": false,
   "required": [
