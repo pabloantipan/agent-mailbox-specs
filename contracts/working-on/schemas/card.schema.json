@@ -26,7 +26,20 @@
 
     "created": {"$ref": "#/$defs/day", "description": "NEW (0042): the day the card was cut (YYYY-MM-DD, or RFC 3339 with an offset)"},
     "done": {"$ref": "#/$defs/day", "description": "NEW (0042): the day the card reached done (YYYY-MM-DD, or RFC 3339 with an offset)"},
-    "review_rounds": {"type": ["integer", "null"], "minimum": 0, "description": "NEW (0042): how many review rounds the card took; 1 is a first-time pass"}
+    "review_rounds": {"type": ["integer", "null"], "minimum": 0, "description": "NEW (0042): how many review rounds the card took; 1 is a first-time pass"},
+
+    "touches": {"type": ["array", "null"], "items": {"type": "string"}, "description": "NEW (atlax, 2026-10-31): the atlax designations the card's diff touches; informational (expected.json accepted_reading.atlax_fields)"},
+    "change_order": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "description": "NEW (atlax, 2026-10-31): the authored elements the card adds, modifies and retires, frozen at the commit where its status first became now (expected.json accepted_reading.atlax_fields)",
+      "properties": {
+        "adds": {"type": ["array", "null"], "items": {"type": "string"}},
+        "modifies": {"type": ["array", "null"], "items": {"type": "string"}},
+        "retires": {"type": ["array", "null"], "items": {"type": "string"}},
+        "frozen_at": {"type": ["string", "null"], "description": "optional; only records the time of the freeze commit"}
+      }
+    }
   },
   "$defs": {
     "date": {"type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}"},

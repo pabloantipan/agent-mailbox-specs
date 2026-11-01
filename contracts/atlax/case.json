@@ -10,7 +10,7 @@
     {"sample": "published/agent-mailbox-api/elements/fn.mailbox.threads.list.yaml", "schema": "element.schema.json", "what": "a published element (http, authored, live)", "equals": "element.sample.yaml"},
     {"sample": "published/agent-mailbox-api/elements/fn.mailbox.health.yaml", "schema": "element.schema.json", "what": "a published element (http, authored, live)"},
     {"sample": "published/agent-mailbox-api/elements/rule.push-retry.yaml", "schema": "element.schema.json", "what": "a published rule: R1 (429) live, R2 (503) planned, each naming its test"},
-    {"sample": "published/agent-mailbox-api/derived/map.json", "schema": "../c4-map/map.schema.json", "what": "derived/map.json, c4-map gen's output at the published sha (c4-map/1, unchanged)"},
+    {"sample": "published/agent-mailbox-api/derived/map.json", "schema": "../c4-map/map.schema.json", "what": "derived/map.json, the initiative's map.json at publish, as committed (c4-map/1, unchanged)"},
     {"sample": "claim.sample.json", "schema": "claim.schema.json", "what": "the body a starting card posts to Hestia's claims"},
     {"sample": "verify-findings.sample.json", "schema": "verify-findings.schema.json", "what": "atlax verify --json: redline, shadow, book-guard, row-test, ext-break"},
     {"sample": "check-findings.sample.json", "schema": "check-findings.schema.json", "what": "atlax check --json: ext-break, consumer-notice"},

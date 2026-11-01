@@ -74,7 +74,7 @@
     },
     {
       "kind": "ext-break",
-      "blocking": true,
+      "blocking": false,
       "designation": "fn:mailbox.threads.list",
       "message": "the branch renames thread list keys (Subject -> subject) that agent-organizer reads; the change order modifies fn:mailbox.threads.list, so the merge may go ahead once organizer's FSE is told",
       "consumer": {
