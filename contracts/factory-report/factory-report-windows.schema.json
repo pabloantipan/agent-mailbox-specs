@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/factory-report/factory-report-windows.schema.json",
+  "title": "factory report --windows --json",
+  "description": "What `factory report <initiative> --windows [--days <n>] --json` (~/claudecode/scripts/factory/report.py) prints: the autonomous windows to pick from (organizer thread 01M604KP815DSNCYV627X593NZ, lf57's window picker, run-report Amendment 2). Writer: Hephaistos (factory). Reader: Deltagos (organizer lf57), which passes a picked window back as `factory report <initiative> --since @<since> --until @<until> --json` (kind given). Times: epoch ints in seconds; *_iso and `generated` are the same times as ISO 8601 with the writer's local offset, for display only. The windows come from the factory's away digest (away-log.jsonl and away-archive/), so they are the factory's, the same for every initiative; `moved` and `moves` are this initiative's. The sample is expected-windows.json for the fixture make-fixture.sh builds (case.json `windows`).",
+  "type": "object",
+  "required": ["initiative", "root", "generated", "days", "from", "from_iso", "windows"],
+  "properties": {
+    "initiative": {"type": "string", "description": "As in factory-report.schema.json."},
+    "root": {"type": "string", "description": "As in factory-report.schema.json; ignored by the contract test."},
+    "generated": {"type": "string", "description": "As in factory-report.schema.json."},
+    "days": {"type": "integer", "minimum": 1, "description": "--days (14 when not given)."},
+    "from": {"type": "integer", "description": "now - days * 86400, epoch s: a window is listed when its until is at or after it."},
+    "from_iso": {"type": "string", "description": "from as ISO 8601 (display only)."},
+    "windows": {
+      "type": "array",
+      "description": "Newest first (by since): every autonomous window that ended with until >= from, and the one on now (kind current) when autonomous mode is on. [] when none.",
+      "items": {
+        "type": "object",
+        "required": ["since", "until", "kind", "source", "since_iso", "until_iso", "moved", "moves"],
+        "properties": {
+          "since": {"type": "integer", "description": "Window start, epoch s."},
+          "until": {"type": "integer", "description": "Window end, epoch s (for kind current: now)."},
+          "kind": {"enum": ["autonomous", "current"], "description": "The same values as factory-report.schema.json window.kind: autonomous = a window that ended; current = the one on now, up to now."},
+          "source": {"type": "string", "description": "away-log.jsonl, away-archive/ (an ended window) or away (the state file, kind current)."},
+          "since_iso": {"type": "string", "description": "since as ISO 8601 (display only)."},
+          "until_iso": {"type": "string", "description": "until as ISO 8601 (display only)."},
+          "moved": {"type": "boolean", "description": "Whether the initiative had a move in the window: a card added under working-on/done/ (the same count as factory-report progress.denominator.count for that window)."},
+          "moves": {"type": "integer", "minimum": 0, "description": "How many cards moved to done/ in it."}
+        }
+      }
+    }
+  }
+}

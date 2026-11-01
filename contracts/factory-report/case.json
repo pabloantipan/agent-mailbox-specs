@@ -7,5 +7,12 @@
   "ignore_fields": ["root"],
   "ignore_why": {
     "root": "the fixture's absolute path (DIR/init), different on every run; expected.json holds the placeholder <fixture>/init"
+  },
+  "windows": {
+    "why": "the window picker's list (organizer thread 01M604KP815DSNCYV627X593NZ): the fixture's three autonomous windows, newest first; the 2026-10-01 one is outside the default 14 days",
+    "command": ["factory", "report", "DIR/init", "--windows"],
+    "json": {"flag": "--json", "expected": "expected-windows.json", "schema": "factory-report-windows.schema.json"},
+    "text": {"flag": "--text", "expected": "expected-windows.txt", "compare": "byte-equal, the trailing newline included"},
+    "ignore_fields": ["root"]
   }
 }

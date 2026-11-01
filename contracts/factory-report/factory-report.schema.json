@@ -227,6 +227,331 @@
         }
       }
     },
+    "waves": {
+      "type": "object",
+      "description": "NEW (organizer 0168, option B, Q2 the waves block): the waves of the window and their rounds, read from the run records' frontmatter waves: (hestia 0042 run-record schema) under <root>/runs/ and <root>/docs/runs/ (TEMPLATE*.md skipped), as written now (runs/ is unversioned, not read at a commit), joined to progress.lines by each wave's cards: list. A round is in the window when it overlaps it (an open round from its start); a wave is in the window when one of its rounds is, when it was launched or merged in it, or when it lists a card that moved in it. Every count is the window's. --text prints it between chart 1 and chart 2. Tokens are not in it (runs.jsonl is not read). Absent when window is null.",
+      "required": [
+        "source",
+        "records",
+        "lines",
+        "waves",
+        "notes"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Where the waves were read, in words."
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Run records with a waves: list, relative to the root, sorted; [] when none (then every card reads no wave)."
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "t",
+              "cards",
+              "waves",
+              "round_count",
+              "failed",
+              "failed_by_cause",
+              "build_minutes"
+            ],
+            "properties": {
+              "t": {
+                "type": "integer",
+                "description": "The progress line's time (progress.lines[].t): the same row."
+              },
+              "cards": {
+                "type": "array",
+                "description": "The line's cards, in progress.lines[].cards order.",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "slug",
+                    "waves",
+                    "label"
+                  ],
+                  "properties": {
+                    "slug": {
+                      "type": "string"
+                    },
+                    "waves": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Keys of the waves (in waves.waves) whose cards: lists it; [] when none."
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "The waves' keys joined by a space, or \"no wave\" when none lists it (never a guess)."
+                    }
+                  }
+                }
+              },
+              "waves": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The keys of every wave the line's cards belong to: the wave column (option B)."
+              },
+              "round_count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Rounds counted (in the window)."
+              },
+              "failed": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Of them, rounds whose result is fail."
+              },
+              "failed_by_cause": {
+                "type": "object",
+                "description": "Failed rounds per cause word, most first: a hestia 0042 cause (approach, execution, gate, environment, unclear) or \"no cause given\" when the round carries none. `unclear` only when the record says unclear; never guessed.",
+                "propertyNames": {
+                  "enum": [
+                    "approach",
+                    "execution",
+                    "gate",
+                    "environment",
+                    "unclear",
+                    "no cause given"
+                  ]
+                },
+                "additionalProperties": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "build_minutes": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Minutes of build rounds with a start and an end, clipped to the window; an open build (no end) adds nothing (no invented time)."
+              }
+            },
+            "$comment": "round_count .. build_minutes here are the line's cost: the in-window rounds of its cards in their waves (the row's disclosure)."
+          },
+          "description": "One per progress.lines row, same order and t."
+        },
+        "waves": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "key",
+              "record",
+              "wave",
+              "supervisor",
+              "cards",
+              "launched",
+              "launched_iso",
+              "merged",
+              "merged_iso",
+              "rounds",
+              "round_count",
+              "failed",
+              "failed_by_cause",
+              "build_minutes"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "<supervisor>/<wave> (the record's file stem when there is no supervisor, or when the key is taken): what lines[].cards[].waves name."
+              },
+              "record": {
+                "type": "string",
+                "description": "The run record, relative to the initiative root."
+              },
+              "wave": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "description": "The wave number as written."
+              },
+              "supervisor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "task": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cards": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The wave's cards: list: the join."
+              },
+              "launched": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "Epoch s, null when not a readable time."
+              },
+              "launched_iso": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "launched as ISO 8601, or null."
+              },
+              "merged": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "Epoch s; null while open or when not a readable time."
+              },
+              "merged_iso": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "merged as ISO 8601, or null."
+              },
+              "rounds": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "card",
+                    "kind",
+                    "start",
+                    "end",
+                    "result",
+                    "cause",
+                    "start_iso",
+                    "end_iso"
+                  ],
+                  "properties": {
+                    "card": {
+                      "type": "string",
+                      "description": "The round's card slug, as written (\"\" when none)."
+                    },
+                    "kind": {
+                      "type": "string",
+                      "description": "build, review, ui-review or take, as written."
+                    },
+                    "start": {
+                      "type": "integer",
+                      "description": "Epoch s. A round with no readable start (RFC 3339 with an offset) is not placed and is counted in waves.notes."
+                    },
+                    "end": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "description": "Epoch s; null while the round is open or when its end is not a readable time."
+                    },
+                    "start_iso": {
+                      "type": "string",
+                      "description": "start as ISO 8601 with the local offset (display only)."
+                    },
+                    "end_iso": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "end as ISO 8601 with the local offset, or null."
+                    },
+                    "result": {
+                      "type": "string",
+                      "description": "pass, fail or n/a, as written (\"\" when none)."
+                    },
+                    "reviewer": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "One line, as written."
+                    },
+                    "cause": {
+                      "oneOf": [
+                        {
+                          "enum": [
+                            "approach",
+                            "execution",
+                            "gate",
+                            "environment",
+                            "unclear"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Why the round was needed (hestia 0042, specs contracts/working-on/schemas/run-record.schema.json $defs.cause): null when the record gives none or a value outside the enum."
+                    }
+                  }
+                },
+                "description": "The wave's rounds in the window, in written order."
+              },
+              "round_count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Rounds counted (in the window)."
+              },
+              "failed": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Of them, rounds whose result is fail."
+              },
+              "failed_by_cause": {
+                "type": "object",
+                "description": "Failed rounds per cause word, most first: a hestia 0042 cause (approach, execution, gate, environment, unclear) or \"no cause given\" when the round carries none. `unclear` only when the record says unclear; never guessed.",
+                "propertyNames": {
+                  "enum": [
+                    "approach",
+                    "execution",
+                    "gate",
+                    "environment",
+                    "unclear",
+                    "no cause given"
+                  ]
+                },
+                "additionalProperties": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "build_minutes": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Minutes of build rounds with a start and an end, clipped to the window; an open build (no end) adds nothing (no invented time)."
+              }
+            }
+          },
+          "description": "The waves in the window, by launched (unknown last), then key: the footer `Waves in this window`."
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "What was read around: a waves: that is not a list, rounds with no readable start."
+        }
+      }
+    },
     "tracks": {
       "description": "Chart 2: each roadmap stage as a track, read from git at the last commit of working-on/ before window.until (a rerun prints the same numbers).",
       "type": "object",
