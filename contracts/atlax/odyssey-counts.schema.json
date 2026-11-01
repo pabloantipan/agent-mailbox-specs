@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/odyssey-counts.schema.json",
+  "title": "atlax counts from a factory whose book stays on its side",
+  "description": "What a factory that keeps its atlax on its own side (odyssey; decisions.md 2026-10-31, item 5) sends Hestia: counts only, as of a time. No artifact name, no designation, no list of any kind: every field but factory and as_of is an integer. Asked by hestia's FSE (thread 01M6AC2ESCY7VB98J69RFDSEC9). Writer: that factory's atlax-agent. Reader: Hestia (a Hestia card, its FSE). Sample: odyssey-counts.sample.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["factory", "as_of", "artifacts", "elements", "authored", "redlines"],
+  "properties": {
+    "factory": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "The sending factory's id."},
+    "as_of": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", "description": "When the counts were taken, UTC."},
+    "artifacts": {"type": "integer", "description": "How many artifacts its book holds."},
+    "elements": {"type": "integer", "description": "How many elements, across them."},
+    "authored": {"type": "integer", "description": "How many of those are authored."},
+    "redlines": {"type": "integer", "description": "Open redlines, as its last verify and check found them."}
+  }
+}

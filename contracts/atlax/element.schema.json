@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/element.schema.json",
+  "title": "atlax element (atlax/elements/<designation>.yaml)",
+  "description": "One element of an artifact's atlax slice, one file per element (ruled 2026-10-31), named by its designation with ':' written '.'. Holds only what is written on purpose; what exists in code is derived by `atlax publish` and is not here. Norm: Atlas (docs/atlas/manifesto.md), maturity binary (`authored`) plus `lifecycle`. Writers: the artifact's FSE, Daedalus and builders, through a card's change order. Readers: `atlax verify`, `atlax publish`, `atlax check` (claudecode bin/atlax), the Deltagos map lens, Elenx C4, Daedalus. Samples: element.sample.yaml, element-consumer.sample.yaml, published/agent-mailbox-api/elements/*.yaml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["designation", "kind", "authored", "lifecycle", "owner"],
+  "properties": {
+    "designation": {"$ref": "#/$defs/designation", "description": "The one stable tag (proposition 4), written form only: `fn:` `prod:` `loc:` or `evt.` `data.` `rule.`. Never reused; a retired element keeps it."},
+    "product": {"type": "string", "pattern": "^prod:[A-Za-z0-9_.-]+$", "description": "The product aspect when the designation is a function: the artifact part that realizes it (builds on the c4-map locked ids)."},
+    "location": {"type": "array", "items": {"type": "string", "pattern": "^loc:[A-Za-z0-9_.-]+$"}, "description": "Where it runs. Written by Talos on a deploy commit (Operation)."},
+    "kind": {"enum": ["http", "cli", "outbound", "event", "data", "rule"], "description": "http: a route the artifact serves; cli: a command; outbound: a call it makes to another artifact; event: one it emits; data: an entity it keeps; rule: a decision table (rows)."},
+    "summary": {"type": "string", "description": "One line: what it does for whom."},
+    "authored": {"type": "boolean", "description": "true: a promise, part of the membrane; changes only through a change order that lists it, and a drift is a redline. false: organic; never a finding. Only a human promotes (or a decision record rules it born authored)."},
+    "lifecycle": {"$ref": "#/$defs/lifecycle", "description": "Independent of authored. An element born authored from a decision record enters planned and goes live when its tests pass."},
+    "owner": {"type": "string", "minLength": 1, "description": "The seat that answers for it (an FSE, or Hephaistos for the factory's own)."},
+    "ruled_by": {"type": "string", "description": "The decision record that made it authored, when one did."},
+    "terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "How to find it in code. http and outbound: method and path (Go 1.22 mux pattern; verify's shadow check compares them). cli: command. event: topic. data: store and entity.",
+      "properties": {
+        "method": {"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]},
+        "path": {"type": "string", "pattern": "^/"},
+        "command": {"type": "string"},
+        "topic": {"type": "string"},
+        "store": {"type": "string"},
+        "entity": {"type": "string"}
+      }
+    },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repo", "path"],
+      "description": "The shared contract sample that states the promise (specs/contracts/README.md).",
+      "properties": {
+        "repo": {"type": "string", "description": "The repo holding the sample, by its directory under the initiative root (specs)."},
+        "path": {"type": "string", "description": "The sample's path inside that repo."}
+      }
+    },
+    "test": {"$ref": "#/$defs/test", "description": "The test that proves the element; `atlax verify` runs it."},
+    "characteristic": {"type": "string", "pattern": "^rule\\.[A-Za-z0-9_.-]+$", "description": "The rule element that holds this element's decision table, when it has one."},
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "description": "kind rule only: the decision table. Every row names its test and has its own lifecycle (a live row's test failing is a redline; a planned row is reported, never blocks).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["row", "when", "then", "lifecycle", "test"],
+        "properties": {
+          "row": {"type": "string", "pattern": "^R[0-9]+$", "description": "Stable row id; never renumbered."},
+          "when": {"type": "object", "description": "The input and state the row matches."},
+          "then": {"type": "string", "description": "The output and new state."},
+          "lifecycle": {"$ref": "#/$defs/lifecycle"},
+          "test": {"$ref": "#/$defs/test"}
+        }
+      }
+    },
+    "consumes": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Promises this element reads from other artifacts. `atlax verify` checks them against the local atlax clone (ATLAX_DIR); `atlax check` notifies this element's owner when one changes.",
+      "items": {"$ref": "#/$defs/ext"}
+    }
+  },
+  "allOf": [
+    {
+      "if": {"required": ["kind"], "properties": {"kind": {"const": "rule"}}},
+      "then": {"required": ["rows"]},
+      "else": {"properties": {"rows": false}}
+    },
+    {
+      "if": {"required": ["authored", "kind"], "properties": {"authored": {"const": true}, "kind": {"enum": ["http", "cli", "outbound", "event", "data"]}}},
+      "then": {"required": ["contract", "test", "terminal"]}
+    },
+    {
+      "if": {"required": ["kind"], "properties": {"kind": {"enum": ["http", "outbound"]}}},
+      "then": {"required": ["terminal"], "properties": {"terminal": {"required": ["method", "path"]}}}
+    }
+  ],
+  "$defs": {
+    "designation": {"type": "string", "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$"},
+    "ext": {"type": "string", "pattern": "^ext:[a-z0-9][a-z0-9-]*#((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$", "description": "ext:<artifact>#<designation>, the artifact by its id (repo slug)."},
+    "lifecycle": {"enum": ["planned", "live", "deprecated", "retired"]},
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "name"],
+      "properties": {
+        "path": {"type": "string", "description": "The test file, relative to the artifact repo's root."},
+        "name": {"type": "string", "description": "The test as its runner names it (Go: TestX or TestX/sub_test)."}
+      }
+    }
+  }
+}

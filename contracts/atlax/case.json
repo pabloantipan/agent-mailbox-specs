@@ -1,0 +1,68 @@
+{
+  "contract": "atlax",
+  "description": "The file shapes of atlax, the platform's copy of the Atlas norm (~/agent-slack/docs/atlas/manifesto.md; implementation.md steps 1-2 and Layout; decisions.md 2026-10-31). Every sample below holds to its schema; test.py checks each, and a missing sample or schema fails, never skips. The example artifact is the mailbox (agent-mailbox-api, the mailbox); the example consumer is Deltagos (agent-organizer).",
+  "samples": [
+    {"sample": "element.sample.yaml", "schema": "element.schema.json", "what": "one element file, atlax/elements/<designation>.yaml in an artifact repo"},
+    {"sample": "element-consumer.sample.yaml", "schema": "element.schema.json", "what": "an element in another artifact whose consumes: reads ext:agent-mailbox-api#fn:mailbox.threads.list"},
+    {"sample": "plant.sample.yaml", "schema": "plant.schema.json", "what": "atlax/plant.yaml, the artifact's nameplate"},
+    {"sample": "published/agent-mailbox-api/PUBLISHED", "schema": "published.schema.json", "what": "the stamp of a published folder"},
+    {"sample": "published/agent-mailbox-api/plant.yaml", "schema": "plant.schema.json", "what": "the nameplate as published", "equals": "plant.sample.yaml"},
+    {"sample": "published/agent-mailbox-api/elements/fn.mailbox.threads.list.yaml", "schema": "element.schema.json", "what": "a published element (http, authored, live)", "equals": "element.sample.yaml"},
+    {"sample": "published/agent-mailbox-api/elements/fn.mailbox.health.yaml", "schema": "element.schema.json", "what": "a published element (http, authored, live)"},
+    {"sample": "published/agent-mailbox-api/elements/rule.push-retry.yaml", "schema": "element.schema.json", "what": "a published rule: R1 (429) live, R2 (503) planned, each naming its test"},
+    {"sample": "published/agent-mailbox-api/derived/map.json", "schema": "../c4-map/map.schema.json", "what": "derived/map.json, c4-map gen's output at the published sha (c4-map/1, unchanged)"},
+    {"sample": "claim.sample.json", "schema": "claim.schema.json", "what": "the body a starting card posts to Hestia's claims"},
+    {"sample": "verify-findings.sample.json", "schema": "verify-findings.schema.json", "what": "atlax verify --json: redline, shadow, book-guard, row-test, ext-break"},
+    {"sample": "check-findings.sample.json", "schema": "check-findings.schema.json", "what": "atlax check --json: ext-break, consumer-notice"},
+    {"sample": "claim-release.sample.json", "schema": "claim-release.schema.json", "what": "the body that releases a claim, keyed by card + artifact"},
+    {"sample": "odyssey-counts.sample.json", "schema": "odyssey-counts.schema.json", "what": "counts only, from a factory whose book stays on its side"}
+  ],
+  "published_folder": {
+    "path": "published/agent-mailbox-api",
+    "required": ["PUBLISHED", "plant.yaml", "elements", "derived/map.json"],
+    "element_file_name": "the designation with ':' written '.', plus .yaml",
+    "lands_at": "artifacts/<artifact>/ in the atlax repo (ATLAX_REPO, cloned at ATLAX_DIR)"
+  },
+  "writers": [
+    "the artifact's FSE, Daedalus and builders: element files and plant.yaml, through a card's change order",
+    "claudecode bin/atlax (card atlax-tool): PUBLISHED, derived/, verify and check findings",
+    "the card's start (factory side): the claim"
+  ],
+  "readers": [
+    "claudecode bin/atlax verify, publish, check (card atlax-tool T1-T7): no test reads this folder yet",
+    "Hestia's claims API (a Hestia card): no test reads claim.sample.json yet",
+    "atlax-agent, the Deltagos map lens, Elenx C4, Daedalus: no test reads it yet"
+  ],
+  "must_refuse": [
+    {"schema": "element.schema.json", "reason": "the IEC symbol is never written: one spelling (decisions.md 2026-10-31, item 2)",
+     "case": {"designation": "=BILLING.ISSUE", "kind": "http", "authored": false, "lifecycle": "live", "owner": "x", "terminal": {"method": "GET", "path": "/x"}}},
+    {"schema": "element.schema.json", "reason": "an authored terminal names its contract sample and its test",
+     "case": {"designation": "fn:mailbox.threads.list", "kind": "http", "authored": true, "lifecycle": "live", "owner": "hephaistos", "terminal": {"method": "GET", "path": "/projects/{pid}/threads"}}},
+    {"schema": "element.schema.json", "reason": "every row of a rule names its test",
+     "case": {"designation": "rule.push-retry", "kind": "rule", "authored": true, "lifecycle": "planned", "owner": "hephaistos", "rows": [{"row": "R2", "when": {"status": 503}, "then": "wait", "lifecycle": "planned"}]}},
+    {"schema": "element.schema.json", "reason": "maturity is binary (authored) for now; no middle levels",
+     "case": {"designation": "fn:mailbox.health", "kind": "http", "authored": false, "maturity": "stable", "lifecycle": "live", "owner": "x", "terminal": {"method": "GET", "path": "/x"}}},
+    {"schema": "element.schema.json", "reason": "consumes: is ext:<artifact>#<designation>",
+     "case": {"designation": "prod:agent-organizer.discuss.ThreadsByStatus", "kind": "outbound", "authored": false, "lifecycle": "live", "owner": "x", "terminal": {"method": "GET", "path": "/x"}, "consumes": ["fn:mailbox.threads.list"]}},
+    {"schema": "plant.schema.json", "reason": "an instance declares the norm it follows",
+     "case": {"artifact": "agent-mailbox-api", "owner": "hephaistos"}},
+    {"schema": "plant.schema.json", "reason": "the artifact id is the repo slug: lowercase letters, digits and hyphens",
+     "case": {"artifact": "pabloantipan/Agent_Mailbox_API", "owner": "hephaistos", "norm": "0.1"}},
+    {"schema": "published.schema.json", "reason": "a short sha cannot be compared with main",
+     "case": {"repo": "github.com/pabloantipan/agent-mailbox-api", "sha": "50de4f2", "time": "2026-10-31T23:40:12Z", "factory": "lodestar"}},
+    {"schema": "claim.schema.json", "reason": "Hestia holds names only, never element content",
+     "case": {"card": "agent-slack/thread-list-tags", "factory": "lodestar", "artifact": "agent-mailbox-api", "designations": [{"designation": "fn:mailbox.threads.list", "kind": "http"}]}},
+    {"schema": "claim.schema.json", "reason": "Hestia holds names only, never element content",
+     "case": {"card": "agent-slack/thread-list-tags", "factory": "lodestar", "artifact": "agent-mailbox-api", "designations": ["fn:mailbox.threads.list"], "elements": {"fn:mailbox.threads.list": {"lifecycle": "live"}}}},
+    {"schema": "verify-findings.schema.json", "reason": "a row-test finding names its row, test and result",
+     "case": {"schema": "atlax-verify/1", "artifact": "agent-mailbox-api", "card": "agent-slack/x", "base": "origin/main", "base_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "head_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "change_order": {"modifies": [], "adds": [], "retires": [], "frozen_at": "2026-11-02T14:05:00Z"}, "exit": 0, "findings": [{"kind": "row-test", "blocking": false, "designation": "rule.push-retry", "message": "R1"}]}},
+    {"schema": "check-findings.schema.json", "reason": "check never raises verify's kinds",
+     "case": {"schema": "atlax-check/1", "atlax_sha": "c7e2b9a4f1d6083e5a2c7b4f9d1e6a3c8b5f2d07", "artifacts": {}, "exit": 1, "findings": [{"kind": "redline", "blocking": true, "designation": "fn:mailbox.health", "message": "x"}]}},
+    {"schema": "claim-release.schema.json", "reason": "a release is keyed by card + artifact",
+     "case": {"card": "agent-slack/thread-list-tags", "factory": "lodestar", "released_at": "2026-11-02T18:20:41Z", "reason": "published"}},
+    {"schema": "odyssey-counts.schema.json", "reason": "counts only: no designation",
+     "case": {"factory": "odyssey", "as_of": "2026-11-02T18:00:00Z", "artifacts": 6, "elements": 143, "authored": 11, "redlines": 1, "designation": "fn:mailbox.threads.list"}},
+    {"schema": "odyssey-counts.schema.json", "reason": "counts only: no list of names",
+     "case": {"factory": "odyssey", "as_of": "2026-11-02T18:00:00Z", "artifacts": ["svc-a", "svc-b"], "elements": 143, "authored": 11, "redlines": 1}}
+  ]
+}

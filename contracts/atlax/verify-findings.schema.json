@@ -1,0 +1,351 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/verify-findings.schema.json",
+  "title": "atlax verify findings (`atlax verify --json`)",
+  "description": "What `atlax verify [--base origin/main] --json` prints, offline, in an artifact repo on a card's branch (implementation.md step 2; card atlax-tool T1-T5). Five finding kinds: redline (an authored, live element missing or changed in code), shadow (a derived route overlapping an authored one), book-guard (an authored element file, named test or contract sample changed but not in the card's change order, frozen at card start), row-test (a row's named test run; gate rows are the ones the card adds or changes), ext-break (the branch breaks another artifact's consumes:, checked against the local atlax clone ATLAX_DIR, without a change order listing it). Unauthored elements never produce findings. exit is 1 when any finding is blocking, else 0. Writer: claudecode bin/atlax. Readers: the builder, the reviewer and the gate (the card's gate rows), atlax-agent. Sample: verify-findings.sample.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "artifact",
+    "card",
+    "base",
+    "base_sha",
+    "head_sha",
+    "change_order",
+    "exit",
+    "findings"
+  ],
+  "properties": {
+    "schema": {
+      "const": "atlax-verify/1",
+      "description": "The format and its version; a reader refuses another major."
+    },
+    "artifact": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "card": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$",
+      "description": "<initiative>/<card slug> whose change order was applied."
+    },
+    "base": {
+      "type": "string",
+      "description": "The ref compared against (default origin/main)."
+    },
+    "base_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "atlax_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "The ATLAX_DIR commit ext: promises were checked against; null when ATLAX_DIR holds no clone, and ext-break was then not checked."
+    },
+    "change_order": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modifies",
+        "adds",
+        "retires",
+        "frozen_at"
+      ],
+      "description": "The card's change order as frozen when the card started.",
+      "properties": {
+        "modifies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$"
+          }
+        },
+        "adds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$"
+          }
+        },
+        "retires": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$"
+          }
+        },
+        "frozen_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+        }
+      }
+    },
+    "exit": {
+      "enum": [
+        0,
+        1
+      ],
+      "description": "1 when any finding is blocking. (2, cannot run, prints no JSON.)"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "blocking",
+        "designation",
+        "message"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "redline",
+            "shadow",
+            "book-guard",
+            "row-test",
+            "ext-break"
+          ]
+        },
+        "blocking": {
+          "type": "boolean",
+          "description": "true: counts toward exit 1 and blocks the merge until a human accepts a change order or the code is fixed. false: reported only."
+        },
+        "designation": {
+          "type": "string",
+          "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$",
+          "description": "The element the finding is about, in the artifact checked (for consumer-notice and check's ext-break: the provider's element)."
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line a seat can act on."
+        },
+        "authored": {
+          "type": "string",
+          "description": "redline: what the element file or its contract sample says."
+        },
+        "derived": {
+          "type": "string",
+          "description": "redline: what the code says (or `missing`)."
+        },
+        "shadowed_by": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "designation",
+            "method",
+            "path",
+            "at"
+          ],
+          "description": "shadow: the derived route that overlaps the authored one (same method, overlapping path by Go 1.22 mux precedence).",
+          "properties": {
+            "designation": {
+              "type": "string",
+              "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$"
+            },
+            "method": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^/"
+            },
+            "at": {
+              "type": "string",
+              "description": "file:line of the registration."
+            }
+          }
+        },
+        "path": {
+          "type": "string",
+          "description": "book-guard: the file changed against the base (an authored element file, a named test, or a contract sample) that the change order does not list."
+        },
+        "row": {
+          "type": "string",
+          "pattern": "^R[0-9]+$",
+          "description": "row-test: the rule row."
+        },
+        "row_lifecycle": {
+          "enum": [
+            "planned",
+            "live",
+            "deprecated",
+            "retired"
+          ],
+          "description": "row-test: the row's own lifecycle; only a live row's failure blocks."
+        },
+        "test": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "name"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "description": "row-test: the test the row names."
+        },
+        "result": {
+          "enum": [
+            "pass",
+            "fail",
+            "missing"
+          ],
+          "description": "row-test: what running it gave (missing: no such test)."
+        },
+        "gate_row": {
+          "type": "boolean",
+          "description": "row-test: true when the card adds or changes this row, so it becomes a gate row."
+        },
+        "consumer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact",
+            "designation"
+          ],
+          "description": "ext-break and consumer-notice: the consuming element in another artifact, whose consumes: names ext:<artifact>#<designation>.",
+          "properties": {
+            "artifact": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            },
+            "designation": {
+              "type": "string",
+              "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$"
+            },
+            "owner": {
+              "type": "string",
+              "description": "Its owner (the seat a notice goes to)."
+            }
+          }
+        },
+        "ext": {
+          "type": "string",
+          "pattern": "^ext:[a-z0-9][a-z0-9-]*#((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$",
+          "description": "ext-break and consumer-notice: the consumes: line as written."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "redline"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "designation",
+              "authored",
+              "derived"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "shadow"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "designation",
+              "shadowed_by"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "book-guard"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "designation",
+              "path"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "row-test"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "designation",
+              "row",
+              "row_lifecycle",
+              "test",
+              "result",
+              "gate_row"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "ext-break"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "designation",
+              "consumer",
+              "ext"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+# One atlax element on the reading side: Deltagos's client call that reads
+# the mailbox's thread list. Lives in the agent-organizer repo as
+# atlax/elements/prod.agent-organizer.discuss.ThreadsByStatus.yaml. Unauthored:
+# atlax publish derives it, and nothing about it is a promise, but the
+# consumes: line is written on purpose so atlax check can tell the
+# organizer's FSE when the thread list changes.
+designation: prod:agent-organizer.discuss.ThreadsByStatus
+kind: outbound
+summary: Reads the thread list for the board, by status.
+authored: false
+lifecycle: live
+owner: organizer-fse
+terminal:
+  method: GET
+  path: /projects/{pid}/threads
+consumes:
+  - ext:agent-mailbox-api#fn:mailbox.threads.list
+test:
+  path: internal/discuss/client_test.go
+  name: TestClientRoundTrips

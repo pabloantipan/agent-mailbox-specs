@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/claim-release.schema.json",
+  "title": "atlax claim release (the body that closes a claim in Hestia)",
+  "description": "Closes the open claim keyed by card + artifact (claim.schema.json): `atlax publish` releases it when the card's merge is published, the card's close releases it otherwise (implementation.md step 5). Names only, like the claim. Asked by hestia's FSE (thread 01M6AC2ESCY7VB98J69RFDSEC9). Writers: `atlax publish` (claudecode bin/atlax), the card's close (factory side). Reader: Hestia's claims API (a Hestia card, its FSE). Sample: claim-release.sample.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["card", "artifact", "factory", "released_at", "reason"],
+  "properties": {
+    "card": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$", "description": "<initiative>/<card slug>; with artifact, the key of the claim released."},
+    "artifact": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "The artifact id (repo slug); with card, the key of the claim released."},
+    "factory": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "The factory releasing it."},
+    "released_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", "description": "UTC."},
+    "reason": {"enum": ["published", "card-closed"], "description": "published: the card's merge reached the atlax repo; card-closed: the card closed without one."}
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/check-findings.schema.json",
+  "title": "atlax check findings (`atlax check --json`)",
+  "description": "What `atlax check --json` prints over the whole atlax repo after a publish (implementation.md step 4; card atlax-tool T7). Two finding kinds: ext-break (a published consumes: names an element that is missing or retired in the provider's published folder; blocking) and consumer-notice (a published element another artifact consumes changed in this publish; tells the consumer's owner, one file per notice, idempotent). Writer: claudecode bin/atlax, run by atlax-agent's watcher. Readers: atlax-agent (spawned only when findings is non-empty), the consumer's FSE. Sample: check-findings.sample.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "atlax_sha",
+    "artifacts",
+    "exit",
+    "findings"
+  ],
+  "properties": {
+    "schema": {
+      "const": "atlax-check/1",
+      "description": "The format and its version; a reader refuses another major."
+    },
+    "atlax_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "The atlax repo commit checked."
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "Each published artifact folder checked and the source sha its PUBLISHED names.",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{40}$"
+      }
+    },
+    "exit": {
+      "enum": [
+        0,
+        1
+      ],
+      "description": "1 when any finding is blocking."
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "blocking",
+        "designation",
+        "message"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "ext-break",
+            "consumer-notice"
+          ]
+        },
+        "blocking": {
+          "type": "boolean",
+          "description": "true: counts toward exit 1 and blocks the merge until a human accepts a change order or the code is fixed. false: reported only."
+        },
+        "designation": {
+          "type": "string",
+          "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$",
+          "description": "The provider's element (the <designation> of the ext: line)."
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line a seat can act on."
+        },
+        "consumer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact",
+            "designation"
+          ],
+          "description": "ext-break and consumer-notice: the consuming element in another artifact, whose consumes: names ext:<artifact>#<designation>.",
+          "properties": {
+            "artifact": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            },
+            "designation": {
+              "type": "string",
+              "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$"
+            },
+            "owner": {
+              "type": "string",
+              "description": "Its owner (the seat a notice goes to)."
+            }
+          }
+        },
+        "ext": {
+          "type": "string",
+          "pattern": "^ext:[a-z0-9][a-z0-9-]*#((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$",
+          "description": "ext-break and consumer-notice: the consumes: line as written."
+        },
+        "change": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from_sha",
+            "to_sha",
+            "what"
+          ],
+          "description": "consumer-notice: the provider's publish that changed the element.",
+          "properties": {
+            "from_sha": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "to_sha": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "what": {
+              "enum": [
+                "modified",
+                "deprecated",
+                "retired"
+              ]
+            }
+          }
+        },
+        "notice": {
+          "type": "string",
+          "pattern": "^notices/[a-z0-9][a-z0-9.-]*\\.md$",
+          "description": "consumer-notice: the one file the notice is written to, named so posting it twice is a no-op."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "ext-break"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "designation",
+              "consumer",
+              "ext"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "consumer-notice"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "designation",
+              "consumer",
+              "ext",
+              "change",
+              "notice"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
