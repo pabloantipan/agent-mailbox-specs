@@ -15,7 +15,9 @@
     {"sample": "verify-findings.sample.json", "schema": "verify-findings.schema.json", "what": "atlax verify --json: redline, shadow, book-guard, row-test, ext-break"},
     {"sample": "check-findings.sample.json", "schema": "check-findings.schema.json", "what": "atlax check --json: ext-break, consumer-notice"},
     {"sample": "claim-release.sample.json", "schema": "claim-release.schema.json", "what": "the body that releases a claim, keyed by card + artifact"},
-    {"sample": "odyssey-counts.sample.json", "schema": "odyssey-counts.schema.json", "what": "counts only, from a factory whose book stays on its side"}
+    {"sample": "odyssey-counts.sample.json", "schema": "odyssey-counts.schema.json", "what": "counts only, from a factory whose book stays on its side"},
+    {"sample": "artifacts.sample.yaml", "schema": "artifacts.schema.json", "what": "platform/artifacts.yaml in the atlax repo: the artifacts atlax-watch polls (slug + remote)"},
+    {"sample": "claims-state.sample.json", "schema": "claims-state.schema.json", "what": "one claims file of a laptop (atlax claim / release): atlax_claim and atlax_claim_released facts, each body per the claim and claim-release samples"}
   ],
   "published_folder": {
     "path": "published/agent-mailbox-api",
@@ -26,12 +28,16 @@
   "writers": [
     "the artifact's FSE, Daedalus and builders: element files and plant.yaml, through a card's change order",
     "claudecode bin/atlax (card atlax-tool): PUBLISHED, derived/, verify and check findings",
-    "the card's start (factory side): the claim"
+    "the card's start (factory side): the claim",
+    "claudecode bin/atlax claim, release, publish (card atlax-agent): the claims files (claims-state)",
+    "atlax-agent, by a platform/ PR it merges itself: platform/artifacts.yaml"
   ],
   "readers": [
     "claudecode bin/atlax verify, publish, check (card atlax-tool T1-T7): no test reads this folder yet",
     "Hestia's claims API (a Hestia card): no test reads claim.sample.json yet",
-    "atlax-agent, the Deltagos map lens, Elenx C4, Daedalus: no test reads it yet"
+    "atlax-agent, the Deltagos map lens, Elenx C4, Daedalus: no test reads it yet",
+    "claudecode bin/atlax-watch (card atlax-agent G1): platform/artifacts.yaml; claudecode tests/atlax t8-t11 check what atlax writes against these samples",
+    "the record's laptop indexer (hestia's card atlax-claims): the claims files; no test reads them yet"
   ],
   "must_refuse": [
     {"schema": "element.schema.json", "reason": "the IEC symbol is never written: one spelling (decisions.md 2026-10-31, item 2)",
@@ -63,6 +69,16 @@
     {"schema": "odyssey-counts.schema.json", "reason": "counts only: no designation",
      "case": {"factory": "odyssey", "as_of": "2026-11-02T18:00:00Z", "artifacts": 6, "elements": 143, "authored": 11, "redlines": 1, "designation": "fn:mailbox.threads.list"}},
     {"schema": "odyssey-counts.schema.json", "reason": "counts only: no list of names",
-     "case": {"factory": "odyssey", "as_of": "2026-11-02T18:00:00Z", "artifacts": ["svc-a", "svc-b"], "elements": 143, "authored": 11, "redlines": 1}}
+     "case": {"factory": "odyssey", "as_of": "2026-11-02T18:00:00Z", "artifacts": ["svc-a", "svc-b"], "elements": 143, "authored": 11, "redlines": 1}},
+    {"schema": "artifacts.schema.json", "reason": "every row names the remote the watcher polls",
+     "case": {"artifacts": [{"slug": "agent-mailbox-api"}]}},
+    {"schema": "artifacts.schema.json", "reason": "the slug is the repo slug, not a path or URL",
+     "case": {"artifacts": [{"slug": "pabloantipan/agent-mailbox-api", "remote": "git@github.com:pabloantipan/agent-mailbox-api.git"}]}},
+    {"schema": "artifacts.schema.json", "reason": "notify's to is a slug and subject_prefix plain: they go into a command",
+     "case": {"artifacts": [{"slug": "agent-mailbox-api", "remote": "git@github.com:pabloantipan/agent-mailbox-api.git", "notify": {"cell": "hestia", "to": "fse --subject x; rm -rf ~", "subject_prefix": "$(id)"}}]}},
+    {"schema": "artifacts.schema.json", "reason": "notify names the cell and the recipient",
+     "case": {"artifacts": [{"slug": "agent-mailbox-api", "remote": "git@github.com:pabloantipan/agent-mailbox-api.git", "notify": {"to": "pablo"}}]}},
+    {"schema": "claims-state.schema.json", "reason": "a fact is one of the two claim kinds",
+     "case": {"card": "agent-slack/x", "artifact": "agent-mailbox-api", "facts": [{"kind": "atlax_overlap", "v": 1, "at": "2026-11-02T14:05:00Z", "body": {}}]}}
   ]
 }

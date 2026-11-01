@@ -9,7 +9,10 @@ Reads case.json. Fails, never skips (contracts/README.md rule 3), when:
   - a sample does not hold to its schema, or a must_refuse case is accepted;
   - a published element's file name is not its designation (':' written '.');
   - a published copy differs from the sample it must equal;
-  - the published folder lacks PUBLISHED, plant.yaml, elements/ or derived/map.json.
+  - the published folder lacks PUBLISHED, plant.yaml, elements/ or derived/map.json;
+  - platform/artifacts.yaml's sample lists a slug twice;
+  - a claims-state fact's body does not hold to its kind's schema (claim, claim-release) or names
+    another card or artifact than its file.
 
 Needs python3 and PyYAML only. The validator below covers the JSON Schema
 keywords these schemas use and refuses any other, so a schema can never pass
@@ -122,6 +125,11 @@ def load(path):
         return yaml.load(f, Loader=_StrDates)
 
 
+def unique_slugs(rows):
+    slugs = [r.get("slug") for r in rows]
+    return len(slugs) == len(set(slugs))
+
+
 def main():
     fails, passes = [], 0
 
@@ -180,6 +188,36 @@ def main():
     for n in names:
         d = (load(os.path.join(edir, n)) or {}).get("designation", "")
         check(n == d.replace(":", ".") + ".yaml", f"elements/{n} is named by its designation {d!r}")
+
+    # platform/artifacts.yaml: a slug once (the watcher stops on a repeat; JSON Schema cannot say it).
+    arts = load(os.path.join(HERE, "artifacts.sample.yaml")).get("artifacts") or []
+    check(unique_slugs(arts), "artifacts.sample.yaml lists each slug once")
+    check(not unique_slugs([{"slug": "a", "remote": "x"}, {"slug": "a", "remote": "y"}]),
+          "a slug listed twice is refused")
+
+    # The claims file: each fact's body holds to the schema of its kind, and names the file's card + artifact.
+    st = load(os.path.join(HERE, "claims-state.sample.json"))
+    by_kind = {"atlax_claim": "claim.schema.json", "atlax_claim_released": "claim-release.schema.json"}
+    kinds = [f.get("kind") for f in st.get("facts", [])]
+    check(set(kinds) == set(by_kind), "claims-state.sample.json carries both kinds")
+    for i, f in enumerate(st.get("facts", [])):
+        errs = []
+        s = schema(by_kind[f["kind"]])
+        validate(f.get("body"), s, s, f"facts[{i}].body", errs)
+        check(not errs, f"claims-state facts[{i}] ({f['kind']}) body holds to {by_kind[f['kind']]}"
+              + "".join(f"\n       {e}" for e in errs))
+        b = f.get("body") or {}
+        check(b.get("card") == st["card"] and b.get("artifact") == st["artifact"],
+              f"claims-state facts[{i}] names the file's card and artifact")
+    for i, f in enumerate(st.get("facts", [])):
+        if f["kind"] == "atlax_claim_released":
+            check(f["at"] == f["body"]["released_at"], f"claims-state facts[{i}] at is its released_at")
+    bad = {"kind": "atlax_claim", "v": 1, "at": "2026-11-02T14:05:00Z",
+           "body": {"card": "agent-slack/x", "factory": "lodestar", "artifact": "agent-mailbox-api",
+                    "designations": [{"designation": "fn:mailbox.threads.list"}]}}
+    errs = []
+    validate(bad["body"], schema("claim.schema.json"), schema("claim.schema.json"), "body", errs)
+    check(bool(errs), "a claims-state body carrying element content is refused by claim.schema.json")
 
     for i, m in enumerate(case["must_refuse"]):
         errs = []

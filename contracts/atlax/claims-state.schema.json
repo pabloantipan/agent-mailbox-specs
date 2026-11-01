@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/claims-state.schema.json",
+  "title": "atlax claims on this laptop (the facts the record's indexer reads)",
+  "description": "Hestia ruled (hestia working-on/atlax-claims.md, decide 1(a), Pablo 2026-10-31): claims travel as facts of kind atlax_claim and atlax_claim_released through the laptop's facts ledger and its forwarder. As the forecast extensions do (forecast-state.json), `atlax claim` and `atlax release` write them to a folder of the laptop, ~/.local/state/factory/atlax-claims/<initiative>.<card>.<artifact>.json (ATLAX_CLAIMS overrides the folder; <name>.json.tmp is the writer's atomic-replace temp and is never read), one file per claim key (card + artifact), its facts appended in the order written and never cut. A claim is open while its last fact is atlax_claim; a later atlax_claim replaces its designations (Hestia's C1). Each fact's body holds to claim.schema.json (atlax_claim) or claim-release.schema.json (atlax_claim_released); test.py checks it by kind. The fact key at Hestia is card + artifact, the factory the batch's. Writers: `atlax claim` (supervise, when a card goes now), `atlax release` (the card's close), `atlax publish` (release, reason published). Readers: the record's laptop indexer (hestia's card atlax-claims, not written yet), `atlax publish` (open claims to release). Sample: claims-state.sample.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["card", "artifact", "facts"],
+  "properties": {
+    "card": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$", "description": "<initiative>/<card slug>; with artifact, the claim's key and the file's name."},
+    "artifact": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "The artifact id (repo slug)."},
+    "branch": {"type": "string", "description": "The card's branch when its front matter names one: `atlax publish` (and atlax-watch, on a sha another factory published) releases the claim when a merge subject since the claim names the card: `merge: <slug>`, or a GitHub merge of this branch. Local only, never in a fact's body."},
+    "facts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "v", "at", "body"],
+        "properties": {
+          "kind": {"enum": ["atlax_claim", "atlax_claim_released"]},
+          "v": {"const": 1},
+          "at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", "description": "UTC, when the fact was written."},
+          "body": {"type": "object", "description": "The A4 claim body (claim.schema.json) or the A7 release body (claim-release.schema.json), by kind."}
+        }
+      }
+    }
+  }
+}
