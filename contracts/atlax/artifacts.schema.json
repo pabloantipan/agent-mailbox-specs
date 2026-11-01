@@ -50,13 +50,13 @@
               },
               "to": {
                 "type": "string",
-                "minLength": 1,
-                "description": "The recipient seat in that cell (an FSE, or pablo)."
+                "pattern": "^[a-z0-9][a-z0-9-]*$",
+                "description": "The recipient seat in that cell (an FSE, or pablo): a slug, since atlax-agent writes it into an atlax-post command."
               },
               "subject_prefix": {
                 "type": "string",
-                "minLength": 1,
-                "description": "Put before the subject, e.g. \"[for hephaistos]\", which Hephaistos's mail hook scans every cell for."
+                "pattern": "^[A-Za-z0-9 \\[\\]_-]{0,40}$",
+                "description": "Put before the subject, e.g. \"[for hephaistos]\", which Hephaistos's mail hook scans every cell for. Letters, digits, spaces, [ ] _ - only, at most 40: it goes into a command and a notice's front matter."
               }
             }
           }
