@@ -74,6 +74,8 @@
      "case": {"artifacts": [{"slug": "agent-mailbox-api"}]}},
     {"schema": "artifacts.schema.json", "reason": "the slug is the repo slug, not a path or URL",
      "case": {"artifacts": [{"slug": "pabloantipan/agent-mailbox-api", "remote": "git@github.com:pabloantipan/agent-mailbox-api.git"}]}},
+    {"schema": "artifacts.schema.json", "reason": "notify names the cell and the recipient",
+     "case": {"artifacts": [{"slug": "agent-mailbox-api", "remote": "git@github.com:pabloantipan/agent-mailbox-api.git", "notify": {"to": "pablo"}}]}},
     {"schema": "claims-state.schema.json", "reason": "a fact is one of the two claim kinds",
      "case": {"card": "agent-slack/x", "artifact": "agent-mailbox-api", "facts": [{"kind": "atlax_overlap", "v": 1, "at": "2026-11-02T14:05:00Z", "body": {}}]}}
   ]

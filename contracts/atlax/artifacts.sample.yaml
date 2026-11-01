@@ -1,10 +1,14 @@
-# platform/artifacts.yaml in the atlax repo: the artifacts atlax-watch polls (slug + remote).
-# An artifact is a deployable repo (decisions.md 2026-10-31); specs, docs and tooling repos are not.
+# platform/artifacts.yaml in the atlax repo: the artifacts atlax-watch polls (slug + remote), and where each
+# one's consumer notices go (notify). An artifact is a deployable repo (decisions.md 2026-10-31); specs, docs
+# and tooling repos are not.
 artifacts:
   - slug: agent-mailbox-api
     remote: git@github.com:pabloantipan/agent-mailbox-api.git
+    notify: {cell: hestia, to: pablo, subject_prefix: "[for hephaistos]"}
   - slug: agent-mailbox-record
     remote: git@github.com:pabloantipan/agent-mailbox-record.git
+    notify: {cell: hestia, to: fse}
   - slug: agent-organizer
     remote: git@github.com:pabloantipan/agent-organizer.git
     note: the organizer (Deltagos); its slice is seeded by its FSE
+    notify: {cell: organizer, to: fse}
