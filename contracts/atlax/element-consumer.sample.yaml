@@ -1,6 +1,6 @@
 # One atlax element on the reading side: Deltagos's client call that reads
 # the mailbox's thread list. Lives in the agent-organizer repo as
-# atlax/elements/prod.organizer.discuss.ThreadsByStatus.yaml. Unauthored:
+# atlax/elements/prod.agent-organizer.discuss.ThreadsByStatus.yaml. Unauthored:
 # atlax publish derives it, and nothing about it is a promise, but the
 # consumes: line is written on purpose so atlax check can tell the
 # organizer's FSE when the thread list changes.
