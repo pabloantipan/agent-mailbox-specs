@@ -46,7 +46,7 @@
     "claudecode bin/atlax-watch (card atlax-agent G1): platform/artifacts.yaml; claudecode tests/atlax t8-t11 check what atlax writes against these samples",
     "the record's laptop indexer (hestia's card atlax-claims): the claims files; no test reads them yet",
     "claudecode bin/atlax verify, touches, derive (card atlax-wails-extractor W1-W4): kinds wails and cli, atlax/overrides.yaml; tests/atlax t16-t17 check the fixture's element files and overrides against these schemas",
-    "claudecode bin/atlax verify, touches, derive, publish, check, claim, card-check (card atlax-tool-followups U1-U13): plant extract and test, method ANY, the undeclared finding, PUBLISHED map, claim claimed_at; tests/atlax t18-t24 check what atlax writes against these schemas"
+    "claudecode bin/atlax verify, touches, derive, publish, check, claim, card-check (card atlax-tool-followups U1-U13): plant extract and test, method ANY, the undeclared finding, PUBLISHED map, claim claimed_at; tests/atlax u1-u13 (cases/u<row>-*.sh, one per row; U11 is this folder's test.py) check what atlax writes against these schemas"
   ],
   "must_refuse": [
     {"schema": "element.schema.json", "reason": "the IEC symbol is never written: one spelling (decisions.md 2026-10-31, item 2)",
