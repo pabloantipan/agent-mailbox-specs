@@ -27,16 +27,23 @@
       "closed": ["superseded", "withdrawn"],
       "note": "awaiting-cells, applied and acknowledged are the crossing statuses (working-on templates/crossing.md); they are valid in any decisions/ folder. applied and acknowledged come after the ruling, so they are not waiting."
     },
-    "ruled_by_modes": ["operator away mode, recommendation taken", "pablo by away mode", "pablo (standing rule)", "pablo by standing rule", "pablo (away mode)", "operator"],
+    "ruled_by_modes": ["operator away mode, recommendation taken", "pablo by away mode", "pablo (standing rule)", "pablo by standing rule", "pablo (away mode)", "operator", "pablo (autonomous mode)", "(autonomous mode)", "(away mode)"],
     "ruled_by_reading": {
-      "operator away mode, recommendation taken": {"person": "pablo", "mode": "away"},
-      "pablo by away mode": {"person": "pablo", "mode": "away"},
+      "operator away mode, recommendation taken": {"person": "pablo", "mode": "autonomous"},
+      "pablo by away mode": {"person": "pablo", "mode": "autonomous"},
       "pablo (standing rule)": {"person": "pablo", "mode": "standing rule"},
       "pablo by standing rule": {"person": "pablo", "mode": "standing rule"},
-      "pablo (away mode)": {"person": "pablo", "mode": "away"},
-      "operator": {"person": "pablo", "mode": "present"}
+      "pablo (away mode)": {"person": "pablo", "mode": "autonomous"},
+      "operator": {"person": "pablo", "mode": "present"},
+      "pablo (autonomous mode)": {"person": "pablo", "mode": "autonomous"},
+      "(autonomous mode)": {"person": "pablo", "mode": "autonomous"},
+      "(away mode)": {"person": "pablo", "mode": "autonomous"}
     },
-    "ruled_by_note": "decisions.md 2026-10-25 ruling 5: ruled_by has one form ahead (the working-on skill names it: `<person>`, or `<person> (away mode)` | `<person> (standing rule)`); old forms are read, not rewritten. A ruled_by value listed in ruled_by_modes does not name a person as written: it names a person and a mode, read as ruled_by_reading gives them (the ruling is pablo's, a RULED_BY to person pablo, with the mode beside it). `operator` (Hestia's ask, 2026-10-26) is person pablo, mode present, and is pablo wherever a person is read (`owner: operator` is person pablo too), so no person node is named operator. Any other value is a person, read as written, mode present (`pablo` is person pablo, mode present). The mode is the decision fact's ruled_mode (facts.enums.ruled_mode); a Themis ruling `themis (FR-4 <x>)` is person themis, mode standing rule.",
+    "ruled_by_refused": {
+      "values": ["pablo (vacation)", "pablo (autonomous mode", "pablo away mode, recommendation taken"],
+      "rule": "decisions.md 2026-11-01: a ruled_by value the reader does not know is refused, never read as present. Refused: a parenthesized note other than `(autonomous mode)`, `(away mode)`, `(standing rule)` and a Themis `(FR-4 <x>)` (`pablo (vacation)`); an unclosed or stray parenthesis (`pablo (autonomous mode`); a value of more than one word that ruled_by_reading does not list and that is no `<person> (<mode>)` or `<person> by away mode|standing rule` (`pablo away mode, recommendation taken`, an unlisted old wording). A refused value gives no person, no RULED_BY and no mode: a counted warning on the record (the record is still read for the rest), and no decision fact (facts.reader_refuses)."
+    },
+    "ruled_by_note": "decisions.md 2026-10-25 ruling 5, amended 2026-11-01 (\"ruled_by says autonomous mode; unknown readings refused\"): ruled_by has one form ahead (the working-on skill names it: `<person>`, or `<person> (autonomous mode)` | `<person> (standing rule)`); old forms are read, not rewritten. `(away mode)`, `<person> by away mode` and `operator away mode, recommendation taken` are the old names of autonomous mode and read as mode autonomous (the mode's name since 2026-10-18). A bare `(autonomous mode)` or `(away mode)`, with no person, is person pablo, mode autonomous. A ruled_by value listed in ruled_by_modes does not name a person as written: it names a person and a mode, read as ruled_by_reading gives them (the ruling is pablo's, a RULED_BY to person pablo, with the mode beside it). The general forms are read the same way for any person: `<person> (autonomous mode)` | `(away mode)` | `(standing rule)` and `<person> by away mode` | `by standing rule` are that person in that mode. `operator` (Hestia's ask, 2026-10-26) is person pablo, mode present, and is pablo wherever a person is read (`owner: operator` is person pablo too), so no person node is named operator. A single word is a person, read as written, mode present (`pablo` is person pablo, mode present). A Themis ruling `themis (FR-4 <x>)` is person themis, mode standing rule. Anything else is refused (ruled_by_refused), never read as present. The mode is the decision fact's ruled_mode (facts.enums.ruled_mode).",
     "ledgers": {
       "names": ["tickets.md", "jira-map.md", "jira-estimates.md", "assumptions.md"],
       "patterns": ["jira-report-*.md", "jira-*.md with no front-matter"],
@@ -77,13 +84,19 @@
     {"number": "0003", "status": "proposed", "class": "open", "cards": ["blocked-spec-list"]},
     {"number": "0004", "status": "withdrawn", "class": "closed"},
     {"number": "0005", "status": "awaiting-cells", "class": "open"},
-    {"number": "0006", "status": "applied", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "away"}},
+    {"number": "0006", "status": "applied", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "autonomous"}},
     {"number": "0007", "status": "acknowledged", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "present"}},
-    {"number": "0008", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "away"}},
+    {"number": "0008", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "autonomous"}},
     {"number": "0009", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "standing rule"}},
     {"number": "0010", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "standing rule"}},
-    {"number": "0011", "status": "ruled", "class": "decided", "cards": ["facts-fields"], "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "away"}},
-    {"number": "0012", "status": "ruled", "class": "decided", "ruled_by": {"person": "pablo", "mode": "present"}}
+    {"number": "0011", "status": "ruled", "class": "decided", "cards": ["facts-fields"], "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "autonomous"}},
+    {"number": "0012", "status": "ruled", "class": "decided", "ruled_by": {"person": "pablo", "mode": "present"}},
+    {"number": "0013", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "autonomous"},
+     "$comment": "the form ahead (2026-11-01): ruled_by `pablo (autonomous mode)`, ruled_mode autonomous"},
+    {"number": "0014", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "autonomous"},
+     "$comment": "a bare `(autonomous mode)`: pablo"},
+    {"number": "0015", "status": "ruled", "class": "decided", "ruled_by_is_mode": true, "ruled_by": {"person": "pablo", "mode": "autonomous"},
+     "$comment": "a bare `(away mode)`, the old name: pablo, autonomous"}
   ],
   "stages": [
     {"id": "discover", "phase": "discovery", "done": "2026-10-06", "exit": [{"text": "The shape is ruled", "met": "2026-10-05"}]},
@@ -129,7 +142,8 @@
       "forecast_extension": {"from": "~/.local/state/factory/forecast/<session>.json, not an initiative file", "sample": "../forecast-state.json"}
     },
     "enums": {
-      "ruled_mode": ["present", "away", "standing rule"],
+      "ruled_mode": ["present", "autonomous", "standing rule", "away"],
+      "ruled_mode_note": "decisions.md 2026-11-01: autonomous is the mode's value; away is its old name, kept valid (added, not renamed) and read as autonomous wherever ruled_mode is read: a record's written `ruled_mode: away` and a fact row sent before. A writer writes autonomous, and a decision fact's payload carries autonomous for either. `ruled_by: pablo (autonomous mode)` with `ruled_mode: away`, or `pablo (away mode)` with `autonomous`, agree.",
       "cause": ["approach", "execution", "gate", "environment", "unclear"],
       "cause_used_by": ["round.cause", "finding.kind", "amendment.cause"],
       "note": "Hard to undo (review.md, Reversibility): a value is added, never renamed. cause: approach = the approach or its context was wrong or missing; execution = the way was right, the work was not; gate = the gate or the spec was wrong or unclear; environment = environment or process (rebase, limit, tooling, CI); unclear = not known, never guessed."
@@ -138,7 +152,7 @@
       "Every decision, card, run record (one with waves or findings) and spec its schema accepts gives its facts; a file named TEMPLATE*.md is not a record.",
       "A field absent or empty in the file is absent from the payload: nothing is backfilled from prose or guessed (review.md, Trade-offs). The listed payloads are held key by key.",
       "Times are kept as written (RFC 3339 with an offset, minutes enough); dates as YYYY-MM-DD.",
-      "decision.ruled_by is the person and decision.ruled_mode the mode, by accepted_reading.ruled_by_reading; a written ruled_mode is the mode, and it must agree with ruled_by's (see reader_refuses).",
+      "decision.ruled_by is the person and decision.ruled_mode the mode, by accepted_reading.ruled_by_reading; a written ruled_mode is the mode (away read as autonomous, enums.ruled_mode_note), and it must agree with ruled_by's (see reader_refuses). A ruled_by that accepted_reading.ruled_by_refused refuses gives no decision fact (reader_refuses).",
       "decision.forecast is {lo, hi} in minutes, from a band at the start of the frontmatter `forecast:` (`60-100m`, `1.5-3h`, `40-90 min ...`, as Argos reads it); no band at the start, no forecast.",
       "decision.raised_in is set only when the decision was raised in the mailbox (Q6).",
       "run is the run record's file name without .md; a finding's n and an amendment's n are 1-based places in their lists.",
@@ -147,8 +161,13 @@
     "decision": [
       {"number": "0011", "status": "ruled", "raised": "2026-10-20", "raised_at": "2026-10-20T09:15-03:00", "raised_by": "sample-fse",
        "raised_in": "01M5DDDDDDDDDDDDDDDDDDDDDD", "owner": "pablo", "ruled": "2026-10-20", "ruled_at": "2026-10-20T09:52-03:00",
-       "ruled_by": "pablo", "ruled_mode": "away", "options": ["a", "b"], "recommended": "b", "chosen": "b",
-       "forecast": {"lo": 60, "hi": 100}, "cards": ["facts-fields"]},
+       "ruled_by": "pablo", "ruled_mode": "autonomous", "options": ["a", "b"], "recommended": "b", "chosen": "b",
+       "forecast": {"lo": 60, "hi": 100}, "cards": ["facts-fields"],
+       "$comment": "written ruled_by `pablo (away mode)`, ruled_mode away (the old name, kept as written): the fact carries autonomous"},
+      {"number": "0013", "status": "ruled", "raised": "2026-11-01", "raised_at": "2026-11-01T09:00-03:00", "raised_by": "sample-fse",
+       "owner": "pablo", "ruled": "2026-11-01", "ruled_at": "2026-11-01T09:40-03:00",
+       "ruled_by": "pablo", "ruled_mode": "autonomous", "options": ["a", "b"], "recommended": "a", "chosen": "a",
+       "$comment": "the form ahead: ruled_by `pablo (autonomous mode)`, ruled_mode autonomous"},
       {"number": "0012", "status": "ruled", "raised": "2026-10-21", "raised_at": "2026-10-21T14:00-03:00", "raised_by": "sample-fse",
        "owner": "pablo", "ruled": "2026-10-21", "ruled_at": "2026-10-21T16:30-03:00",
        "ruled_by": "pablo", "ruled_mode": "present", "options": ["a", "b"], "recommended": "a", "chosen": "b",
@@ -195,7 +214,13 @@
     ],
     "reader_refuses": [
       {"name": "ruled_mode disagrees with ruled_by", "frontmatter": {"status": "ruled", "ruled_by": "pablo (away mode)", "ruled_mode": "present"},
-       "reading": "schema-valid, but the two disagree: a counted warning and no decision fact (never guess which one is right)"}
+       "reading": "schema-valid, but the two disagree: a counted warning and no decision fact (never guess which one is right)"},
+      {"name": "an unknown parenthesized note", "frontmatter": {"status": "ruled", "ruled_by": "pablo (vacation)"},
+       "reading": "schema-valid, but ruled_by is no reading the reader knows (accepted_reading.ruled_by_refused): a counted warning and no decision fact; never person pablo, mode present"},
+      {"name": "an unclosed parenthesis", "frontmatter": {"status": "ruled", "ruled_by": "pablo (autonomous mode"},
+       "reading": "refused as above: a counted warning and no decision fact; never read as autonomous by guessing the parenthesis"},
+      {"name": "an unlisted old wording", "frontmatter": {"status": "ruled", "ruled_by": "pablo away mode, recommendation taken"},
+       "reading": "refused as above: only the wordings ruled_by_reading lists are old forms; a counted warning and no decision fact"}
     ]
   },
   "readers_today": {
@@ -212,7 +237,8 @@
         "boundary and repos are not read at all (nothing to compare)",
         "0001, 0002, 0007: ruled_by \"operator\" is person operator with RULED_BY to it, and every owner: operator makes person operator; wanted (2026-10-26): person pablo (mode present for ruled_by), no person operator",
         "0011: ruled_by \"pablo (away mode)\" not split at the parentheses; 0012 makes person pablo (wanted, beside the operator owner)",
-        "facts (0042): no schema check, no fact ledger yet; specs with frontmatter read for title and status only (amended-spec agrees there)"
+        "facts (0042): no schema check, no fact ledger yet; specs with frontmatter read for title and status only (amended-spec agrees there)",
+        "2026-11-01 (ruled_by says autonomous mode): the mode value is away where autonomous is wanted (0006, 0008, 0011 and every away form of ruled_by_reading); 0013 `pablo (autonomous mode)`, 0014 `(autonomous mode)`, 0015 `(away mode)` are not read as pablo, autonomous; ruled_by_refused values are read as a person, mode present, where a refusal is wanted (hestia's card)"
       ]
     },
     "deltagos": {
@@ -226,6 +252,7 @@
         "0005, 0006, 0007: \"unknown decision status\" for awaiting-cells, applied, acknowledged",
         "0006, 0008, 0009, 0010: ruled_by kept as one string as written; no person and mode read from it",
         "0001, 0002, 0007, 0011: ruled_by \"operator\", \"pablo (away mode)\" kept as written",
+        "0013, 0014, 0015: ruled_by `pablo (autonomous mode)`, `(autonomous mode)`, `(away mode)` kept as written; no refusal of ruled_by_refused values (2026-11-01)",
         "0011, 0012: forecast kept as the band string; forecast_top 100 from `60-100m`, 0 from `40-90 min of ...` (its regexp is anchored at the end; the facts read {lo 40, hi 90}, as Argos does); the other 0042 fields are not read"
       ]
     }
