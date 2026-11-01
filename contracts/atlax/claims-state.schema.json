@@ -9,7 +9,7 @@
   "properties": {
     "card": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$", "description": "<initiative>/<card slug>; with artifact, the claim's key and the file's name."},
     "artifact": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "The artifact id (repo slug)."},
-    "branch": {"type": "string", "description": "The card's branch when its front matter names one: `atlax publish` releases the claim when a commit since the claim names the card's slug or this branch. Local only, never in a fact's body."},
+    "branch": {"type": "string", "description": "The card's branch when its front matter names one: `atlax publish` (and atlax-watch, on a sha another factory published) releases the claim when a merge subject since the claim names the card: `merge: <slug>`, or a GitHub merge of this branch. Local only, never in a fact's body."},
     "facts": {
       "type": "array",
       "minItems": 1,
