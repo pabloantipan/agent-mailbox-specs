@@ -1,0 +1,13 @@
+# An http element whose Go 1.22 pattern names no method (it takes every
+# method): terminal.method is ANY, as `atlax derive` prints it
+# (atlax-tool-followups U7; the record's catch-all under /projects/).
+designation: fn:record.cell.noseat
+product: prod:agent-mailbox-record.ANY_projects_cell
+kind: http
+summary: "Any other method or path of a cell: 404 naming that the record has no seat."
+authored: false
+lifecycle: live
+owner: fse
+terminal:
+  method: ANY
+  path: "/projects/{cell}"

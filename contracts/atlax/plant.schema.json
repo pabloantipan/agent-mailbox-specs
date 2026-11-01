@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/pabloantipan/agent-mailbox-specs/contracts/atlax/plant.schema.json",
   "title": "atlax nameplate (atlax/plant.yaml)",
-  "description": "The nameplate of one artifact (proposition 1): its id, owner and the norm version it follows. One per artifact repo, at atlax/plant.yaml; copied unchanged to artifacts/<artifact>/plant.yaml in the atlax repo on publish. Writer: the artifact's FSE (Hephaistos for agent-mailbox-api). Readers: `atlax verify`, `atlax publish` (the folder name), `atlax check` (resolves ext:<artifact>), atlax-agent. Samples: plant.sample.yaml, published/agent-mailbox-api/plant.yaml.",
+  "description": "The nameplate of one artifact (proposition 1): its id, owner and the norm version it follows. One per artifact repo, at atlax/plant.yaml; copied unchanged to artifacts/<artifact>/plant.yaml in the atlax repo on publish. Writer: the artifact's FSE (Hephaistos for agent-mailbox-api). Readers: `atlax verify`, `atlax publish` (the folder name), `atlax check` (resolves ext:<artifact>), atlax-agent. Samples: plant.sample.yaml, plant-extract.sample.yaml, published/agent-mailbox-api/plant.yaml.",
   "type": "object",
   "additionalProperties": false,
   "required": ["artifact", "owner", "norm"],
@@ -12,6 +12,39 @@
     "norm": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "The Atlas norm version followed, quoted (\"0.1\"). A reader refuses a norm it does not know."},
     "purpose": {"type": "string", "description": "One line: what the artifact is for."},
     "repo": {"type": "string", "description": "Where its code lives (host/owner/name); PUBLISHED repeats it."},
-    "c4_system": {"type": "string", "pattern": "^[A-Za-z0-9_]+$", "description": "The c4-map node id of the system this artifact realizes, so derived/map.json and the elements join."}
+    "c4_system": {"type": "string", "pattern": "^[A-Za-z0-9_]+$", "description": "The c4-map node id of the system this artifact realizes, so derived/map.json and the elements join."},
+    "extract": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "What the extractors are told about this artifact's code (atlax-tool-followups U5). Read by `atlax verify`, `touches`, `derive` and `publish`. Sample: plant-extract.sample.yaml.",
+      "properties": {
+        "go_route_wrappers": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "The artifact's own route registration functions, as written at the call (`rt.scoped`, `register`): the first argument is a Go 1.22 mux pattern, read like mux.HandleFunc's. A pattern built `m+\" /path\"` inside `for _, m := range []string{...}` is one route per value.",
+          "items": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)?$"}
+        },
+        "exclude": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Repo-relative directories or files the extractors never read (test-helper packages, such as a fake OIDC issuer).",
+          "items": {"type": "string", "pattern": "^[^/\\s][^\\s]*$"}
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "How `atlax verify` runs this artifact's named tests (atlax-tool-followups U8). ATLAX_TEST_CMD, when set, still wins.",
+      "properties": {
+        "go_tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Build tags passed to `go test -tags=<a,b>`, so a test behind a build tag (//go:build integration) is run, not read as missing.",
+          "items": {"type": "string", "pattern": "^[A-Za-z0-9_.]+$"}
+        },
+        "cmd": {"type": "string", "minLength": 1, "description": "A command (sh -c, in the repo) run instead of go test, as ATLAX_TEST_CMD: ATLAX_TEST_PATH, ATLAX_TEST_NAME, ATLAX_TEST_RUN in its environment; exit 0 pass, 5 no such test, else fail."}
+      }
+    }
   }
 }

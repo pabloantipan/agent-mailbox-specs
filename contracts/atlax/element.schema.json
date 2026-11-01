@@ -21,7 +21,7 @@
       "additionalProperties": false,
       "description": "How to find it in code. http and outbound: method and path (Go 1.22 mux pattern; verify's shadow check compares them). wails: binding (Struct.Method) and signature (types only, as atlax derives it: a changed one is a redline when authored). cli: command (the words after the binary). event: topic. data: store and entity.",
       "properties": {
-        "method": {"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]},
+        "method": {"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "ANY"], "description": "http and outbound: the pattern's method; ANY for a Go 1.22 pattern registered with no method (it matches every method), as `atlax derive` prints it. Required: an element with no method is refused by verify and publish."},
         "path": {"type": "string", "pattern": "^/"},
         "binding": {"type": "string", "pattern": "^(go\\.[A-Za-z_][A-Za-z0-9_]*\\.)?[A-Za-z_][A-Za-z0-9_]*\\.[A-Z][A-Za-z0-9_]*$", "description": "wails: the bound struct and its exported method, Struct.Method for a type in package main, else as Wails exposes it, go.<pkg>.Struct.Method."},
         "signature": {"type": "string", "pattern": "^\\(", "description": "wails: the parameter and result types, gofmt spelling, no names, `interface{}` written `any`: \"(string, int) ([]model.Ticket, error)\"."},

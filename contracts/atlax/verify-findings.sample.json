@@ -83,6 +83,13 @@
         "owner": "organizer-fse"
       },
       "ext": "ext:agent-mailbox-api#fn:mailbox.threads.list"
+    },
+    {
+      "kind": "undeclared",
+      "blocking": false,
+      "designation": "prod:agent-mailbox-api.GET_projects_pid_tags",
+      "message": "GET /projects/{pid}/tags is registered in code but no element file names it (atlax/elements/)",
+      "derived": "GET /projects/{pid}/tags at internal/handler/routes.go:41"
     }
   ]
 }
