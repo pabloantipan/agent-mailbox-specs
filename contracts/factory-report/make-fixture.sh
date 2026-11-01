@@ -11,7 +11,8 @@
 #               Run records (organizer 0168, the waves block; frontmatter `waves:` as hestia 0042's
 #               run-record schema): runs/2026-10-20-sup1.md, wave 1 of sup1 (cards a, c; a failed
 #               review, cause execution) and wave 1 of sup2 (cards b, e; launched 2026-10-19, one
-#               round before every window, a failed review with no cause, e's build still open);
+#               round before every window, a failed review with no cause, e's build still open;
+#               two of its rounds written as flow maps `- {card: b, ...}`, as many real records do);
 #               docs/runs/2026-10-15-sup0.md (wave 1 of sup0, card z, outside the window);
 #               docs/runs/TEMPLATE.md (skipped). d is in no wave.
 #   DIR/state/  a factory state dir: away-log.jsonl with three autonomous windows (2026-10-01
@@ -145,20 +146,8 @@ waves:
         result: n/a
         reviewer:
         reason: "built, before the window"
-      - card: b
-        kind: review
-        start: 2026-10-20T00:20+00:00
-        end: 2026-10-20T00:30+00:00
-        result: fail
-        reviewer: b-rev
-        reason: "B1 unmet, no cause written"
-      - card: b
-        kind: build
-        start: 2026-10-20T00:31+00:00
-        end: 2026-10-20T01:00+00:00
-        result: n/a
-        reviewer:
-        reason: "B1 fixed"
+      - {card: b, kind: review, start: 2026-10-20T00:20+00:00, end: 2026-10-20T00:30+00:00, result: fail, reviewer: b-rev, reason: "B1 unmet, no cause written"}
+      - {card: b, kind: build, start: 2026-10-20T00:31+00:00, end: 2026-10-20T01:00+00:00, result: n/a, reviewer: , reason: "B1 fixed (flow map, as 22 organizer records write rounds)"}
       - card: b
         kind: review
         start: 2026-10-20T01:02+00:00

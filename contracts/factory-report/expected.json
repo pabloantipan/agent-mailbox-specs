@@ -202,7 +202,7 @@
             "end": 1792458000,
             "result": "n/a",
             "reviewer": null,
-            "reason": "B1 fixed",
+            "reason": "B1 fixed (flow map, as 22 organizer records write rounds)",
             "cause": null,
             "start_iso": "2026-10-20T00:31:00+00:00",
             "end_iso": "2026-10-20T01:00:00+00:00"
