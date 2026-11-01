@@ -17,7 +17,8 @@
     {"sample": "claim-release.sample.json", "schema": "claim-release.schema.json", "what": "the body that releases a claim, keyed by card + artifact"},
     {"sample": "odyssey-counts.sample.json", "schema": "odyssey-counts.schema.json", "what": "counts only, from a factory whose book stays on its side"},
     {"sample": "artifacts.sample.yaml", "schema": "artifacts.schema.json", "what": "platform/artifacts.yaml in the atlax repo: the artifacts atlax-watch polls (slug + remote)"},
-    {"sample": "claims-state.sample.json", "schema": "claims-state.schema.json", "what": "one claims file of a laptop (atlax claim / release): atlax_claim and atlax_claim_released facts, each body per the claim and claim-release samples"}
+    {"sample": "claims-state.sample.json", "schema": "claims-state.schema.json", "what": "one claims file of a laptop (atlax claim / release): atlax_claim and atlax_claim_released facts, each body per the claim and claim-release samples"},
+    {"sample": "claims-overlaps.sample.json", "schema": "claims-overlaps.schema.json", "what": "Hestia's GET /v1/claims/overlaps?factory= answer: the asked factory's open claims that share designations with another open claim (only the shared ones)"}
   ],
   "published_folder": {
     "path": "published/agent-mailbox-api",
