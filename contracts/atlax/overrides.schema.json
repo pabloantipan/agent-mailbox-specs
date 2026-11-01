@@ -12,7 +12,7 @@
       "additionalProperties": false,
       "properties": {
         "dispatch": {"type": "array", "items": {"type": "string", "pattern": "^[^:]*:[A-Za-z_][A-Za-z0-9_]*$"}, "description": "dir:func, each a function whose switch on an argument's [0] lists the commands, when main's dispatch cannot be followed."},
-        "commands": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "The commands verbatim, when no switch can be read. Wins over dispatch."},
+        "commands": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "The commands verbatim, when no switch can be read. Wins over dispatch. Taken as present: a command removed from the code still derives from here, so an authored one listed here can never redline; prefer dispatch, and keep this list by hand. Each command's evidence is its line in this file."},
         "ignore": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "Commands that are never elements."}
       }
     },
@@ -20,7 +20,8 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "ignore": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*\\.[A-Z][A-Za-z0-9_]*$"}, "description": "Struct.Method bindings that are never elements."}
+        "bind": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[^:]*:[A-Za-z_][A-Za-z0-9_]*$"}, "description": "dir:Type, each a type bound to the frontend whose Bind: entry cannot be read (options built elsewhere, a value of unreadable type); its exported methods become elements, with this line as the binding's evidence. \".:App\" is a type in the module root."},
+        "ignore": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(go\\.[A-Za-z_][A-Za-z0-9_]*\\.)?[A-Za-z_][A-Za-z0-9_]*\\.[A-Z][A-Za-z0-9_]*$"}, "description": "Bindings that are never elements: Struct.Method in package main, else go.<pkg>.Struct.Method."}
       }
     }
   }

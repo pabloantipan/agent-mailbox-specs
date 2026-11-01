@@ -23,8 +23,8 @@
       "properties": {
         "method": {"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]},
         "path": {"type": "string", "pattern": "^/"},
-        "binding": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*\\.[A-Z][A-Za-z0-9_]*$", "description": "wails: the bound struct and its exported method."},
-        "signature": {"type": "string", "pattern": "^\\(", "description": "wails: the parameter and result types, gofmt spelling, no names: \"(string, int) ([]model.Ticket, error)\"."},
+        "binding": {"type": "string", "pattern": "^(go\\.[A-Za-z_][A-Za-z0-9_]*\\.)?[A-Za-z_][A-Za-z0-9_]*\\.[A-Z][A-Za-z0-9_]*$", "description": "wails: the bound struct and its exported method, Struct.Method for a type in package main, else as Wails exposes it, go.<pkg>.Struct.Method."},
+        "signature": {"type": "string", "pattern": "^\\(", "description": "wails: the parameter and result types, gofmt spelling, no names, `interface{}` written `any`: \"(string, int) ([]model.Ticket, error)\"."},
         "command": {"type": "string", "minLength": 1},
         "topic": {"type": "string"},
         "store": {"type": "string"},

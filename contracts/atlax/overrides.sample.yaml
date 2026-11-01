@@ -1,9 +1,12 @@
 # atlax/overrides.yaml in an artifact repo: only what the extractors cannot
 # read. This one is invented: a CLI whose commands sit in a map, so no switch
-# lists them, and a debug binding nobody should promise.
+# lists them (taken as present: a command removed from code cannot redline),
+# options passed to wails.Run from a helper, so App is named here, and a
+# debug binding nobody should promise.
 short: organizer
 cli:
   commands: [status, board, sync]
   ignore: [help]
 wails:
+  bind: [".:App"]
   ignore: [App.DebugDump]
