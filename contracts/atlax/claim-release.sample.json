@@ -1,0 +1,7 @@
+{
+  "card": "agent-slack/thread-list-tags",
+  "artifact": "agent-mailbox-api",
+  "factory": "lodestar",
+  "released_at": "2026-11-02T18:20:41Z",
+  "reason": "published"
+}
