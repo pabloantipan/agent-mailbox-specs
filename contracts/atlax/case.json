@@ -48,7 +48,7 @@
     "claudecode bin/atlax-watch (card atlax-agent G1): platform/artifacts.yaml; claudecode tests/atlax t8-t11 check what atlax writes against these samples",
     "the record's laptop indexer (hestia's card atlax-claims): the claims files; no test reads them yet",
     "claudecode bin/atlax verify, touches, derive (card atlax-wails-extractor W1-W4): kinds wails and cli, atlax/overrides.yaml; tests/atlax t16-t17 check the fixture's element files and overrides against these schemas",
-    "claudecode bin/atlax verify, touches, derive, publish, check, claim, card-check (card atlax-tool-followups U1-U13): plant extract and test, method ANY, the undeclared finding, PUBLISHED map; tests/atlax u1-u13 (cases/u<row>-*.sh, one per row; U11 claimed_at moves to the joint merge with hestia atlax-reclaim, specs feat/atlax-claimed-at) check what atlax writes against these schemas",
+    "claudecode bin/atlax verify, touches, derive, publish, check, claim, card-check (card atlax-tool-followups U1-U13): plant extract and test, method ANY, the undeclared finding, PUBLISHED map, claim claimed_at; tests/atlax u1-u13 (cases/u<row>-*.sh, one per row; U11 claimed_at is this folder's test.py, joint with hestia atlax-reclaim) check what atlax writes against these schemas",
     "claudecode bin/atlax publish, verify, derive (card atlax-tool-followups-2 V1-V5, V7): publish only an artifact remote's main, the change order at the latest now, element scope, plant short and contracts, overrides cli.flags_only; tests/atlax v1-v7 (cases/v<row>-*.sh; V6 claimed_at waits for the joint merge) check them against these schemas"
   ],
   "must_refuse": [
@@ -114,6 +114,8 @@
      "case": {"artifact": "agent-mailbox-record", "owner": "fse", "norm": "0.1", "test": {"go_tags": ["integration -race"]}}},
     {"schema": "published.schema.json", "reason": "map is said only when not the initiative's: derived or none",
      "case": {"repo": "github.com/pabloantipan/agent-mailbox-api", "sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "time": "2026-10-31T23:40:12Z", "factory": "lodestar", "map": "initiative"}},
+    {"schema": "claim.schema.json", "reason": "claimed_at is UTC, the fact's at",
+     "case": {"card": "agent-slack/thread-list-tags", "factory": "lodestar", "artifact": "agent-mailbox-api", "designations": ["fn:mailbox.threads.list"], "claimed_at": "2026-11-02 14:05"}},
     {"schema": "verify-findings.schema.json", "reason": "an undeclared route is information, never blocking",
      "case": {"schema": "atlax-verify/1", "artifact": "agent-mailbox-api", "card": "agent-slack/x", "base": "origin/main", "base_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "head_sha": "50de4f29ff59cb8db0ff80b5777bfbafd986e204", "change_order": {"modifies": [], "adds": [], "retires": [], "frozen_at": "2026-11-02T14:05:00Z"}, "exit": 1, "findings": [{"kind": "undeclared", "blocking": true, "designation": "prod:agent-mailbox-api.GET_x", "message": "x", "derived": "GET /x at a.go:1"}]}},
     {"schema": "element.schema.json", "reason": "scope is one auth scope, never a space-separated list (atlax-tool-followups-2 V3)",
