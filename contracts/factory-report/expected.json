@@ -50,7 +50,8 @@
         ],
         "done": 2,
         "pct": 50,
-        "hashes": 17
+        "hashes": 17,
+        "dead_minutes": 0
       },
       {
         "t": 1792468800,
@@ -62,7 +63,8 @@
         ],
         "done": 3,
         "pct": 75,
-        "hashes": 26
+        "hashes": 26,
+        "dead_minutes": 60
       },
       {
         "t": 1792483200,
@@ -74,7 +76,8 @@
         ],
         "done": 4,
         "pct": 100,
-        "hashes": 34
+        "hashes": 34,
+        "dead_minutes": 30
       }
     ],
     "dead": [
@@ -93,7 +96,8 @@
         "minutes": 30
       }
     ],
-    "notes": []
+    "notes": [],
+    "dead_minutes": 90
   },
   "waves": {
     "source": "run records under runs/ and docs/runs/ (frontmatter waves:), as written now",

@@ -84,7 +84,8 @@
         "moves",
         "lines",
         "dead",
-        "notes"
+        "notes",
+        "dead_minutes"
       ],
       "properties": {
         "denominator": {
@@ -142,7 +143,8 @@
               "commits",
               "done",
               "pct",
-              "hashes"
+              "hashes",
+              "dead_minutes"
             ],
             "properties": {
               "t": {
@@ -178,6 +180,11 @@
                 "minimum": 0,
                 "maximum": 34,
                 "description": "Filled cells of the 34-cell text bar: round(34 * done / count)."
+              },
+              "dead_minutes": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Dead time before this line: the sum of `minutes` of the dead spans that start from the previous line's t (the window's since for the first line) up to this line's t, whole minutes. Spans after the last line count only in progress.dead_minutes."
               }
             }
           }
@@ -224,6 +231,11 @@
             "type": "string"
           },
           "description": "Lines printed under the denominator line, e.g. that dead time is not drawn (no pulse history) or drawn only from a later time."
+        },
+        "dead_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The window's dead time: the sum of every dead span's `minutes` (whole minutes, each span rounded as shown), so a reader sums nothing."
         }
       }
     },
