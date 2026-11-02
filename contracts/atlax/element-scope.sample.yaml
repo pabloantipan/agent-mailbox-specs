@@ -1,0 +1,21 @@
+# An http element that names the auth scope its caller needs
+# (atlax-tool-followups-2 V3), modelled on the record's claims overlaps: what
+# a reviewer had to write in a comment ("scope: kb:read (specs
+# contracts/auth.json, the route row)") is a field. atlax verify compares it
+# with the route-scope contract the plant names (plant-contracts.sample.yaml).
+designation: fn:record.claims.overlaps
+kind: http
+summary: A factory's open atlax claims that share designations with another factory's; never blocks.
+authored: true
+lifecycle: live
+owner: fse
+scope: kb:read
+terminal:
+  method: GET
+  path: /v1/claims/overlaps
+contract:
+  repo: specs
+  path: contracts/atlax/claims-overlaps.sample.json
+test:
+  path: internal/handler/claims_overlaps_test.go
+  name: TestClaimsOverlapsMatchesTheSample
