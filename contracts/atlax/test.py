@@ -12,7 +12,7 @@ Reads case.json. Fails, never skips (contracts/README.md rule 3), when:
   - the published folder lacks PUBLISHED, plant.yaml, elements/ or derived/map.json;
   - platform/artifacts.yaml's sample lists a slug twice;
   - a claims-state fact's body does not hold to its kind's schema (claim, claim-release) or names
-    another card or artifact than its file.
+    another card or artifact than its file, or its at is not the body's claimed_at / released_at.
 
 Needs python3 and PyYAML only. The validator below covers the JSON Schema
 keywords these schemas use and refuses any other, so a schema can never pass
@@ -212,6 +212,26 @@ def main():
     for i, f in enumerate(st.get("facts", [])):
         if f["kind"] == "atlax_claim_released":
             check(f["at"] == f["body"]["released_at"], f"claims-state facts[{i}] at is its released_at")
+        if f["kind"] == "atlax_claim" and "claimed_at" in f["body"]:
+            check(f["at"] == f["body"]["claimed_at"], f"claims-state facts[{i}] at is its claimed_at")
+    # U11: the same designations claimed again after a release are a new claim: the bodies differ.
+    # The re-claim is the sample's claim posted again after the claims-state sample's release: the same card,
+    # factory, artifact and designations, claimed_at the only field that can tell the two apart.
+    claim = load(os.path.join(HERE, "claim.sample.json"))
+    released = [f["body"]["released_at"] for f in st.get("facts", []) if f["kind"] == "atlax_claim_released"]
+    check("claimed_at" in claim and bool(released),
+          "claim.sample.json carries claimed_at, and claims-state.sample.json a release of it")
+    again = dict(claim, claimed_at="2026-11-03T09:00:00Z")
+    errs = []
+    validate(again, schema("claim.schema.json"), schema("claim.schema.json"), "re-claim", errs)
+    check(not errs, "a re-claim with a new claimed_at holds to claim.schema.json" + "".join(f"\n       {e}" for e in errs))
+    check(bool(released) and again["claimed_at"] > max(released) and claim.get("claimed_at", "") <= min(released),
+          "the sample claim was made before its release, the re-claim after it")
+    same = {k: v for k, v in claim.items() if k != "claimed_at"}
+    check(again != claim and {k: v for k, v in again.items() if k != "claimed_at"} == same,
+          "the re-claim differs from the claim by claimed_at alone, so claimed_at is what makes it new")
+    check(dict(again, claimed_at=claim.get("claimed_at")) == claim,
+          "with the claim's claimed_at, the re-claim is the same body (nothing else distinguishes it)")
     bad = {"kind": "atlax_claim", "v": 1, "at": "2026-11-02T14:05:00Z",
            "body": {"card": "agent-slack/x", "factory": "lodestar", "artifact": "agent-mailbox-api",
                     "designations": [{"designation": "fn:mailbox.threads.list"}]}}

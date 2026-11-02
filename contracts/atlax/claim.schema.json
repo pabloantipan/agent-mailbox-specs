@@ -16,6 +16,7 @@
       "uniqueItems": true,
       "description": "The designations the card adds, changes or retires in that artifact. Strings only: no element content.",
       "items": {"type": "string", "pattern": "^((fn|prod|loc):[A-Za-z0-9_][A-Za-z0-9_.-]*|(evt|data|rule)\\.[A-Za-z0-9_][A-Za-z0-9_.-]*)$"}
-    }
+    },
+    "claimed_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", "description": "UTC, when this claim was made (the fact's `at`). What makes a claim re-posted after its release, with the same designations, a new claim: the record keys a claim's generation by it, so its ledger does not keep the claim at the released seq (atlax-tool-followups U11; hestia acl-review on atlax-claims). Optional until the record side reads it (joint merge: specs, then record, then `atlax claim` writes it)."}
   }
 }
